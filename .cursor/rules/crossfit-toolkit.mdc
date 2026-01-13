@@ -1,0 +1,57 @@
+# CrossfitToolkit - Cursor AI Rules
+
+These rules guide AI-assisted changes in this repo to keep the implementation aligned with the product MVP and best practices.
+
+## Product constraints (MVP)
+
+- This is a **PR-first CrossFit toolkit**.
+- The app is **independent of any gym**.
+- Users primarily **search a catalog** (PR items + benchmarks) and **log single-result PR entries**.
+- **No accounts/auth in v1**.
+- Persist data **locally in the browser** (IndexedDB) with **export/import** backup.
+- **Mobile-first UI**: assume most usage is on mobile; UI must be responsive.
+
+## UX rules (mobile-first)
+
+- Design for small screens first (~360–430px width), then scale up.
+- Prioritize **fast, low-friction logging**:
+  - Prominent search
+  - Large tap targets
+  - Minimal typing
+- Avoid dense tables on mobile; prefer cards and stacked layouts.
+- Keep page load and interactions snappy (debounce search, avoid heavy rendering).
+
+## Engineering rules (keep it simple + structured)
+
+- Prefer **simple, readable code** over clever abstractions.
+- Avoid introducing complex state management unless clearly necessary.
+- Keep responsibilities separated:
+  - UI components should not contain persistence details.
+  - Persistence layer should not depend on UI.
+- Add types for core domain models and reuse them consistently.
+- Keep dependencies minimal; avoid adding libraries unless they provide clear MVP value.
+
+## Architecture expectations
+
+- Use a **feature-first** structure with small shared components:
+  - `src/features/**` for feature modules (catalog, PR logging, settings)
+  - `src/components/**` for shared UI primitives
+  - `src/db/**` for IndexedDB access and migrations/versioning
+  - `src/catalog/**` for builtin catalog seed data
+  - `src/styles/**` for global styles/tokens
+
+## Data rules
+
+- Treat the builtin catalog as **seed data**; user edits to built-ins must be stored as **overrides** (do not mutate the shipped seed in-place).
+- PR logs must reference catalog items by stable IDs.
+- Export/import must be **versioned** and backwards-compatible where reasonable.
+
+## Safety and quality
+
+- Don’t log or store secrets.
+- If changing data formats, include a migration strategy.
+- Keep changes small and incremental; avoid large rewrites.
+
+## When unsure
+
+- Ask for clarification before adding major scope (accounts, social sharing, cloud sync, complex programming/planning features).
