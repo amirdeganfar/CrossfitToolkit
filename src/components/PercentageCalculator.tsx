@@ -7,58 +7,100 @@ interface PercentageCalculatorProps {
   weightUnit: 'kg' | 'lb';
 }
 
+/**
+ * Calculator option derived from a log entry
+ */
+interface CalculatorOption {
+  id: string;
+  logId: string;
+  label: string;           // "Est. 1RM: ~117kg" or "1RM: 120kg (actual)"
+  sublabel: string;        // "from 5RM @ 100kg • Jan 18" or "Jan 10"
+  baseWeight: number;      // The estimated 1RM value to use for calculations
+  isEstimated: boolean;
+  originalWeight: number;  // The raw logged weight
+  originalReps: number;    // The raw logged reps
+}
+
 const PERCENTAGE_PRESETS = [90, 85, 80, 75, 70, 65, 60, 55, 50];
+
+/**
+ * Estimate 1RM using the Epley formula
+ * Formula: weight × (1 + reps / 30)
+ */
+const estimateOneRepMax = (weight: number, reps: number): number => {
+  if (reps <= 1) return weight; // Already a 1RM
+  return weight * (1 + reps / 30);
+};
+
+/**
+ * Round to nearest 0.5
+ */
+const roundToHalf = (value: number): number => {
+  return Math.round(value * 2) / 2;
+};
 
 export const PercentageCalculator = ({ logs, weightUnit }: PercentageCalculatorProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [selectedLogId, setSelectedLogId] = useState<string | null>(null);
+  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [selectedPercentage, setSelectedPercentage] = useState(80);
   const [customPercentage, setCustomPercentage] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
-
-  // Sort logs by date (most recent first) and find default selection
-  const sortedLogs = useMemo(() => {
-    return [...logs].sort((a, b) => b.date - a.date);
-  }, [logs]);
-
-  // Find the default log to select (most recent 1RM, or most recent if no 1RM)
-  const defaultLog = useMemo(() => {
-    const oneRepMax = sortedLogs.find((log) => log.reps === 1 || !log.reps);
-    return oneRepMax ?? sortedLogs[0] ?? null;
-  }, [sortedLogs]);
-
-  // Get the currently selected log
-  const selectedLog = useMemo(() => {
-    if (selectedLogId) {
-      return logs.find((log) => log.id === selectedLogId) ?? defaultLog;
-    }
-    return defaultLog;
-  }, [selectedLogId, logs, defaultLog]);
-
-  // Calculate the result based on selected percentage
-  const calculatedWeight = useMemo(() => {
-    if (!selectedLog) return null;
-    const baseWeight = selectedLog.resultValue;
-    const percentage = customPercentage ? parseFloat(customPercentage) : selectedPercentage;
-    if (isNaN(percentage) || percentage <= 0 || percentage > 100) return null;
-    // Round to nearest 0.5
-    return Math.round((baseWeight * percentage) / 100 * 2) / 2;
-  }, [selectedLog, selectedPercentage, customPercentage]);
-
-  // Format log entry for display
-  const formatLogEntry = (log: PRLog): string => {
-    const reps = log.reps ?? 1;
-    return `${reps}RM @ ${log.resultValue}${weightUnit}`;
-  };
 
   // Format date for display
   const formatDate = (timestamp: number): string => {
     return new Date(timestamp).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
-      year: 'numeric',
     });
   };
+
+  // Transform logs into calculator options with estimated 1RM
+  const calculatorOptions = useMemo((): CalculatorOption[] => {
+    return logs.map((log) => {
+      const reps = log.reps ?? 1;
+      const originalWeight = log.resultValue;
+      const estimated1RM = roundToHalf(estimateOneRepMax(originalWeight, reps));
+      const isActual1RM = reps <= 1;
+
+      return {
+        id: `option-${log.id}`,
+        logId: log.id,
+        label: isActual1RM
+          ? `1RM: ${originalWeight}${weightUnit} (actual)`
+          : `Est. 1RM: ~${estimated1RM}${weightUnit}`,
+        sublabel: isActual1RM
+          ? formatDate(log.date)
+          : `from ${reps}RM @ ${originalWeight}${weightUnit} • ${formatDate(log.date)}`,
+        baseWeight: estimated1RM,
+        isEstimated: !isActual1RM,
+        originalWeight,
+        originalReps: reps,
+      };
+    })
+    // Sort by estimated 1RM (highest first)
+    .sort((a, b) => b.baseWeight - a.baseWeight);
+  }, [logs, weightUnit]);
+
+  // Get the default option (highest estimated 1RM)
+  const defaultOption = calculatorOptions[0] ?? null;
+
+  // Get the currently selected option
+  const selectedOption = useMemo(() => {
+    if (selectedOptionId) {
+      return calculatorOptions.find((opt) => opt.id === selectedOptionId) ?? defaultOption;
+    }
+    return defaultOption;
+  }, [selectedOptionId, calculatorOptions, defaultOption]);
+
+  // Calculate the result based on selected percentage
+  const calculatedWeight = useMemo(() => {
+    if (!selectedOption) return null;
+    const baseWeight = selectedOption.baseWeight;
+    const percentage = customPercentage ? parseFloat(customPercentage) : selectedPercentage;
+    if (isNaN(percentage) || percentage <= 0 || percentage > 100) return null;
+    // Round to nearest 0.5
+    return roundToHalf((baseWeight * percentage) / 100);
+  }, [selectedOption, selectedPercentage, customPercentage]);
 
   // Handle preset click
   const handlePresetClick = (percentage: number) => {
@@ -145,8 +187,8 @@ export const PercentageCalculator = ({ logs, weightUnit }: PercentageCalculatorP
               Base
             </label>
             
-            {/* Show dropdown only if multiple logs */}
-            {sortedLogs.length > 1 ? (
+            {/* Show dropdown only if multiple options */}
+            {calculatorOptions.length > 1 ? (
               <div className="relative">
                 <button
                   onClick={() => setShowDropdown(!showDropdown)}
@@ -156,11 +198,11 @@ export const PercentageCalculator = ({ logs, weightUnit }: PercentageCalculatorP
                 >
                   <div className="flex flex-col items-start">
                     <span className="font-medium">
-                      {selectedLog ? formatLogEntry(selectedLog) : 'Select entry'}
+                      {selectedOption?.label ?? 'Select entry'}
                     </span>
-                    {selectedLog && (
+                    {selectedOption && (
                       <span className="text-xs text-[var(--color-text-muted)]">
-                        {formatDate(selectedLog.date)}
+                        {selectedOption.sublabel}
                       </span>
                     )}
                   </div>
@@ -169,29 +211,29 @@ export const PercentageCalculator = ({ logs, weightUnit }: PercentageCalculatorP
 
                 {/* Dropdown menu */}
                 {showDropdown && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-[var(--color-surface-elevated)] border border-[var(--color-border)] rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
-                    {sortedLogs.map((log) => (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-[var(--color-surface-elevated)] border border-[var(--color-border)] rounded-lg shadow-lg z-10 max-h-56 overflow-y-auto">
+                    {calculatorOptions.map((option) => (
                       <button
-                        key={log.id}
+                        key={option.id}
                         onClick={() => {
-                          setSelectedLogId(log.id);
+                          setSelectedOptionId(option.id);
                           setShowDropdown(false);
                         }}
-                        className={`w-full flex items-center justify-between px-3 py-2 text-left hover:bg-[var(--color-surface)] transition-colors ${
-                          selectedLog?.id === log.id ? 'bg-[var(--color-primary)]/10' : ''
+                        className={`w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-[var(--color-surface)] transition-colors ${
+                          selectedOption?.id === option.id ? 'bg-[var(--color-primary)]/10' : ''
                         }`}
                         role="option"
-                        aria-selected={selectedLog?.id === log.id}
+                        aria-selected={selectedOption?.id === option.id}
                       >
                         <div className="flex flex-col">
-                          <span className={`font-medium ${selectedLog?.id === log.id ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
-                            {formatLogEntry(log)}
+                          <span className={`font-medium ${selectedOption?.id === option.id ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
+                            {option.label}
                           </span>
                           <span className="text-xs text-[var(--color-text-muted)]">
-                            {formatDate(log.date)}
+                            {option.sublabel}
                           </span>
                         </div>
-                        {selectedLog?.id === log.id && (
+                        {selectedOption?.id === option.id && (
                           <div className="w-2 h-2 rounded-full bg-[var(--color-primary)]" />
                         )}
                       </button>
@@ -200,14 +242,14 @@ export const PercentageCalculator = ({ logs, weightUnit }: PercentageCalculatorP
                 )}
               </div>
             ) : (
-              // Single log - just show it without dropdown
+              // Single option - just show it without dropdown
               <div className="px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg">
                 <span className="font-medium text-[var(--color-text)]">
-                  {selectedLog ? formatLogEntry(selectedLog) : 'No entry'}
+                  {selectedOption?.label ?? 'No entry'}
                 </span>
-                {selectedLog && (
+                {selectedOption && (
                   <span className="text-xs text-[var(--color-text-muted)] ml-2">
-                    ({formatDate(selectedLog.date)})
+                    ({selectedOption.sublabel})
                   </span>
                 )}
               </div>
@@ -260,13 +302,16 @@ export const PercentageCalculator = ({ logs, weightUnit }: PercentageCalculatorP
 
           {/* Calculated result */}
           <div className="text-center py-2">
-            {calculatedWeight !== null ? (
+            {calculatedWeight !== null && selectedOption ? (
               <>
                 <div className="text-3xl font-bold text-[var(--color-primary)]">
                   {calculatedWeight} {weightUnit}
                 </div>
                 <div className="text-sm text-[var(--color-text-muted)] mt-1">
-                  {activePercentage}% of {selectedLog?.resultValue}{weightUnit}
+                  {activePercentage}% of {selectedOption.baseWeight}{weightUnit}
+                  {selectedOption.isEstimated && (
+                    <span className="text-xs"> (est.)</span>
+                  )}
                 </div>
               </>
             ) : (
