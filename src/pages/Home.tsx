@@ -1,37 +1,74 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ChevronRight, Star, Clock, Plus } from 'lucide-react';
+import { Search, ChevronRight, Star, Clock, Plus, Loader2 } from 'lucide-react';
+import { useCatalogStore } from '../stores/catalogStore';
+import { useInitialize } from '../hooks/useInitialize';
+import type { CatalogItem } from '../types/catalog';
+import * as db from '../db';
 
-// Placeholder data - will be replaced with real data from IndexedDB
-const MOCK_AUTOCOMPLETE = [
-  { id: '1', name: 'Fran', category: 'Benchmark', scoreType: 'Time' },
-  { id: '2', name: 'Back Squat', category: 'Lift', scoreType: 'Load' },
-  { id: '3', name: 'Row 2k', category: 'Monostructural', scoreType: 'Time' },
-  { id: '4', name: 'Pull-ups Max', category: 'Skill', scoreType: 'Reps' },
-];
-
-const MOCK_FAVORITES = [
-  { id: '1', name: 'Fran' },
-  { id: '2', name: 'Back Squat 1RM' },
-  { id: '3', name: 'Grace' },
-];
-
-const MOCK_RECENT_LOGS = [
-  { id: '1', itemName: 'Fran', result: '4:32', variant: 'Rx', date: 'Jan 13, 2026' },
-  { id: '2', itemName: 'Clean 1RM', result: '100kg', variant: null, date: 'Jan 10, 2026' },
-  { id: '3', itemName: 'Cindy', result: '18+5', variant: 'Scaled', date: 'Jan 8, 2026' },
-];
+interface RecentLogWithItem {
+  id: string;
+  itemId: string;
+  itemName: string;
+  result: string;
+  variant: string | null;
+  date: string;
+}
 
 export const Home = () => {
   const navigate = useNavigate();
+  const { isInitialized, isLoading } = useInitialize();
+  
+  // Store state
+  const catalogItems = useCatalogStore((state) => state.catalogItems);
+  const favorites = useCatalogStore((state) => state.favorites);
+  const recentLogs = useCatalogStore((state) => state.recentLogs);
+  
+  // Local state
   const [searchQuery, setSearchQuery] = useState('');
   const [showAutocomplete, setShowAutocomplete] = useState(false);
+  const [recentLogsWithItems, setRecentLogsWithItems] = useState<RecentLogWithItem[]>([]);
 
-  const filteredItems = searchQuery
-    ? MOCK_AUTOCOMPLETE.filter((item) =>
-        item.name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : MOCK_AUTOCOMPLETE;
+  // Filter items for autocomplete
+  const filteredItems = useMemo(() => {
+    if (!searchQuery) {
+      return catalogItems.slice(0, 6); // Show first 6 when empty
+    }
+    const query = searchQuery.toLowerCase();
+    return catalogItems
+      .filter((item) => item.name.toLowerCase().includes(query))
+      .slice(0, 6);
+  }, [catalogItems, searchQuery]);
+
+  // Fetch item names for recent logs
+  useEffect(() => {
+    const fetchItemNames = async () => {
+      const logsWithItems = await Promise.all(
+        recentLogs.map(async (log) => {
+          const item = await db.getCatalogItemById(log.catalogItemId);
+          return {
+            id: log.id,
+            itemId: log.catalogItemId,
+            itemName: item?.name ?? 'Unknown',
+            result: log.result,
+            variant: log.variant,
+            date: new Date(log.date).toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            }),
+          };
+        })
+      );
+      setRecentLogsWithItems(logsWithItems);
+    };
+
+    if (recentLogs.length > 0) {
+      fetchItemNames();
+    } else {
+      setRecentLogsWithItems([]);
+    }
+  }, [recentLogs]);
 
   const handleSearchFocus = () => {
     setShowAutocomplete(true);
@@ -54,7 +91,7 @@ export const Home = () => {
     navigate('/search');
   };
 
-  const getCategoryColor = (category: string) => {
+  const getCategoryColor = (category: CatalogItem['category']) => {
     switch (category) {
       case 'Benchmark':
         return 'text-amber-400';
@@ -64,10 +101,20 @@ export const Home = () => {
         return 'text-green-400';
       case 'Skill':
         return 'text-purple-400';
+      case 'Custom':
+        return 'text-pink-400';
       default:
         return 'text-[var(--color-text-muted)]';
     }
   };
+
+  if (!isInitialized || isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 text-[var(--color-primary)] animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -88,7 +135,7 @@ export const Home = () => {
         </div>
 
         {/* Autocomplete dropdown */}
-        {showAutocomplete && (
+        {showAutocomplete && filteredItems.length > 0 && (
           <div className="absolute top-full left-0 right-0 mt-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden shadow-lg z-10">
             <div className="max-h-64 overflow-y-auto">
               {filteredItems.map((item) => (
@@ -126,18 +173,24 @@ export const Home = () => {
             Favorites
           </h2>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {MOCK_FAVORITES.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => handleItemClick(item.id)}
-              className="px-4 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-full text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-surface-elevated)] hover:border-[var(--color-primary)] transition-colors"
-              aria-label={`View ${item.name}`}
-            >
-              {item.name}
-            </button>
-          ))}
-        </div>
+        {favorites.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {favorites.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => handleItemClick(item.id)}
+                className="px-4 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-full text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-surface-elevated)] hover:border-[var(--color-primary)] transition-colors"
+                aria-label={`View ${item.name}`}
+              >
+                {item.name}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-[var(--color-text-muted)]">
+            No favorites yet. Tap ⭐ on any item to add it here.
+          </p>
+        )}
       </section>
 
       {/* Recent logs section */}
@@ -148,35 +201,43 @@ export const Home = () => {
             Recent Logs
           </h2>
         </div>
-        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden">
-          {MOCK_RECENT_LOGS.map((log, index) => (
-            <button
-              key={log.id}
-              onClick={() => handleItemClick(log.id)}
-              className={`w-full flex items-center justify-between px-4 py-3 hover:bg-[var(--color-surface-elevated)] transition-colors text-left ${
-                index !== MOCK_RECENT_LOGS.length - 1 ? 'border-b border-[var(--color-border)]' : ''
-              }`}
-              aria-label={`View ${log.itemName} log`}
-            >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-[var(--color-text)] truncate">
-                    {log.itemName}
-                  </span>
-                  <span className="text-[var(--color-text-muted)]">—</span>
-                  <span className="text-[var(--color-primary)] font-semibold">{log.result}</span>
-                  {log.variant && (
-                    <span className="px-2 py-0.5 text-xs rounded-full bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]">
-                      {log.variant}
+        {recentLogsWithItems.length > 0 ? (
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden">
+            {recentLogsWithItems.map((log, index) => (
+              <button
+                key={log.id}
+                onClick={() => handleItemClick(log.itemId)}
+                className={`w-full flex items-center justify-between px-4 py-3 hover:bg-[var(--color-surface-elevated)] transition-colors text-left ${
+                  index !== recentLogsWithItems.length - 1 ? 'border-b border-[var(--color-border)]' : ''
+                }`}
+                aria-label={`View ${log.itemName} log`}
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-[var(--color-text)] truncate">
+                      {log.itemName}
                     </span>
-                  )}
+                    <span className="text-[var(--color-text-muted)]">—</span>
+                    <span className="text-[var(--color-primary)] font-semibold">{log.result}</span>
+                    {log.variant && (
+                      <span className="px-2 py-0.5 text-xs rounded-full bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]">
+                        {log.variant}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-xs text-[var(--color-text-muted)]">{log.date}</span>
                 </div>
-                <span className="text-xs text-[var(--color-text-muted)]">{log.date}</span>
-              </div>
-              <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)] flex-shrink-0 ml-2" />
-            </button>
-          ))}
-        </div>
+                <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)] flex-shrink-0 ml-2" />
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-6 text-center">
+            <p className="text-[var(--color-text-muted)]">
+              No logs yet. Start tracking your PRs!
+            </p>
+          </div>
+        )}
       </section>
 
       {/* Log PR button */}
