@@ -53,3 +53,20 @@ body {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* Calculator expand/collapse animation */
+.calculator-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 0.3s ease-out, opacity 0.2s ease-out;
+}
+
+.calculator-content.expanded {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.calculator-content > div {
+  overflow: hidden;
+}

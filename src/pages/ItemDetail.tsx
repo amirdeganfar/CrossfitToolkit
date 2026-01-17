@@ -4,6 +4,7 @@ import { ArrowLeft, Star, Plus, Trash2, Loader2, TrendingUp, TrendingDown } from
 import { useCatalogStore, useCatalogItem } from '../stores/catalogStore';
 import { useInitialize } from '../hooks/useInitialize';
 import { LogResultModal } from '../components/LogResultModal';
+import { PercentageCalculator } from '../components/PercentageCalculator';
 import * as db from '../db';
 import type { PRLog } from '../types/catalog';
 
@@ -204,6 +205,11 @@ export const ItemDetail = () => {
           <p className="text-[var(--color-text-muted)]">No results yet</p>
         )}
       </div>
+
+      {/* Percentage Calculator - only for Lift category with Load scoreType */}
+      {item.category === 'Lift' && item.scoreType === 'Load' && (
+        <PercentageCalculator logs={logs} weightUnit={settings.weightUnit} />
+      )}
 
       {/* History section */}
       <section>
