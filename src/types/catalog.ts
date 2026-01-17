@@ -49,6 +49,8 @@ export interface PRLog {
   variant: Variant;
   date: number;            // timestamp
   notes?: string;
+  reps?: number;           // For Load scoreType (e.g., 5 reps @ 100kg)
+  distance?: number;       // For Distance scoreType (e.g., 200m in 30s)
   createdAt: number;
 }
 
