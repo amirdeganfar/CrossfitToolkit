@@ -1,12 +1,204 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Star, Plus, Trash2, Loader2, TrendingUp, TrendingDown } from 'lucide-react';
+import { ArrowLeft, Star, Plus, Trash2, Loader2, TrendingUp, TrendingDown, ChevronDown } from 'lucide-react';
 import { useCatalogStore, useCatalogItem } from '../stores/catalogStore';
 import { useInitialize } from '../hooks/useInitialize';
 import { LogResultModal } from '../components/LogResultModal';
 import { PercentageCalculator } from '../components/PercentageCalculator';
 import * as db from '../db';
 import type { PRLog } from '../types/catalog';
+
+// Group structure for accordion display
+interface LogGroup {
+  key: number | string;  // distance, time, reps, or variant
+  label: string;         // formatted label (e.g., "200m", "2:00", "5RM", "Rx")
+  type: 'distance' | 'calories' | 'reps' | 'variant';
+  logs: PRLog[];         // sorted: PR first, then by date desc
+  bestLog: PRLog;        // the PR for this group
+}
+
+// Group logs by distance or calories/time, with PR first in each group
+const groupLogs = (
+  logs: PRLog[],
+  bestByDistance: Map<number, PRLog>,
+  bestByCalories: Map<number, PRLog>,
+  formatDistance: (meters: number) => string
+): LogGroup[] => {
+  const distanceGroups = new Map<number, PRLog[]>();
+  const calorieGroups = new Map<number, PRLog[]>(); // keyed by time (resultValue)
+
+  // Separate logs by type
+  logs.forEach(log => {
+    if (log.distance !== undefined) {
+      const existing = distanceGroups.get(log.distance) || [];
+      existing.push(log);
+      distanceGroups.set(log.distance, existing);
+    } else if (log.calories !== undefined) {
+      const existing = calorieGroups.get(log.resultValue) || [];
+      existing.push(log);
+      calorieGroups.set(log.resultValue, existing);
+    }
+  });
+
+  const result: LogGroup[] = [];
+
+  // Process distance groups (sorted by distance ascending)
+  Array.from(distanceGroups.keys())
+    .sort((a, b) => a - b)
+    .forEach(distance => {
+      const groupLogs = distanceGroups.get(distance)!;
+      const bestLog = bestByDistance.get(distance);
+      if (!bestLog) return;
+
+      // Sort: PR first, then by date descending
+      const sorted = [...groupLogs].sort((a, b) => {
+        if (a.id === bestLog.id) return -1;
+        if (b.id === bestLog.id) return 1;
+        return b.date - a.date;
+      });
+
+      result.push({
+        key: distance,
+        label: formatDistance(distance),
+        type: 'distance',
+        logs: sorted,
+        bestLog,
+      });
+    });
+
+  // Process calorie groups (sorted by time ascending)
+  Array.from(calorieGroups.keys())
+    .sort((a, b) => a - b)
+    .forEach(timeSeconds => {
+      const groupLogs = calorieGroups.get(timeSeconds)!;
+      const bestLog = bestByCalories.get(timeSeconds);
+      if (!bestLog) return;
+
+      // Sort: PR first, then by date descending
+      const sorted = [...groupLogs].sort((a, b) => {
+        if (a.id === bestLog.id) return -1;
+        if (b.id === bestLog.id) return 1;
+        return b.date - a.date;
+      });
+
+      // Format time
+      const mins = Math.floor(timeSeconds / 60);
+      const secs = timeSeconds % 60;
+      const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+
+      result.push({
+        key: timeSeconds,
+        label: timeStr,
+        type: 'calories',
+        logs: sorted,
+        bestLog,
+      });
+    });
+
+  return result;
+};
+
+// Group logs by reps (for Lift items), with best (highest weight) first in each group
+const groupLogsByReps = (
+  logs: PRLog[]
+): LogGroup[] => {
+  const repsGroups = new Map<number, PRLog[]>();
+
+  // Group logs by reps
+  logs.forEach(log => {
+    const reps = log.reps ?? 1; // Default to 1RM if no reps specified
+    const existing = repsGroups.get(reps) || [];
+    existing.push(log);
+    repsGroups.set(reps, existing);
+  });
+
+  const result: LogGroup[] = [];
+
+  // Process reps groups (sorted by reps ascending: 1RM, 3RM, 5RM, etc.)
+  Array.from(repsGroups.keys())
+    .sort((a, b) => a - b)
+    .forEach(reps => {
+      const groupLogs = repsGroups.get(reps)!;
+      
+      // Find best log (highest resultValue = heaviest weight)
+      const bestLog = groupLogs.reduce((best, curr) => 
+        curr.resultValue > best.resultValue ? curr : best
+      );
+
+      // Sort: PR first, then by date descending
+      const sorted = [...groupLogs].sort((a, b) => {
+        if (a.id === bestLog.id) return -1;
+        if (b.id === bestLog.id) return 1;
+        return b.date - a.date;
+      });
+
+      result.push({
+        key: reps,
+        label: `${reps}RM`,
+        type: 'reps',
+        logs: sorted,
+        bestLog,
+      });
+    });
+
+  return result;
+};
+
+// Group logs by variant (for Benchmark/Skill items), with best first in each group
+const groupLogsByVariant = (
+  logs: PRLog[],
+  isLowerBetter: boolean
+): LogGroup[] => {
+  const variantGroups = new Map<string, PRLog[]>();
+
+  // Group logs by variant
+  logs.forEach(log => {
+    const variant = log.variant ?? 'Unspecified';
+    const existing = variantGroups.get(variant) || [];
+    existing.push(log);
+    variantGroups.set(variant, existing);
+  });
+
+  const result: LogGroup[] = [];
+
+  // Define variant order: Rx+ first, then Rx, then Scaled, then Unspecified
+  const variantOrder = ['Rx+', 'Rx', 'Scaled', 'Unspecified'];
+  const sortedVariants = Array.from(variantGroups.keys()).sort((a, b) => {
+    const aIndex = variantOrder.indexOf(a);
+    const bIndex = variantOrder.indexOf(b);
+    return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex);
+  });
+
+  sortedVariants.forEach(variant => {
+    const groupLogs = variantGroups.get(variant)!;
+    
+    // Find best log based on scoreType
+    const bestLog = groupLogs.reduce((best, curr) => {
+      if (isLowerBetter) {
+        return curr.resultValue < best.resultValue ? curr : best;
+      } else {
+        return curr.resultValue > best.resultValue ? curr : best;
+      }
+    });
+
+    // Sort: PR first, then by date descending
+    const sorted = [...groupLogs].sort((a, b) => {
+      if (a.id === bestLog.id) return -1;
+      if (b.id === bestLog.id) return 1;
+      return b.date - a.date;
+    });
+
+    result.push({
+      key: variant,
+      label: variant,
+      type: 'variant',
+      logs: sorted,
+      bestLog,
+    });
+  });
+
+  return result;
+};
 
 export const ItemDetail = () => {
   const navigate = useNavigate();
@@ -26,6 +218,7 @@ export const ItemDetail = () => {
   const [bestByCalories, setBestByCalories] = useState<Map<number, PRLog>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   // Check if this is a dual-metric item (Row, Bike) - supports both distance and calories
   const isDualMetricItem = item?.category === 'Monostructural' && item?.scoreType === 'Time' && 
@@ -202,6 +395,39 @@ export const ItemDetail = () => {
   
   // Sort times for calorie-based PRs (ascending by time in seconds)
   const sortedCalorieTimes = Array.from(bestByCalories.keys()).sort((a, b) => a - b);
+
+  // Determine grouping type and create grouped logs for accordion display
+  const getGroupedLogs = (): LogGroup[] => {
+    if (isDualMetricItem || isDistanceOnlyItem) {
+      // Monostructural items: group by distance or calories/time
+      return groupLogs(logs, bestByDistance, bestByCalories, formatDistance);
+    } else if (item?.category === 'Lift' && item?.scoreType === 'Load') {
+      // Lift items: group by reps (1RM, 3RM, 5RM, etc.)
+      return groupLogsByReps(logs);
+    } else if (logs.length > 0) {
+      // All other items (Benchmark, Skill, Custom): group by variant
+      return groupLogsByVariant(logs, isLowerBetter);
+    }
+    return [];
+  };
+
+  const groupedLogs = getGroupedLogs();
+
+  // Toggle accordion group expansion
+  const toggleGroup = (groupKey: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(groupKey)) {
+        next.delete(groupKey);
+      } else {
+        next.add(groupKey);
+      }
+      return next;
+    });
+  };
+
+  // Check if should use grouped display (use grouping when we have groups)
+  const useGroupedHistory = groupedLogs.length > 0;
 
   if (!isInitialized || isInitializing) {
     return (
@@ -398,22 +624,132 @@ export const ItemDetail = () => {
           <div className="flex items-center justify-center h-32 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl">
             <Loader2 className="w-5 h-5 text-[var(--color-text-muted)] animate-spin" />
           </div>
+        ) : useGroupedHistory ? (
+          /* Grouped accordion view for all items */
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden">
+            {groupedLogs.map((group, groupIndex) => {
+              const groupKey = `${group.type}-${group.key}`;
+              const isExpanded = expandedGroups.has(groupKey);
+              
+              // Format the PR value based on group type
+              const getPrDisplayValue = () => {
+                switch (group.type) {
+                  case 'distance':
+                    return group.bestLog.result.includes(' in ') 
+                      ? group.bestLog.result.split(' in ')[1] 
+                      : group.bestLog.result;
+                  case 'calories':
+                    return `${group.bestLog.calories} cal`;
+                  case 'reps':
+                    return `${group.bestLog.resultValue} ${settings.weightUnit}`;
+                  case 'variant':
+                    return getResultWithUnit(group.bestLog.result);
+                }
+              };
+
+              return (
+                <div key={groupKey} className={groupIndex !== groupedLogs.length - 1 ? 'border-b border-[var(--color-border)]' : ''}>
+                  {/* Accordion Header */}
+                  <button
+                    onClick={() => toggleGroup(groupKey)}
+                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-[var(--color-surface-elevated)] transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <ChevronDown 
+                        className={`w-4 h-4 text-[var(--color-text-muted)] transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
+                      />
+                      <span className="font-semibold text-[var(--color-text)]">
+                        {group.label}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-[var(--color-primary)]">
+                        {getPrDisplayValue()}
+                      </span>
+                      <span className="px-1.5 py-0.5 text-xs rounded bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]">
+                        {group.logs.length}
+                      </span>
+                    </div>
+                  </button>
+
+                  {/* Accordion Content */}
+                  <div className={`accordion-content ${isExpanded ? 'expanded' : ''}`}>
+                    <div>
+                      {group.logs.map((log, logIndex) => {
+                        const isPR = log.id === group.bestLog.id;
+                        
+                        // Format display result based on group type
+                        const getDisplayResult = () => {
+                          switch (group.type) {
+                            case 'distance':
+                              return log.result.includes(' in ') 
+                                ? log.result.split(' in ')[1] 
+                                : log.result;
+                            case 'calories':
+                              return `${log.calories} cal`;
+                            case 'reps':
+                              return `${log.resultValue} ${settings.weightUnit}`;
+                            case 'variant':
+                              return getResultWithUnit(log.result);
+                          }
+                        };
+                        const displayResult = getDisplayResult();
+
+                        return (
+                          <div
+                            key={log.id}
+                            className={`flex items-center justify-between px-4 py-2 pl-11 group bg-[var(--color-bg)] ${
+                              logIndex !== group.logs.length - 1 ? 'border-b border-[var(--color-border)]/50' : ''
+                            }`}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className={`text-sm ${
+                                  isPR ? 'font-semibold text-[var(--color-primary)]' : 'text-[var(--color-text)]'
+                                }`}>
+                                  {displayResult}
+                                </span>
+                                {/* Show variant badge only when not grouped by variant */}
+                                {group.type !== 'variant' && log.variant && (
+                                  <span className="px-1.5 py-0.5 text-xs rounded-full bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]">
+                                    {log.variant}
+                                  </span>
+                                )}
+                                {isPR && (
+                                  <span className="px-1.5 py-0.5 text-xs rounded-full bg-[var(--color-primary)]/20 text-[var(--color-primary)]">
+                                    PR
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-[var(--color-text-muted)]">
+                                {formatDate(log.date)}
+                                {log.notes && ` — ${log.notes}`}
+                              </p>
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteLog(log.id);
+                              }}
+                              className="p-2 -m-2 rounded-lg text-[var(--color-border)] hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
+                              aria-label="Delete log"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         ) : logs.length > 0 ? (
+          /* Flat list view for non-monostructural items */
           <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden">
             {logs.map((log, index) => {
-              // Check if this log is a PR (either overall or for its specific distance/calories)
-              let isPR = false;
-              if (isDualMetricItem || isDistanceOnlyItem) {
-                // For dual-metric and distance-only items, check by the metric type used
-                if (log.distance !== undefined) {
-                  isPR = bestByDistance.get(log.distance)?.id === log.id;
-                } else if (log.calories !== undefined) {
-                  // For calories: bestByCalories is keyed by TIME (resultValue), not calories
-                  isPR = bestByCalories.get(log.resultValue)?.id === log.id;
-                }
-              } else {
-                isPR = log.id === bestLog?.id;
-              }
+              const isPR = log.id === bestLog?.id;
               
               return (
                 <div

@@ -70,3 +70,18 @@ body {
 .calculator-content > div {
   overflow: hidden;
 }
+
+/* Accordion expand/collapse animation */
+.accordion-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.2s ease-out;
+}
+
+.accordion-content.expanded {
+  grid-template-rows: 1fr;
+}
+
+.accordion-content > div {
+  overflow: hidden;
+}
