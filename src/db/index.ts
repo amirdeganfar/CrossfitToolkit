@@ -245,7 +245,7 @@ export const getBestPRsByCalories = async (
 
     // Group by time (resultValue), find MAX calories for each time
     const existingBest = bestByTime.get(log.resultValue);
-    if (!existingBest || log.calories > existingBest.calories) {
+    if (!existingBest || existingBest.calories === undefined || log.calories > existingBest.calories) {
       // For calories, higher is better (max calories in given time)
       bestByTime.set(log.resultValue, log);
     }
