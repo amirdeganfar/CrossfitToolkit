@@ -203,8 +203,8 @@ export const BUILTIN_CATALOG: Omit<CatalogItem, 'isFavorite' | 'createdAt'>[] = 
     id: 'bike-cals',
     name: 'Assault Bike (Cal)',
     category: 'Monostructural',
-    scoreType: 'Calories',
-    description: 'Max calories in set time on Assault Bike',
+    scoreType: 'Time',
+    description: 'Assault Bike for time — specify calories when logging',
     isBuiltin: true,
   },
 

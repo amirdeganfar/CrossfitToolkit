@@ -50,7 +50,8 @@ export interface PRLog {
   date: number;            // timestamp
   notes?: string;
   reps?: number;           // For Load scoreType (e.g., 5 reps @ 100kg)
-  distance?: number;       // For Distance scoreType (e.g., 200m in 30s)
+  distance?: number;       // For Monostructural Time (e.g., 200m in 30s)
+  calories?: number;       // For Monostructural Time on bike (e.g., 50 cal in 3:20)
   createdAt: number;
 }
 

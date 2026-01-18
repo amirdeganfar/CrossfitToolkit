@@ -4,6 +4,7 @@ import type { CatalogItem, Variant } from '../types/catalog';
 import { useCatalogStore } from '../stores/catalogStore';
 import { parseResultToValue, validateResult, getResultPlaceholder, getResultLabel, formatCompoundResult } from '../utils/resultParser';
 import { DatePicker } from './DatePicker';
+import { TimeInput } from './TimeInput';
 
 interface LogResultModalProps {
   item: CatalogItem;
@@ -23,8 +24,9 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
 
   const [result, setResult] = useState('');
   const [reps, setReps] = useState<string>('1'); // For Load scoreType
-  const [distance, setDistance] = useState<string>(''); // For Monostructural Time items
+  const [distance, setDistance] = useState<string>(''); // For Monostructural Time items (Run, Row)
   const [distanceUnit, setDistanceUnit] = useState<'m' | 'km' | 'mi'>('m');
+  const [calories, setCalories] = useState<string>(''); // For Monostructural Time items (Bike)
   const [variant, setVariant] = useState<Variant>(item.category === 'Benchmark' ? 'Rx' : null);
   const [date, setDate] = useState(new Date());
   const [notes, setNotes] = useState('');
@@ -33,8 +35,12 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
 
   // Determine which fields to show based on scoreType/category
   const showReps = item.scoreType === 'Load';
-  // Show distance input for Monostructural items with Time scoreType (e.g., Run, Row)
-  const showDistance = item.category === 'Monostructural' && item.scoreType === 'Time';
+  // Check if this is a calorie-based item (bike)
+  const isCalorieBasedItem = item.id === 'bike-cals' || item.name.toLowerCase().includes('bike');
+  // Show distance input for Monostructural items with Time scoreType (e.g., Run, Row) but not bike
+  const showDistance = item.category === 'Monostructural' && item.scoreType === 'Time' && !isCalorieBasedItem;
+  // Show calories input for bike items
+  const showCalories = item.category === 'Monostructural' && item.scoreType === 'Time' && isCalorieBasedItem;
   const showVariant = item.category === 'Benchmark'; // Rx/Scaled only for WODs
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,9 +59,15 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
       return;
     }
 
-    // Validate distance for Monostructural Time items
+    // Validate distance for Monostructural Time items (Run, Row)
     if (showDistance && (!distance || parseFloat(distance) <= 0)) {
       setError('Please enter a valid distance');
+      return;
+    }
+
+    // Validate calories for Monostructural Time items (Bike)
+    if (showCalories && (!calories || parseFloat(calories) <= 0)) {
+      setError('Please enter a valid calorie amount');
       return;
     }
 
@@ -81,14 +93,20 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
         }
       }
 
-      // Build display result string with distance prefix for Monostructural Time items
+      // Build display result string
       let displayResult: string;
+      let caloriesValue: number | undefined;
+      
       if (showDistance && distanceInMeters) {
         // Format: "400m in 1:20" or "1.5km in 6:30"
         const distanceDisplay = distanceUnit === 'm' 
           ? `${distance}m`
           : `${distance}${distanceUnit}`;
         displayResult = `${distanceDisplay} in ${result}`;
+      } else if (showCalories) {
+        // Format: "50 cal in 3:20"
+        caloriesValue = parseFloat(calories);
+        displayResult = `${calories} cal in ${result}`;
       } else {
         displayResult = formatCompoundResult(result, item.scoreType, {
           reps: repsValue,
@@ -106,6 +124,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
         notes: notes.trim() || undefined,
         reps: repsValue,
         distance: distanceInMeters,
+        calories: caloriesValue,
       });
 
       onSuccess();
@@ -184,7 +203,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
             </div>
           )}
 
-          {/* Distance input for Monostructural Time items */}
+          {/* Distance input for Monostructural Time items (Run, Row) */}
           {showDistance && (
             <div>
               <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-1">
@@ -220,20 +239,51 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
             </div>
           )}
 
+          {/* Calories input for Monostructural Time items (Bike) */}
+          {showCalories && (
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-1">
+                Calories
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={calories}
+                  onChange={(e) => setCalories(e.target.value)}
+                  placeholder="e.g., 50"
+                  className="flex-1 px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+                />
+                <div className="flex items-center px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-muted)] text-sm font-medium">
+                  cal
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Result input */}
           <div>
             <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-1">
               {getResultLabel(item.scoreType)} {getUnitLabel() && item.scoreType === 'Load' && `(${getUnitLabel()})`}
             </label>
-            <input
-              type="text"
-              value={result}
-              onChange={(e) => setResult(e.target.value)}
-              placeholder={getResultPlaceholder(item.scoreType)}
-              className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
-              autoFocus
-              required
-            />
+            {item.scoreType === 'Time' ? (
+              <TimeInput
+                value={result}
+                onChange={setResult}
+                autoFocus
+              />
+            ) : (
+              <input
+                type="text"
+                value={result}
+                onChange={(e) => setResult(e.target.value)}
+                placeholder={getResultPlaceholder(item.scoreType)}
+                className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+                autoFocus
+                required
+              />
+            )}
           </div>
 
           {/* Variant selector - only for Benchmark WODs */}

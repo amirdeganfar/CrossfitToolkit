@@ -32,12 +32,32 @@ export const db = new CrossfitToolkitDB();
  */
 export const initializeDatabase = async (): Promise<void> => {
   const count = await db.catalogItems.count();
+  const builtinItems = getBuiltinCatalog();
   
   if (count === 0) {
     // Seed with builtin catalog
-    const builtinItems = getBuiltinCatalog();
     await db.catalogItems.bulkAdd(builtinItems);
     console.log(`[DB] Seeded ${builtinItems.length} catalog items`);
+  } else {
+    // Update existing builtin items with latest seed data (migration)
+    // This ensures scoreType and description changes are reflected
+    for (const seedItem of builtinItems) {
+      const existing = await db.catalogItems.get(seedItem.id);
+      if (existing && existing.isBuiltin) {
+        // Preserve user preferences (isFavorite), update everything else
+        await db.catalogItems.update(seedItem.id, {
+          name: seedItem.name,
+          category: seedItem.category,
+          scoreType: seedItem.scoreType,
+          description: seedItem.description,
+        });
+      } else if (!existing) {
+        // Add new builtin items that don't exist yet
+        await db.catalogItems.add(seedItem);
+        console.log(`[DB] Added new builtin item: ${seedItem.name}`);
+      }
+    }
+    console.log('[DB] Synced builtin catalog items');
   }
 
   // Ensure default settings exist
@@ -208,6 +228,29 @@ export const getBestPRsByDistance = async (
   }
 
   return bestByDistance;
+};
+
+/**
+ * Get best PRs grouped by calories (for Monostructural Time items like Assault Bike)
+ * Returns a map of calories to best PR at that calorie target
+ */
+export const getBestPRsByCalories = async (
+  catalogItemId: string
+): Promise<Map<number, PRLog>> => {
+  const logs = await getPRLogsForItem(catalogItemId);
+  const bestByCalories = new Map<number, PRLog>();
+
+  for (const log of logs) {
+    if (log.calories === undefined) continue;
+
+    const existingBest = bestByCalories.get(log.calories);
+    if (!existingBest || log.resultValue < existingBest.resultValue) {
+      // For Time scoreType, lower is better
+      bestByCalories.set(log.calories, log);
+    }
+  }
+
+  return bestByCalories;
 };
 
 /**
