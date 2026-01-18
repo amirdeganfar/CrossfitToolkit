@@ -27,10 +27,12 @@ export const ItemDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
-  // Check if this is a calorie-based item (Assault Bike)
-  const isCalorieBasedItem = item?.id === 'bike-cals' || (item?.name.toLowerCase().includes('bike') && item?.category === 'Monostructural');
-  // Check if this is a distance-based Monostructural Time item (Run, Row) - not bike
-  const isDistanceBasedItem = item?.category === 'Monostructural' && item?.scoreType === 'Time' && !isCalorieBasedItem;
+  // Check if this is a dual-metric item (Row, Bike) - supports both distance and calories
+  const isDualMetricItem = item?.category === 'Monostructural' && item?.scoreType === 'Time' && 
+    (item?.id === 'row' || item?.id === 'bike-cals' || item?.name.toLowerCase().includes('row') || item?.name.toLowerCase().includes('bike'));
+  // Check if this is a distance-only item (Run) - only supports distance
+  const isDistanceOnlyItem = item?.category === 'Monostructural' && item?.scoreType === 'Time' && 
+    !isDualMetricItem && (item?.id === 'run' || item?.name.toLowerCase().includes('run'));
 
   // Fetch logs for this item
   useEffect(() => {
@@ -42,13 +44,18 @@ export const ItemDetail = () => {
         const itemLogs = await db.getPRLogsForItem(id);
         setLogs(itemLogs);
         
-        // For distance-based items, get best PRs grouped by distance
-        if (isDistanceBasedItem) {
+        // For dual-metric items (Row, Bike), get best PRs for BOTH distance and calories
+        if (isDualMetricItem) {
           const bestsByDist = await db.getBestPRsByDistance(id);
+          const bestsByCal = await db.getBestPRsByCalories(id);
           setBestByDistance(bestsByDist);
-          // Set the overall best (lowest time across all distances) for general display
-          if (bestsByDist.size > 0) {
-            const allBests = Array.from(bestsByDist.values());
+          setBestByCalories(bestsByCal);
+          // Set overall best from whichever has data
+          const allBests = [
+            ...Array.from(bestsByDist.values()),
+            ...Array.from(bestsByCal.values()),
+          ];
+          if (allBests.length > 0) {
             const overallBest = allBests.reduce((best, curr) => 
               curr.resultValue < best.resultValue ? curr : best
             );
@@ -56,13 +63,12 @@ export const ItemDetail = () => {
           } else {
             setBestLog(null);
           }
-        } else if (isCalorieBasedItem) {
-          // For calorie-based items (Assault Bike), get best PRs grouped by calories
-          const bestsByCal = await db.getBestPRsByCalories(id);
-          setBestByCalories(bestsByCal);
-          // Set the overall best (lowest time across all calorie targets) for general display
-          if (bestsByCal.size > 0) {
-            const allBests = Array.from(bestsByCal.values());
+        } else if (isDistanceOnlyItem) {
+          // For distance-only items (Run), get best PRs grouped by distance
+          const bestsByDist = await db.getBestPRsByDistance(id);
+          setBestByDistance(bestsByDist);
+          if (bestsByDist.size > 0) {
+            const allBests = Array.from(bestsByDist.values());
             const overallBest = allBests.reduce((best, curr) => 
               curr.resultValue < best.resultValue ? curr : best
             );
@@ -82,7 +88,7 @@ export const ItemDetail = () => {
     };
 
     fetchLogs();
-  }, [id, isInitialized, isDistanceBasedItem, isCalorieBasedItem]);
+  }, [id, isInitialized, isDualMetricItem, isDistanceOnlyItem]);
 
   const handleBack = () => {
     navigate(-1);
@@ -98,11 +104,16 @@ export const ItemDetail = () => {
     const itemLogs = await db.getPRLogsForItem(id!);
     setLogs(itemLogs);
     
-    if (isDistanceBasedItem) {
+    if (isDualMetricItem) {
       const bestsByDist = await db.getBestPRsByDistance(id!);
+      const bestsByCal = await db.getBestPRsByCalories(id!);
       setBestByDistance(bestsByDist);
-      if (bestsByDist.size > 0) {
-        const allBests = Array.from(bestsByDist.values());
+      setBestByCalories(bestsByCal);
+      const allBests = [
+        ...Array.from(bestsByDist.values()),
+        ...Array.from(bestsByCal.values()),
+      ];
+      if (allBests.length > 0) {
         const overallBest = allBests.reduce((best, curr) => 
           curr.resultValue < best.resultValue ? curr : best
         );
@@ -110,11 +121,11 @@ export const ItemDetail = () => {
       } else {
         setBestLog(null);
       }
-    } else if (isCalorieBasedItem) {
-      const bestsByCal = await db.getBestPRsByCalories(id!);
-      setBestByCalories(bestsByCal);
-      if (bestsByCal.size > 0) {
-        const allBests = Array.from(bestsByCal.values());
+    } else if (isDistanceOnlyItem) {
+      const bestsByDist = await db.getBestPRsByDistance(id!);
+      setBestByDistance(bestsByDist);
+      if (bestsByDist.size > 0) {
+        const allBests = Array.from(bestsByDist.values());
         const overallBest = allBests.reduce((best, curr) => 
           curr.resultValue < best.resultValue ? curr : best
         );
@@ -268,8 +279,62 @@ export const ItemDetail = () => {
           <div className="flex items-center justify-center h-16">
             <Loader2 className="w-5 h-5 text-[var(--color-text-muted)] animate-spin" />
           </div>
-        ) : isDistanceBasedItem && sortedDistances.length > 0 ? (
-          // Show best PRs grouped by distance for Monostructural Time items (Run, Row)
+        ) : isDualMetricItem && (sortedDistances.length > 0 || sortedCalories.length > 0) ? (
+          // Show best PRs for both distance and calories for dual-metric items (Row, Bike)
+          <div className="space-y-4">
+            {/* Distance-based PRs */}
+            {sortedDistances.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide">By Distance</p>
+                {sortedDistances.map((distanceMeters) => {
+                  const pr = bestByDistance.get(distanceMeters);
+                  if (!pr) return null;
+                  return (
+                    <div key={distanceMeters} className="flex items-baseline justify-between">
+                      <span className="text-sm font-medium text-[var(--color-text-muted)]">
+                        {formatDistance(distanceMeters)}
+                      </span>
+                      <div className="text-right">
+                        <span className="text-xl font-bold text-[var(--color-primary)]">
+                          {pr.result.includes(' in ') ? pr.result.split(' in ')[1] : pr.result}
+                        </span>
+                        <p className="text-xs text-[var(--color-text-muted)]">
+                          {formatDate(pr.date)}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            {/* Calorie-based PRs */}
+            {sortedCalories.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide">By Calories</p>
+                {sortedCalories.map((calories) => {
+                  const pr = bestByCalories.get(calories);
+                  if (!pr) return null;
+                  return (
+                    <div key={calories} className="flex items-baseline justify-between">
+                      <span className="text-sm font-medium text-[var(--color-text-muted)]">
+                        {calories} cal
+                      </span>
+                      <div className="text-right">
+                        <span className="text-xl font-bold text-[var(--color-primary)]">
+                          {pr.result.includes(' in ') ? pr.result.split(' in ')[1] : pr.result}
+                        </span>
+                        <p className="text-xs text-[var(--color-text-muted)]">
+                          {formatDate(pr.date)}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ) : isDistanceOnlyItem && sortedDistances.length > 0 ? (
+          // Show best PRs grouped by distance for distance-only items (Run)
           <div className="space-y-3">
             {sortedDistances.map((distanceMeters) => {
               const pr = bestByDistance.get(distanceMeters);
@@ -278,29 +343,6 @@ export const ItemDetail = () => {
                 <div key={distanceMeters} className="flex items-baseline justify-between">
                   <span className="text-sm font-medium text-[var(--color-text-muted)]">
                     {formatDistance(distanceMeters)}
-                  </span>
-                  <div className="text-right">
-                    <span className="text-xl font-bold text-[var(--color-primary)]">
-                      {pr.result.includes(' in ') ? pr.result.split(' in ')[1] : pr.result}
-                    </span>
-                    <p className="text-xs text-[var(--color-text-muted)]">
-                      {formatDate(pr.date)}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : isCalorieBasedItem && sortedCalories.length > 0 ? (
-          // Show best PRs grouped by calories for Assault Bike
-          <div className="space-y-3">
-            {sortedCalories.map((calories) => {
-              const pr = bestByCalories.get(calories);
-              if (!pr) return null;
-              return (
-                <div key={calories} className="flex items-baseline justify-between">
-                  <span className="text-sm font-medium text-[var(--color-text-muted)]">
-                    {calories} cal
                   </span>
                   <div className="text-right">
                     <span className="text-xl font-bold text-[var(--color-primary)]">
@@ -357,10 +399,13 @@ export const ItemDetail = () => {
             {logs.map((log, index) => {
               // Check if this log is a PR (either overall or for its specific distance/calories)
               let isPR = false;
-              if (isDistanceBasedItem && log.distance !== undefined) {
-                isPR = bestByDistance.get(log.distance)?.id === log.id;
-              } else if (isCalorieBasedItem && log.calories !== undefined) {
-                isPR = bestByCalories.get(log.calories)?.id === log.id;
+              if (isDualMetricItem || isDistanceOnlyItem) {
+                // For dual-metric and distance-only items, check by the metric type used
+                if (log.distance !== undefined) {
+                  isPR = bestByDistance.get(log.distance)?.id === log.id;
+                } else if (log.calories !== undefined) {
+                  isPR = bestByCalories.get(log.calories)?.id === log.id;
+                }
               } else {
                 isPR = log.id === bestLog?.id;
               }

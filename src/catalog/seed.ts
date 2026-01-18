@@ -196,7 +196,7 @@ export const BUILTIN_CATALOG: Omit<CatalogItem, 'isFavorite' | 'createdAt'>[] = 
     name: 'Row',
     category: 'Monostructural',
     scoreType: 'Time',
-    description: 'Rowing for time — specify distance when logging',
+    description: 'Rowing for time — log by distance or calories',
     isBuiltin: true,
   },
   {
@@ -204,7 +204,7 @@ export const BUILTIN_CATALOG: Omit<CatalogItem, 'isFavorite' | 'createdAt'>[] = 
     name: 'Assault Bike (Cal)',
     category: 'Monostructural',
     scoreType: 'Time',
-    description: 'Assault Bike for time — specify calories when logging',
+    description: 'Assault Bike for time — log by distance or calories',
     isBuiltin: true,
   },
 

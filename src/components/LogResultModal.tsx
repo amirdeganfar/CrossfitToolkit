@@ -27,6 +27,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
   const [distance, setDistance] = useState<string>(''); // For Monostructural Time items (Run, Row)
   const [distanceUnit, setDistanceUnit] = useState<'m' | 'km' | 'mi'>('m');
   const [calories, setCalories] = useState<string>(''); // For Monostructural Time items (Bike)
+  const [metricType, setMetricType] = useState<'distance' | 'calories'>('distance'); // For dual-metric items
   const [variant, setVariant] = useState<Variant>(item.category === 'Benchmark' ? 'Rx' : null);
   const [date, setDate] = useState(new Date());
   const [notes, setNotes] = useState('');
@@ -35,12 +36,16 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
 
   // Determine which fields to show based on scoreType/category
   const showReps = item.scoreType === 'Load';
-  // Check if this is a calorie-based item (bike)
-  const isCalorieBasedItem = item.id === 'bike-cals' || item.name.toLowerCase().includes('bike');
-  // Show distance input for Monostructural items with Time scoreType (e.g., Run, Row) but not bike
-  const showDistance = item.category === 'Monostructural' && item.scoreType === 'Time' && !isCalorieBasedItem;
-  // Show calories input for bike items
-  const showCalories = item.category === 'Monostructural' && item.scoreType === 'Time' && isCalorieBasedItem;
+  // Check if this is a dual-metric item (Row, Bike) - supports both distance and calories
+  const isDualMetricItem = item.category === 'Monostructural' && item.scoreType === 'Time' && 
+    (item.id === 'row' || item.id === 'bike-cals' || item.name.toLowerCase().includes('row') || item.name.toLowerCase().includes('bike'));
+  // Check if this is a distance-only item (Run) - only supports distance
+  const isDistanceOnlyItem = item.category === 'Monostructural' && item.scoreType === 'Time' && 
+    !isDualMetricItem && (item.id === 'run' || item.name.toLowerCase().includes('run'));
+  // Show distance input based on metric type selection or if distance-only
+  const showDistance = isDistanceOnlyItem || (isDualMetricItem && metricType === 'distance');
+  // Show calories input based on metric type selection
+  const showCalories = isDualMetricItem && metricType === 'calories';
   const showVariant = item.category === 'Benchmark'; // Rx/Scaled only for WODs
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -200,6 +205,39 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
               <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                 Use 1 for 1RM (one-rep max)
               </p>
+            </div>
+          )}
+
+          {/* Metric type toggle for dual-metric items (Row, Bike) */}
+          {isDualMetricItem && (
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-2">
+                Measure by
+              </label>
+              <div className="flex rounded-lg border border-[var(--color-border)] overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setMetricType('distance')}
+                  className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
+                    metricType === 'distance'
+                      ? 'bg-[var(--color-primary)] text-white'
+                      : 'bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-elevated)]'
+                  }`}
+                >
+                  Distance
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMetricType('calories')}
+                  className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
+                    metricType === 'calories'
+                      ? 'bg-[var(--color-primary)] text-white'
+                      : 'bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-elevated)]'
+                  }`}
+                >
+                  Calories
+                </button>
+              </div>
             </div>
           )}
 
