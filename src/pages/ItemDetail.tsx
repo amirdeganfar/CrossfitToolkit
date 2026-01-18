@@ -200,8 +200,8 @@ export const ItemDetail = () => {
   // Sort distances for display (ascending)
   const sortedDistances = Array.from(bestByDistance.keys()).sort((a, b) => a - b);
   
-  // Sort calories for display (ascending)
-  const sortedCalories = Array.from(bestByCalories.keys()).sort((a, b) => a - b);
+  // Sort times for calorie-based PRs (ascending by time in seconds)
+  const sortedCalorieTimes = Array.from(bestByCalories.keys()).sort((a, b) => a - b);
 
   if (!isInitialized || isInitializing) {
     return (
@@ -279,7 +279,7 @@ export const ItemDetail = () => {
           <div className="flex items-center justify-center h-16">
             <Loader2 className="w-5 h-5 text-[var(--color-text-muted)] animate-spin" />
           </div>
-        ) : isDualMetricItem && (sortedDistances.length > 0 || sortedCalories.length > 0) ? (
+        ) : isDualMetricItem && (sortedDistances.length > 0 || sortedCalorieTimes.length > 0) ? (
           // Show best PRs for both distance and calories for dual-metric items (Row, Bike)
           <div className="space-y-4">
             {/* Distance-based PRs */}
@@ -307,21 +307,25 @@ export const ItemDetail = () => {
                 })}
               </div>
             )}
-            {/* Calorie-based PRs */}
-            {sortedCalories.length > 0 && (
+            {/* Calorie-based PRs - grouped by time, showing max calories */}
+            {sortedCalorieTimes.length > 0 && (
               <div className="space-y-2">
-                <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide">By Calories</p>
-                {sortedCalories.map((calories) => {
-                  const pr = bestByCalories.get(calories);
+                <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide">By Time</p>
+                {sortedCalorieTimes.map((timeSeconds) => {
+                  const pr = bestByCalories.get(timeSeconds);
                   if (!pr) return null;
+                  // Format time from seconds to MM:SS
+                  const mins = Math.floor(timeSeconds / 60);
+                  const secs = timeSeconds % 60;
+                  const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
                   return (
-                    <div key={calories} className="flex items-baseline justify-between">
+                    <div key={timeSeconds} className="flex items-baseline justify-between">
                       <span className="text-sm font-medium text-[var(--color-text-muted)]">
-                        {calories} cal
+                        {timeStr}
                       </span>
                       <div className="text-right">
                         <span className="text-xl font-bold text-[var(--color-primary)]">
-                          {pr.result.includes(' in ') ? pr.result.split(' in ')[1] : pr.result}
+                          {pr.calories} cal
                         </span>
                         <p className="text-xs text-[var(--color-text-muted)]">
                           {formatDate(pr.date)}
@@ -404,7 +408,8 @@ export const ItemDetail = () => {
                 if (log.distance !== undefined) {
                   isPR = bestByDistance.get(log.distance)?.id === log.id;
                 } else if (log.calories !== undefined) {
-                  isPR = bestByCalories.get(log.calories)?.id === log.id;
+                  // For calories: bestByCalories is keyed by TIME (resultValue), not calories
+                  isPR = bestByCalories.get(log.resultValue)?.id === log.id;
                 }
               } else {
                 isPR = log.id === bestLog?.id;

@@ -231,26 +231,27 @@ export const getBestPRsByDistance = async (
 };
 
 /**
- * Get best PRs grouped by calories (for Monostructural Time items like Assault Bike)
- * Returns a map of calories to best PR at that calorie target
+ * Get best PRs grouped by time (for Monostructural Time items like Assault Bike)
+ * Returns a map of time (resultValue in seconds) to best PR at that time (highest calories)
  */
 export const getBestPRsByCalories = async (
   catalogItemId: string
 ): Promise<Map<number, PRLog>> => {
   const logs = await getPRLogsForItem(catalogItemId);
-  const bestByCalories = new Map<number, PRLog>();
+  const bestByTime = new Map<number, PRLog>();
 
   for (const log of logs) {
     if (log.calories === undefined) continue;
 
-    const existingBest = bestByCalories.get(log.calories);
-    if (!existingBest || log.resultValue < existingBest.resultValue) {
-      // For Time scoreType, lower is better
-      bestByCalories.set(log.calories, log);
+    // Group by time (resultValue), find MAX calories for each time
+    const existingBest = bestByTime.get(log.resultValue);
+    if (!existingBest || log.calories > existingBest.calories) {
+      // For calories, higher is better (max calories in given time)
+      bestByTime.set(log.resultValue, log);
     }
   }
 
-  return bestByCalories;
+  return bestByTime;
 };
 
 /**
