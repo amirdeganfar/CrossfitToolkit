@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ChevronRight, Star, Clock, Plus, Loader2 } from 'lucide-react';
+import { Search, ChevronRight, ChevronDown, Star, Clock, Plus, Loader2 } from 'lucide-react';
 import { useCatalogStore } from '../stores/catalogStore';
 import { useInitialize } from '../hooks/useInitialize';
 import type { CatalogItem } from '../types/catalog';
@@ -15,6 +15,32 @@ interface RecentLogWithItem {
   date: string;
 }
 
+interface LogGroup {
+  itemId: string;
+  itemName: string;
+  logs: RecentLogWithItem[];
+}
+
+// Group logs by itemId
+const groupLogsByItem = (logs: RecentLogWithItem[]): LogGroup[] => {
+  const groupMap = new Map<string, LogGroup>();
+  
+  logs.forEach(log => {
+    const existing = groupMap.get(log.itemId);
+    if (existing) {
+      existing.logs.push(log);
+    } else {
+      groupMap.set(log.itemId, {
+        itemId: log.itemId,
+        itemName: log.itemName,
+        logs: [log],
+      });
+    }
+  });
+  
+  return Array.from(groupMap.values());
+};
+
 export const Home = () => {
   const navigate = useNavigate();
   const { isInitialized, isLoading } = useInitialize();
@@ -28,6 +54,23 @@ export const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAutocomplete, setShowAutocomplete] = useState(false);
   const [recentLogsWithItems, setRecentLogsWithItems] = useState<RecentLogWithItem[]>([]);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  // Group recent logs by item
+  const groupedLogs = useMemo(() => groupLogsByItem(recentLogsWithItems), [recentLogsWithItems]);
+
+  // Toggle accordion group expansion
+  const toggleGroup = (itemId: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(itemId)) {
+        next.delete(itemId);
+      } else {
+        next.add(itemId);
+      }
+      return next;
+    });
+  };
 
   // Filter items for autocomplete
   const filteredItems = useMemo(() => {
@@ -201,35 +244,74 @@ export const Home = () => {
             Recent Logs
           </h2>
         </div>
-        {recentLogsWithItems.length > 0 ? (
+        {groupedLogs.length > 0 ? (
           <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden">
-            {recentLogsWithItems.map((log, index) => (
-              <button
-                key={log.id}
-                onClick={() => handleItemClick(log.itemId)}
-                className={`w-full flex items-center justify-between px-4 py-3 hover:bg-[var(--color-surface-elevated)] transition-colors text-left ${
-                  index !== recentLogsWithItems.length - 1 ? 'border-b border-[var(--color-border)]' : ''
-                }`}
-                aria-label={`View ${log.itemName} log`}
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-[var(--color-text)] truncate">
-                      {log.itemName}
-                    </span>
-                    <span className="text-[var(--color-text-muted)]">—</span>
-                    <span className="text-[var(--color-primary)] font-semibold">{log.result}</span>
-                    {log.variant && (
-                      <span className="px-2 py-0.5 text-xs rounded-full bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]">
-                        {log.variant}
+            {groupedLogs.map((group, groupIndex) => {
+              const isExpanded = expandedGroups.has(group.itemId);
+              const latestLog = group.logs[0];
+              
+              return (
+                <div key={group.itemId} className={groupIndex !== groupedLogs.length - 1 ? 'border-b border-[var(--color-border)]' : ''}>
+                  {/* Accordion Header */}
+                  <button
+                    onClick={() => toggleGroup(group.itemId)}
+                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-[var(--color-surface-elevated)] transition-colors"
+                    aria-label={`Toggle ${group.itemName} logs`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <ChevronDown 
+                        className={`w-4 h-4 text-[var(--color-text-muted)] transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
+                      />
+                      <span className="font-semibold text-[var(--color-text)]">
+                        {group.itemName}
                       </span>
-                    )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-[var(--color-primary)]">
+                        {latestLog.result}
+                      </span>
+                      {latestLog.variant && (
+                        <span className="px-1.5 py-0.5 text-xs rounded-full bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]">
+                          {latestLog.variant}
+                        </span>
+                      )}
+                      <span className="px-1.5 py-0.5 text-xs rounded bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]">
+                        {group.logs.length}
+                      </span>
+                    </div>
+                  </button>
+
+                  {/* Accordion Content */}
+                  <div className={`accordion-content ${isExpanded ? 'expanded' : ''}`}>
+                    <div>
+                      {group.logs.map((log, logIndex) => (
+                        <button
+                          key={log.id}
+                          onClick={() => handleItemClick(log.itemId)}
+                          className={`w-full flex items-center justify-between px-4 py-2 pl-11 hover:bg-[var(--color-surface-elevated)] transition-colors text-left bg-[var(--color-bg)] ${
+                            logIndex !== group.logs.length - 1 ? 'border-b border-[var(--color-border)]/50' : ''
+                          }`}
+                          aria-label={`View ${log.itemName} log`}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-[var(--color-text)]">{log.result}</span>
+                              {log.variant && (
+                                <span className="px-1.5 py-0.5 text-xs rounded-full bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]">
+                                  {log.variant}
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-xs text-[var(--color-text-muted)]">{log.date}</span>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)] flex-shrink-0 ml-2" />
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <span className="text-xs text-[var(--color-text-muted)]">{log.date}</span>
                 </div>
-                <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)] flex-shrink-0 ml-2" />
-              </button>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-6 text-center">
