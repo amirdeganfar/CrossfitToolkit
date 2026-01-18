@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Star, Plus, Trash2, Loader2, TrendingUp, TrendingDown, ChevronDown } from 'lucide-react';
 import { useCatalogStore, useCatalogItem } from '../stores/catalogStore';
 import { useInitialize } from '../hooks/useInitialize';
 import { LogResultModal } from '../components/LogResultModal';
 import { PercentageCalculator } from '../components/PercentageCalculator';
+import { isDualMetricItem, isDistanceOnlyItem } from '../utils/itemMetrics';
 import * as db from '../db';
-import type { PRLog } from '../types/catalog';
+import type { PRLog, CatalogItem } from '../types/catalog';
 
 // Group structure for accordion display
 interface LogGroup {
@@ -220,86 +221,22 @@ export const ItemDetail = () => {
   const [showModal, setShowModal] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
-  // Check if this is a dual-metric item (Row, Bike) - supports both distance and calories
-  const isDualMetricItem = item?.category === 'Monostructural' && item?.scoreType === 'Time' && 
-    (item?.id === 'row' || item?.id === 'bike-cals' || item?.name.toLowerCase().includes('row') || item?.name.toLowerCase().includes('bike'));
-  // Check if this is a distance-only item (Run) - only supports distance
-  const isDistanceOnlyItem = item?.category === 'Monostructural' && item?.scoreType === 'Time' && 
-    !isDualMetricItem && (item?.id === 'run' || item?.name.toLowerCase().includes('run'));
+  // Use utility functions for metric type detection
+  const isDual = isDualMetricItem(item);
+  const isDistanceOnly = isDistanceOnlyItem(item);
 
-  // Fetch logs for this item
-  useEffect(() => {
-    const fetchLogs = async () => {
-      if (!id || !isInitialized) return;
-      
-      setIsLoading(true);
-      try {
-        const itemLogs = await db.getPRLogsForItem(id);
-        setLogs(itemLogs);
-        
-        // For dual-metric items (Row, Bike), get best PRs for BOTH distance and calories
-        if (isDualMetricItem) {
-          const bestsByDist = await db.getBestPRsByDistance(id);
-          const bestsByCal = await db.getBestPRsByCalories(id);
-          setBestByDistance(bestsByDist);
-          setBestByCalories(bestsByCal);
-          // Set overall best from whichever has data
-          const allBests = [
-            ...Array.from(bestsByDist.values()),
-            ...Array.from(bestsByCal.values()),
-          ];
-          if (allBests.length > 0) {
-            const overallBest = allBests.reduce((best, curr) => 
-              curr.resultValue < best.resultValue ? curr : best
-            );
-            setBestLog(overallBest);
-          } else {
-            setBestLog(null);
-          }
-        } else if (isDistanceOnlyItem) {
-          // For distance-only items (Run), get best PRs grouped by distance
-          const bestsByDist = await db.getBestPRsByDistance(id);
-          setBestByDistance(bestsByDist);
-          if (bestsByDist.size > 0) {
-            const allBests = Array.from(bestsByDist.values());
-            const overallBest = allBests.reduce((best, curr) => 
-              curr.resultValue < best.resultValue ? curr : best
-            );
-            setBestLog(overallBest);
-          } else {
-            setBestLog(null);
-          }
-        } else {
-          const best = await db.getBestPR(id);
-          setBestLog(best ?? null);
-        }
-      } catch (error) {
-        console.error('[ItemDetail] Error fetching logs:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchLogs();
-  }, [id, isInitialized, isDualMetricItem, isDistanceOnlyItem]);
-
-  const handleBack = () => {
-    navigate(-1);
-  };
-
-  const handleFavoriteClick = async () => {
-    if (id) {
-      await toggleFavorite(id);
-    }
-  };
-
-  const refreshLogs = async () => {
-    const itemLogs = await db.getPRLogsForItem(id!);
+  // Shared function to fetch logs and best PRs for an item
+  const fetchLogsAndBests = useCallback(async (
+    itemId: string,
+    currentItem: CatalogItem | null
+  ) => {
+    const itemLogs = await db.getPRLogsForItem(itemId);
     setLogs(itemLogs);
     
-    if (isDualMetricItem) {
-      const bestsByDist = await db.getBestPRsByDistance(id!);
-      const bestsByCal = await db.getBestPRsByCalories(id!);
+    if (isDualMetricItem(currentItem)) {
+      // For dual-metric items, get best PRs for BOTH distance and calories
+      const bestsByDist = await db.getBestPRsByDistance(itemId);
+      const bestsByCal = await db.getBestPRsByCalories(itemId);
       setBestByDistance(bestsByDist);
       setBestByCalories(bestsByCal);
       const allBests = [
@@ -314,9 +251,11 @@ export const ItemDetail = () => {
       } else {
         setBestLog(null);
       }
-    } else if (isDistanceOnlyItem) {
-      const bestsByDist = await db.getBestPRsByDistance(id!);
+    } else if (isDistanceOnlyItem(currentItem)) {
+      // For distance-only items, get best PRs grouped by distance
+      const bestsByDist = await db.getBestPRsByDistance(itemId);
       setBestByDistance(bestsByDist);
+      setBestByCalories(new Map());
       if (bestsByDist.size > 0) {
         const allBests = Array.from(bestsByDist.values());
         const overallBest = allBests.reduce((best, curr) => 
@@ -327,9 +266,44 @@ export const ItemDetail = () => {
         setBestLog(null);
       }
     } else {
-      const best = await db.getBestPR(id!);
+      setBestByDistance(new Map());
+      setBestByCalories(new Map());
+      const best = await db.getBestPR(itemId);
       setBestLog(best ?? null);
     }
+  }, []);
+
+  // Fetch logs for this item
+  useEffect(() => {
+    const fetchLogs = async () => {
+      if (!id || !isInitialized || !item) return;
+      
+      setIsLoading(true);
+      try {
+        await fetchLogsAndBests(id, item);
+      } catch (error) {
+        console.error('[ItemDetail] Error fetching logs:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchLogs();
+  }, [id, isInitialized, item, fetchLogsAndBests]);
+
+  const handleBack = () => {
+    navigate(-1);
+  };
+
+  const handleFavoriteClick = async () => {
+    if (id) {
+      await toggleFavorite(id);
+    }
+  };
+
+  const refreshLogs = async () => {
+    if (!id || !item) return;
+    await fetchLogsAndBests(id, item);
   };
 
   const handleDeleteLog = async (logId: string) => {
@@ -398,7 +372,7 @@ export const ItemDetail = () => {
 
   // Determine grouping type and create grouped logs for accordion display
   const getGroupedLogs = (): LogGroup[] => {
-    if (isDualMetricItem || isDistanceOnlyItem) {
+    if (isDual || isDistanceOnly) {
       // Monostructural items: group by distance or calories/time
       return groupLogs(logs, bestByDistance, bestByCalories, formatDistance);
     } else if (item?.category === 'Lift' && item?.scoreType === 'Load') {
@@ -505,7 +479,7 @@ export const ItemDetail = () => {
           <div className="flex items-center justify-center h-16">
             <Loader2 className="w-5 h-5 text-[var(--color-text-muted)] animate-spin" />
           </div>
-        ) : isDualMetricItem && (sortedDistances.length > 0 || sortedCalorieTimes.length > 0) ? (
+        ) : isDual && (sortedDistances.length > 0 || sortedCalorieTimes.length > 0) ? (
           // Show best PRs for both distance and calories for dual-metric items (Row, Bike)
           <div className="space-y-4">
             {/* Distance-based PRs */}
@@ -563,7 +537,7 @@ export const ItemDetail = () => {
               </div>
             )}
           </div>
-        ) : isDistanceOnlyItem && sortedDistances.length > 0 ? (
+        ) : isDistanceOnly && sortedDistances.length > 0 ? (
           // Show best PRs grouped by distance for distance-only items (Run)
           <div className="space-y-3">
             {sortedDistances.map((distanceMeters) => {

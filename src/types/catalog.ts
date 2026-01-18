@@ -25,6 +25,11 @@ export type ScoreType =
 export type Variant = 'Rx' | 'Scaled' | 'Rx+' | null;
 
 /**
+ * Metric type for Monostructural items (what input metrics are supported)
+ */
+export type MetricType = 'distance' | 'calories' | 'distance+calories';
+
+/**
  * A catalog item (benchmark, lift, or custom)
  */
 export interface CatalogItem {
@@ -36,6 +41,7 @@ export interface CatalogItem {
   isBuiltin: boolean;      // true for seed items, false for user-created
   isFavorite: boolean;     // user preference
   createdAt: number;       // timestamp
+  metrics?: MetricType;    // For Monostructural items: what input metrics are supported
 }
 
 /**

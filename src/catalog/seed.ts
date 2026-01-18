@@ -189,6 +189,7 @@ export const BUILTIN_CATALOG: Omit<CatalogItem, 'isFavorite' | 'createdAt'>[] = 
     category: 'Monostructural',
     scoreType: 'Time',
     description: 'Running for time — specify distance when logging',
+    metrics: 'distance',
     isBuiltin: true,
   },
   {
@@ -197,6 +198,7 @@ export const BUILTIN_CATALOG: Omit<CatalogItem, 'isFavorite' | 'createdAt'>[] = 
     category: 'Monostructural',
     scoreType: 'Time',
     description: 'Rowing for time — log by distance or calories',
+    metrics: 'distance+calories',
     isBuiltin: true,
   },
   {
@@ -205,6 +207,16 @@ export const BUILTIN_CATALOG: Omit<CatalogItem, 'isFavorite' | 'createdAt'>[] = 
     category: 'Monostructural',
     scoreType: 'Time',
     description: 'Assault Bike for time — log by distance or calories',
+    metrics: 'distance+calories',
+    isBuiltin: true,
+  },
+  {
+    id: 'ski-erg',
+    name: 'Ski Erg',
+    category: 'Monostructural',
+    scoreType: 'Time',
+    description: 'Ski Erg for time — log by distance or calories',
+    metrics: 'distance+calories',
     isBuiltin: true,
   },
 

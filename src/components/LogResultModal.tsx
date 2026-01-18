@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import type { CatalogItem, Variant } from '../types/catalog';
 import { useCatalogStore } from '../stores/catalogStore';
 import { parseResultToValue, validateResult, getResultPlaceholder, getResultLabel, formatCompoundResult } from '../utils/resultParser';
+import { isDualMetricItem, isDistanceOnlyItem } from '../utils/itemMetrics';
 import { DatePicker } from './DatePicker';
 import { TimeInput } from './TimeInput';
 
@@ -36,16 +37,13 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
 
   // Determine which fields to show based on scoreType/category
   const showReps = item.scoreType === 'Load';
-  // Check if this is a dual-metric item (Row, Bike) - supports both distance and calories
-  const isDualMetricItem = item.category === 'Monostructural' && item.scoreType === 'Time' && 
-    (item.id === 'row' || item.id === 'bike-cals' || item.name.toLowerCase().includes('row') || item.name.toLowerCase().includes('bike'));
-  // Check if this is a distance-only item (Run) - only supports distance
-  const isDistanceOnlyItem = item.category === 'Monostructural' && item.scoreType === 'Time' && 
-    !isDualMetricItem && (item.id === 'run' || item.name.toLowerCase().includes('run'));
+  // Use utility functions for metric type detection
+  const isDual = isDualMetricItem(item);
+  const isDistanceOnly = isDistanceOnlyItem(item);
   // Show distance input based on metric type selection or if distance-only
-  const showDistance = isDistanceOnlyItem || (isDualMetricItem && metricType === 'distance');
+  const showDistance = isDistanceOnly || (isDual && metricType === 'distance');
   // Show calories input based on metric type selection
-  const showCalories = isDualMetricItem && metricType === 'calories';
+  const showCalories = isDual && metricType === 'calories';
   const showVariant = item.category === 'Benchmark'; // Rx/Scaled only for WODs
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -208,8 +206,8 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
             </div>
           )}
 
-          {/* Metric type toggle for dual-metric items (Row, Bike) */}
-          {isDualMetricItem && (
+          {/* Metric type toggle for dual-metric items */}
+          {isDual && (
             <div>
               <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-2">
                 Measure by
