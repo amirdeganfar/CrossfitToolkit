@@ -188,6 +188,29 @@ export const getBestPR = async (
 };
 
 /**
+ * Get best PRs grouped by distance (for Monostructural Time items like Run, Row)
+ * Returns a map of distance (in meters) to best PR at that distance
+ */
+export const getBestPRsByDistance = async (
+  catalogItemId: string
+): Promise<Map<number, PRLog>> => {
+  const logs = await getPRLogsForItem(catalogItemId);
+  const bestByDistance = new Map<number, PRLog>();
+
+  for (const log of logs) {
+    if (log.distance === undefined) continue;
+
+    const existingBest = bestByDistance.get(log.distance);
+    if (!existingBest || log.resultValue < existingBest.resultValue) {
+      // For Time scoreType, lower is better
+      bestByDistance.set(log.distance, log);
+    }
+  }
+
+  return bestByDistance;
+};
+
+/**
  * Add a new PR log
  */
 export const addPRLog = async (

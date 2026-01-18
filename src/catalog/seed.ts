@@ -184,35 +184,19 @@ export const BUILTIN_CATALOG: Omit<CatalogItem, 'isFavorite' | 'createdAt'>[] = 
   // MONOSTRUCTURAL (Cardio / Endurance)
   // ═══════════════════════════════════════════════════════════════════════════
   {
-    id: 'row-500m',
-    name: 'Row 500m',
+    id: 'run',
+    name: 'Run',
     category: 'Monostructural',
     scoreType: 'Time',
-    description: '500 meter row for time',
+    description: 'Running for time — specify distance when logging',
     isBuiltin: true,
   },
   {
-    id: 'row-2k',
-    name: 'Row 2k',
+    id: 'row',
+    name: 'Row',
     category: 'Monostructural',
     scoreType: 'Time',
-    description: '2000 meter row for time',
-    isBuiltin: true,
-  },
-  {
-    id: 'run-400m',
-    name: 'Run 400m',
-    category: 'Monostructural',
-    scoreType: 'Time',
-    description: '400 meter sprint',
-    isBuiltin: true,
-  },
-  {
-    id: 'run-1mile',
-    name: 'Run 1 Mile',
-    category: 'Monostructural',
-    scoreType: 'Time',
-    description: '1 mile run for time',
+    description: 'Rowing for time — specify distance when logging',
     isBuiltin: true,
   },
   {

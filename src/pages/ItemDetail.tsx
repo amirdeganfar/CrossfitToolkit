@@ -22,8 +22,12 @@ export const ItemDetail = () => {
   // Local state
   const [logs, setLogs] = useState<PRLog[]>([]);
   const [bestLog, setBestLog] = useState<PRLog | null>(null);
+  const [bestByDistance, setBestByDistance] = useState<Map<number, PRLog>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+
+  // Check if this is a Monostructural Time item (Run, Row)
+  const isDistanceBasedItem = item?.category === 'Monostructural' && item?.scoreType === 'Time';
 
   // Fetch logs for this item
   useEffect(() => {
@@ -35,8 +39,24 @@ export const ItemDetail = () => {
         const itemLogs = await db.getPRLogsForItem(id);
         setLogs(itemLogs);
         
-        const best = await db.getBestPR(id);
-        setBestLog(best ?? null);
+        // For distance-based items, get best PRs grouped by distance
+        if (isDistanceBasedItem) {
+          const bestsByDist = await db.getBestPRsByDistance(id);
+          setBestByDistance(bestsByDist);
+          // Set the overall best (lowest time across all distances) for general display
+          if (bestsByDist.size > 0) {
+            const allBests = Array.from(bestsByDist.values());
+            const overallBest = allBests.reduce((best, curr) => 
+              curr.resultValue < best.resultValue ? curr : best
+            );
+            setBestLog(overallBest);
+          } else {
+            setBestLog(null);
+          }
+        } else {
+          const best = await db.getBestPR(id);
+          setBestLog(best ?? null);
+        }
       } catch (error) {
         console.error('[ItemDetail] Error fetching logs:', error);
       } finally {
@@ -45,7 +65,7 @@ export const ItemDetail = () => {
     };
 
     fetchLogs();
-  }, [id, isInitialized]);
+  }, [id, isInitialized, isDistanceBasedItem]);
 
   const handleBack = () => {
     navigate(-1);
@@ -57,23 +77,37 @@ export const ItemDetail = () => {
     }
   };
 
-  const handleDeleteLog = async (logId: string) => {
-    if (window.confirm('Delete this log?')) {
-      await deletePRLog(logId);
-      // Refresh logs
-      const itemLogs = await db.getPRLogsForItem(id!);
-      setLogs(itemLogs);
+  const refreshLogs = async () => {
+    const itemLogs = await db.getPRLogsForItem(id!);
+    setLogs(itemLogs);
+    
+    if (isDistanceBasedItem) {
+      const bestsByDist = await db.getBestPRsByDistance(id!);
+      setBestByDistance(bestsByDist);
+      if (bestsByDist.size > 0) {
+        const allBests = Array.from(bestsByDist.values());
+        const overallBest = allBests.reduce((best, curr) => 
+          curr.resultValue < best.resultValue ? curr : best
+        );
+        setBestLog(overallBest);
+      } else {
+        setBestLog(null);
+      }
+    } else {
       const best = await db.getBestPR(id!);
       setBestLog(best ?? null);
     }
   };
 
+  const handleDeleteLog = async (logId: string) => {
+    if (window.confirm('Delete this log?')) {
+      await deletePRLog(logId);
+      await refreshLogs();
+    }
+  };
+
   const handleModalSuccess = async () => {
-    // Refresh logs after adding new one
-    const itemLogs = await db.getPRLogsForItem(id!);
-    setLogs(itemLogs);
-    const best = await db.getBestPR(id!);
-    setBestLog(best ?? null);
+    await refreshLogs();
   };
 
   const formatDate = (timestamp: number): string => {
@@ -108,6 +142,23 @@ export const ItemDetail = () => {
   };
 
   const isLowerBetter = item?.scoreType === 'Time';
+
+  // Format distance in meters to human-readable format
+  const formatDistance = (meters: number): string => {
+    if (meters >= 1609.34) {
+      // Convert to miles for distances >= 1 mile
+      const miles = meters / 1609.34;
+      return miles === 1 ? '1 mile' : `${miles.toFixed(1)} mi`;
+    } else if (meters >= 1000) {
+      // Convert to km for distances >= 1km
+      const km = meters / 1000;
+      return `${km % 1 === 0 ? km.toFixed(0) : km.toFixed(1)}km`;
+    }
+    return `${meters}m`;
+  };
+
+  // Sort distances for display (ascending)
+  const sortedDistances = Array.from(bestByDistance.keys()).sort((a, b) => a - b);
 
   if (!isInitialized || isInitializing) {
     return (
@@ -185,6 +236,29 @@ export const ItemDetail = () => {
           <div className="flex items-center justify-center h-16">
             <Loader2 className="w-5 h-5 text-[var(--color-text-muted)] animate-spin" />
           </div>
+        ) : isDistanceBasedItem && sortedDistances.length > 0 ? (
+          // Show best PRs grouped by distance for Monostructural Time items
+          <div className="space-y-3">
+            {sortedDistances.map((distanceMeters) => {
+              const pr = bestByDistance.get(distanceMeters);
+              if (!pr) return null;
+              return (
+                <div key={distanceMeters} className="flex items-baseline justify-between">
+                  <span className="text-sm font-medium text-[var(--color-text-muted)]">
+                    {formatDistance(distanceMeters)}
+                  </span>
+                  <div className="text-right">
+                    <span className="text-xl font-bold text-[var(--color-primary)]">
+                      {pr.result.includes(' in ') ? pr.result.split(' in ')[1] : pr.result}
+                    </span>
+                    <p className="text-xs text-[var(--color-text-muted)]">
+                      {formatDate(pr.date)}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         ) : bestLog ? (
           <div>
             <div className="flex items-baseline gap-2">
@@ -225,45 +299,52 @@ export const ItemDetail = () => {
           </div>
         ) : logs.length > 0 ? (
           <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden">
-            {logs.map((log, index) => (
-              <div
-                key={log.id}
-                className={`flex items-center justify-between px-4 py-3 group ${
-                  index !== logs.length - 1 ? 'border-b border-[var(--color-border)]' : ''
-                }`}
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className={`font-semibold ${
-                      log.id === bestLog?.id ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'
-                    }`}>
-                      {getResultWithUnit(log.result)}
-                    </span>
-                    {log.variant && (
-                      <span className="px-2 py-0.5 text-xs rounded-full bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]">
-                        {log.variant}
-                      </span>
-                    )}
-                    {log.id === bestLog?.id && (
-                      <span className="px-2 py-0.5 text-xs rounded-full bg-[var(--color-primary)]/20 text-[var(--color-primary)]">
-                        PR
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-[var(--color-text-muted)]">
-                    {formatDate(log.date)}
-                    {log.notes && ` — ${log.notes}`}
-                  </p>
-                </div>
-                <button
-                  onClick={() => handleDeleteLog(log.id)}
-                  className="p-2 -m-2 rounded-lg text-[var(--color-border)] hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
-                  aria-label="Delete log"
+            {logs.map((log, index) => {
+              // Check if this log is a PR (either overall or for its specific distance)
+              const isPR = isDistanceBasedItem && log.distance !== undefined
+                ? bestByDistance.get(log.distance)?.id === log.id
+                : log.id === bestLog?.id;
+              
+              return (
+                <div
+                  key={log.id}
+                  className={`flex items-center justify-between px-4 py-3 group ${
+                    index !== logs.length - 1 ? 'border-b border-[var(--color-border)]' : ''
+                  }`}
                 >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className={`font-semibold ${
+                        isPR ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'
+                      }`}>
+                        {getResultWithUnit(log.result)}
+                      </span>
+                      {log.variant && (
+                        <span className="px-2 py-0.5 text-xs rounded-full bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]">
+                          {log.variant}
+                        </span>
+                      )}
+                      {isPR && (
+                        <span className="px-2 py-0.5 text-xs rounded-full bg-[var(--color-primary)]/20 text-[var(--color-primary)]">
+                          PR
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-[var(--color-text-muted)]">
+                      {formatDate(log.date)}
+                      {log.notes && ` — ${log.notes}`}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleDeleteLog(log.id)}
+                    className="p-2 -m-2 rounded-lg text-[var(--color-border)] hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
+                    aria-label="Delete log"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              );
+            })}
           </div>
         ) : (
           <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-6 text-center">

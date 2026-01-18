@@ -23,7 +23,8 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
 
   const [result, setResult] = useState('');
   const [reps, setReps] = useState<string>('1'); // For Load scoreType
-  const [distance, setDistance] = useState<string>(''); // For Distance scoreType
+  const [distance, setDistance] = useState<string>(''); // For Monostructural Time items
+  const [distanceUnit, setDistanceUnit] = useState<'m' | 'km' | 'mi'>('m');
   const [variant, setVariant] = useState<Variant>(item.category === 'Benchmark' ? 'Rx' : null);
   const [date, setDate] = useState(new Date());
   const [notes, setNotes] = useState('');
@@ -32,7 +33,8 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
 
   // Determine which fields to show based on scoreType/category
   const showReps = item.scoreType === 'Load';
-  const showDistance = item.scoreType === 'Distance';
+  // Show distance input for Monostructural items with Time scoreType (e.g., Run, Row)
+  const showDistance = item.category === 'Monostructural' && item.scoreType === 'Time';
   const showVariant = item.category === 'Benchmark'; // Rx/Scaled only for WODs
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -51,7 +53,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
       return;
     }
 
-    // Validate distance for Distance type
+    // Validate distance for Monostructural Time items
     if (showDistance && (!distance || parseFloat(distance) <= 0)) {
       setError('Please enter a valid distance');
       return;
@@ -62,15 +64,38 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
     try {
       const resultValue = parseResultToValue(result, item.scoreType);
       const repsValue = showReps ? parseInt(reps) : undefined;
-      const distanceValue = showDistance ? parseFloat(distance) : undefined;
+      
+      // Convert distance to meters for storage
+      let distanceInMeters: number | undefined;
+      if (showDistance) {
+        const rawDistance = parseFloat(distance);
+        switch (distanceUnit) {
+          case 'km':
+            distanceInMeters = rawDistance * 1000;
+            break;
+          case 'mi':
+            distanceInMeters = rawDistance * 1609.34;
+            break;
+          default:
+            distanceInMeters = rawDistance;
+        }
+      }
 
-      // Build display result string
-      const displayResult = formatCompoundResult(result, item.scoreType, {
-        reps: repsValue,
-        distance: distanceValue,
-        weightUnit: settings.weightUnit,
-        distanceUnit: settings.distanceUnit,
-      });
+      // Build display result string with distance prefix for Monostructural Time items
+      let displayResult: string;
+      if (showDistance && distanceInMeters) {
+        // Format: "400m in 1:20" or "1.5km in 6:30"
+        const distanceDisplay = distanceUnit === 'm' 
+          ? `${distance}m`
+          : `${distance}${distanceUnit}`;
+        displayResult = `${distanceDisplay} in ${result}`;
+      } else {
+        displayResult = formatCompoundResult(result, item.scoreType, {
+          reps: repsValue,
+          weightUnit: settings.weightUnit,
+          distanceUnit: settings.distanceUnit,
+        });
+      }
       
       await addPRLog({
         catalogItemId: item.id,
@@ -80,7 +105,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
         date: date.getTime(),
         notes: notes.trim() || undefined,
         reps: repsValue,
-        distance: distanceValue,
+        distance: distanceInMeters,
       });
 
       onSuccess();
@@ -159,21 +184,39 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
             </div>
           )}
 
-          {/* Distance input for Distance type */}
+          {/* Distance input for Monostructural Time items */}
           {showDistance && (
             <div>
               <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-1">
-                Distance ({settings.distanceUnit})
+                Distance
               </label>
-              <input
-                type="number"
-                min="0"
-                step="any"
-                value={distance}
-                onChange={(e) => setDistance(e.target.value)}
-                placeholder="e.g., 200"
-                className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={distance}
+                  onChange={(e) => setDistance(e.target.value)}
+                  placeholder="e.g., 400"
+                  className="flex-1 px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+                />
+                <div className="flex rounded-lg border border-[var(--color-border)] overflow-hidden">
+                  {(['m', 'km', 'mi'] as const).map((unit) => (
+                    <button
+                      key={unit}
+                      type="button"
+                      onClick={() => setDistanceUnit(unit)}
+                      className={`px-3 py-2 text-sm font-medium transition-colors ${
+                        distanceUnit === unit
+                          ? 'bg-[var(--color-primary)] text-white'
+                          : 'bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-elevated)]'
+                      }`}
+                    >
+                      {unit}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
