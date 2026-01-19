@@ -27,6 +27,7 @@ const FILES = [
   'benchmarks_heroes.json',
   'benchmarks_notable.json',
   'benchmarks_open.json',
+  'benchmarks_games.json',
   'lifts.json',
   'monostructural.json',
   'skills.json',

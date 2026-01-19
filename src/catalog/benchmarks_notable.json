@@ -5,7 +5,7 @@
     "category": "Benchmark",
     "subCategory": "Notable",
     "scoreType": "Reps",
-    "description": "3 rounds: 1:00 Wall Balls (20/14), 1:00 Sumo Deadlift High Pull (75/55), 1:00 Box Jumps (20\"), 1:00 Push Press (75/55), 1:00 Row (cal); rest 1:00 between rounds",
+    "description": "3 rounds: 1 min Wall Balls (20/14 lb), 1 min Sumo Deadlift High Pull (75/55 lb), 1 min Box Jumps (20\"), 1 min Push Press (75/55 lb), 1 min Row (cal); rest 1 min between rounds",
     "tags": ["benchmark", "notable", "intervals"],
     "aliases": ["FGB"],
     "source": "curated"
@@ -16,8 +16,8 @@
     "category": "Benchmark",
     "subCategory": "Notable",
     "scoreType": "Time",
-    "description": "For time: 50 Box Jumps, 50 Jumping Pull-ups, 50 KB Swings, 50 Walking Lunges, 50 Knees-to-Elbows, 50 Push Press, 50 Back Extensions, 50 Wall Balls, 50 Burpees, 50 Double-unders",
-    "tags": ["benchmark", "notable", "chip"],
+    "description": "For time: 50 Box Jumps (24/20\"), 50 Jumping Pull-ups, 50 KB Swings (35/26 lb), 50 Walking Lunges, 50 Knees-to-Elbows, 50 Push Press (45/35 lb), 50 Back Extensions, 50 Wall Balls (20/14 lb), 50 Burpees, 50 Double-unders",
+    "tags": ["benchmark", "notable", "chipper"],
     "source": "curated"
   },
   {
@@ -26,8 +26,8 @@
     "category": "Benchmark",
     "subCategory": "Notable",
     "scoreType": "Time",
-    "description": "3 rounds for time: 1 Deadlift (455/320), 2 Muscle-ups, 3 Squat Cleans (250/175), 4 Handstand Push-ups",
-    "tags": ["benchmark", "notable"],
+    "description": "3 RFT: 1 Deadlift (455/320 lb), 2 Muscle-ups, 3 Squat Cleans (250/175 lb), 4 Handstand Push-ups",
+    "tags": ["benchmark", "notable", "heavy"],
     "source": "curated"
   },
   {
@@ -36,9 +36,450 @@
     "category": "Benchmark",
     "subCategory": "Notable",
     "scoreType": "Rounds+Reps",
-    "description": "5 cycles: AMRAP 3: 3 Power Cleans (135/95), 6 Push-ups, 9 Air Squats; rest 1:00 between cycles",
+    "description": "5 cycles: AMRAP 3: 3 Power Cleans (135/95 lb), 6 Push-ups, 9 Air Squats; rest 1 min between cycles",
     "tags": ["benchmark", "notable", "intervals"],
+    "source": "curated"
+  },
+  {
+    "id": "nasty-girls",
+    "name": "Nasty Girls",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "3 RFT: 50 Air Squats, 7 Muscle-ups, 10 Hang Power Cleans (135/95 lb)",
+    "tags": ["benchmark", "notable"],
+    "source": "curated"
+  },
+  {
+    "id": "crossfit-total",
+    "name": "CrossFit Total",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Load",
+    "description": "Sum of 1RM: Back Squat + Shoulder Press + Deadlift",
+    "tags": ["benchmark", "notable", "strength"],
+    "source": "curated"
+  },
+  {
+    "id": "baseline",
+    "name": "Baseline",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "For time: 500m Row, 40 Air Squats, 30 Sit-ups, 20 Push-ups, 10 Pull-ups",
+    "tags": ["benchmark", "notable"],
+    "source": "curated"
+  },
+  {
+    "id": "death-by-pull-ups",
+    "name": "Death by Pull-ups",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Reps",
+    "description": "EMOM: 1 Pull-up first minute, 2 second minute, 3 third... continue until failure",
+    "tags": ["benchmark", "notable", "emom"],
+    "source": "curated"
+  },
+  {
+    "id": "death-by-burpees",
+    "name": "Death by Burpees",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Reps",
+    "description": "EMOM: 1 Burpee first minute, 2 second minute, 3 third... continue until failure",
+    "tags": ["benchmark", "notable", "emom"],
+    "source": "curated"
+  },
+  {
+    "id": "death-by-thrusters",
+    "name": "Death by Thrusters",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Reps",
+    "description": "EMOM: 1 Thruster (95/65 lb) first minute, 2 second minute, 3 third... continue until failure",
+    "tags": ["benchmark", "notable", "emom"],
+    "source": "curated"
+  },
+  {
+    "id": "tabata-this",
+    "name": "Tabata This",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Reps",
+    "description": "Tabata intervals (8 rounds 20s on/10s off) of: Row (cal), Air Squats, Pull-ups, Push-ups, Sit-ups. 1 min rest between movements. Score is lowest round of each.",
+    "tags": ["benchmark", "notable", "tabata"],
+    "source": "curated"
+  },
+  {
+    "id": "tabata-something-else",
+    "name": "Tabata Something Else",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Reps",
+    "description": "Tabata (8 rounds) of: Pull-ups, Push-ups, Sit-ups, Air Squats. Score is total reps.",
+    "tags": ["benchmark", "notable", "tabata"],
+    "source": "curated"
+  },
+  {
+    "id": "seven-minutes-of-burpees",
+    "name": "7 Minutes of Burpees",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Reps",
+    "description": "AMRAP 7: Burpees",
+    "tags": ["benchmark", "notable"],
+    "aliases": ["Open 12.1"],
+    "source": "curated"
+  },
+  {
+    "id": "rowing-jackie",
+    "name": "Rowing Jackie",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "For time: 1000m Row, 50 Thrusters (45/35 lb), 30 Pull-ups",
+    "tags": ["benchmark", "notable"],
+    "source": "curated"
+  },
+  {
+    "id": "heavy-grace",
+    "name": "Heavy Grace",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "For time: 30 Clean & Jerks (185/125 lb)",
+    "tags": ["benchmark", "notable", "barbell"],
+    "source": "curated"
+  },
+  {
+    "id": "super-fran",
+    "name": "Super Fran",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "21-15-9: Thrusters (135/95 lb) & Muscle-ups",
+    "tags": ["benchmark", "notable"],
+    "source": "curated"
+  },
+  {
+    "id": "mini-murph",
+    "name": "Mini Murph",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "For time: 800m Run, 50 Pull-ups, 100 Push-ups, 150 Air Squats, 800m Run",
+    "tags": ["benchmark", "notable"],
+    "source": "curated"
+  },
+  {
+    "id": "half-murph",
+    "name": "Half Murph",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "For time: 800m Run, 50 Pull-ups, 100 Push-ups, 150 Air Squats, 800m Run",
+    "tags": ["benchmark", "notable"],
+    "source": "curated"
+  },
+  {
+    "id": "air-force-wod",
+    "name": "Air Force WOD",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Reps",
+    "description": "AMRAP 20: 20 Thrusters (95/65 lb), 20 Sumo Deadlift High Pulls (95/65 lb), 20 Push Jerks (95/65 lb), 20 Overhead Squats (95/65 lb), 20 Front Squats (95/65 lb); 4 Burpees EMOM",
+    "tags": ["benchmark", "notable"],
+    "source": "curated"
+  },
+  {
+    "id": "donkey-kong",
+    "name": "Donkey Kong",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "3 RFT: 21 Burpees, 21 KB Swings (53/35 lb), 21 Box Jumps (24/20\")",
+    "tags": ["benchmark", "notable"],
+    "source": "curated"
+  },
+  {
+    "id": "rowing-fran",
+    "name": "Rowing Fran",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "21-15-9: Thrusters (95/65 lb) & Calories on Rower",
+    "tags": ["benchmark", "notable"],
+    "source": "curated"
+  },
+  {
+    "id": "naughty-nancy",
+    "name": "Naughty Nancy",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "5 RFT: 400m Run, 15 Overhead Squats (135/95 lb)",
+    "tags": ["benchmark", "notable"],
+    "source": "curated"
+  },
+  {
+    "id": "running-fran",
+    "name": "Running Fran",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "21-15-9: Thrusters (95/65 lb), 200m Run after each set, Pull-ups",
+    "tags": ["benchmark", "notable"],
+    "source": "curated"
+  },
+  {
+    "id": "sprint-400",
+    "name": "Sprint 400",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "For time: 400m Sprint",
+    "tags": ["benchmark", "notable"],
+    "source": "curated"
+  },
+  {
+    "id": "sprint-800",
+    "name": "Sprint 800",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "For time: 800m Sprint",
+    "tags": ["benchmark", "notable"],
+    "source": "curated"
+  },
+  {
+    "id": "mile-run",
+    "name": "Mile Run",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "For time: 1 Mile Run",
+    "tags": ["benchmark", "notable"],
+    "source": "curated"
+  },
+  {
+    "id": "5k-run",
+    "name": "5K Run",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "For time: 5K Run",
+    "tags": ["benchmark", "notable", "endurance"],
+    "source": "curated"
+  },
+  {
+    "id": "10k-run",
+    "name": "10K Run",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "For time: 10K Run",
+    "tags": ["benchmark", "notable", "endurance"],
+    "source": "curated"
+  },
+  {
+    "id": "2k-row",
+    "name": "2K Row",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "For time: 2000m Row",
+    "tags": ["benchmark", "notable"],
+    "source": "curated"
+  },
+  {
+    "id": "5k-row",
+    "name": "5K Row",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "For time: 5000m Row",
+    "tags": ["benchmark", "notable", "endurance"],
+    "source": "curated"
+  },
+  {
+    "id": "10k-row",
+    "name": "10K Row",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "For time: 10,000m Row",
+    "tags": ["benchmark", "notable", "endurance"],
+    "source": "curated"
+  },
+  {
+    "id": "100-burpees",
+    "name": "100 Burpees",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "For time: 100 Burpees",
+    "tags": ["benchmark", "notable"],
+    "source": "curated"
+  },
+  {
+    "id": "150-wallballs",
+    "name": "150 Wall Balls",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "For time: 150 Wall Balls (20/14 lb)",
+    "tags": ["benchmark", "notable"],
+    "aliases": ["Karen"],
+    "source": "curated"
+  },
+  {
+    "id": "400-meter-lunges",
+    "name": "400m Walking Lunges",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "For time: 400m Walking Lunges",
+    "tags": ["benchmark", "notable"],
+    "source": "curated"
+  },
+  {
+    "id": "running-grace",
+    "name": "Running Grace",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "For time: 10 Clean & Jerks (135/95 lb), 400m Run, 10 C&J, 400m Run, 10 C&J",
+    "tags": ["benchmark", "notable"],
+    "source": "curated"
+  },
+  {
+    "id": "rowing-helen",
+    "name": "Rowing Helen",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "3 RFT: 500m Row, 21 KB Swings (53/35 lb), 12 Pull-ups",
+    "tags": ["benchmark", "notable"],
+    "source": "curated"
+  },
+  {
+    "id": "strict-fran",
+    "name": "Strict Fran",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "21-15-9: Thrusters (95/65 lb) & Strict Pull-ups",
+    "tags": ["benchmark", "notable"],
+    "source": "curated"
+  },
+  {
+    "id": "bear-complex",
+    "name": "Bear Complex",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Load",
+    "description": "5 rounds: 7 unbroken sets of Power Clean, Front Squat, Push Press, Back Squat, Push Press. Find max load.",
+    "tags": ["benchmark", "notable", "barbell"],
+    "source": "curated"
+  },
+  {
+    "id": "macho-man",
+    "name": "Macho Man",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Rounds+Reps",
+    "description": "EMOM for as long as possible: 3 Power Cleans (185/125 lb), 3 Front Squats, 3 Jerks",
+    "tags": ["benchmark", "notable", "emom"],
+    "source": "curated"
+  },
+  {
+    "id": "grace-under-pressure",
+    "name": "Grace Under Pressure",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "For time: 30 Clean & Jerks (135/95 lb) with 5 Burpee penalty every time bar is dropped",
+    "tags": ["benchmark", "notable"],
+    "source": "curated"
+  },
+  {
+    "id": "grinch",
+    "name": "Grinch",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "For time: 100 Pull-ups, 100 Thrusters (65/45 lb), 100 Burpees",
+    "tags": ["benchmark", "notable", "chipper"],
+    "source": "curated"
+  },
+  {
+    "id": "happy-star",
+    "name": "Happy Star",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "5 RFT: 10 Burpees, 10 DB Snatches (50/35 lb), 10 Box Jumps (24/20\"), 200m Run",
+    "tags": ["benchmark", "notable"],
+    "source": "curated"
+  },
+  {
+    "id": "box-squat-helen",
+    "name": "Box Squat Helen",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "3 RFT: 400m Run, 21 KB Swings (53/35 lb), 12 Box Jumps (24/20\")",
+    "tags": ["benchmark", "notable"],
+    "source": "curated"
+  },
+  {
+    "id": "death-by-clean-and-jerk",
+    "name": "Death by Clean & Jerk",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Reps",
+    "description": "EMOM: 1 Clean & Jerk (135/95 lb) minute 1, 2 minute 2... continue until failure",
+    "tags": ["benchmark", "notable", "emom"],
+    "source": "curated"
+  },
+  {
+    "id": "rowing-cindy",
+    "name": "Rowing Cindy",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Rounds+Reps",
+    "description": "AMRAP 20: 500m Row, 5 Pull-ups, 10 Push-ups, 15 Air Squats",
+    "tags": ["benchmark", "notable", "amrap"],
+    "source": "curated"
+  },
+  {
+    "id": "short-baseline",
+    "name": "Short Baseline",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "For time: 250m Row, 20 Air Squats, 15 Sit-ups, 10 Push-ups, 5 Pull-ups",
+    "tags": ["benchmark", "notable"],
+    "source": "curated"
+  },
+  {
+    "id": "long-baseline",
+    "name": "Long Baseline",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "For time: 1000m Row, 80 Air Squats, 60 Sit-ups, 40 Push-ups, 20 Pull-ups",
+    "tags": ["benchmark", "notable"],
+    "source": "curated"
+  },
+  {
+    "id": "300-fx",
+    "name": "300 FX",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "For time: 25 Pull-ups, 50 Deadlifts (135/95 lb), 50 Push-ups, 50 Box Jumps (24/20\"), 50 Floor Wipers, 50 KB Clean & Press (35/26 lb), 25 Pull-ups",
+    "tags": ["benchmark", "notable", "chipper"],
     "source": "curated"
   }
 ]
-

@@ -1,41 +1,76 @@
-# Catalog sources & licensing
+# Catalog Sources & Licensing
 
 This app ships with a **curated builtin catalog** (static JSON files under `src/catalog/`).
 
-## Important legal notes (summary)
+## Important Legal Notes (Summary)
 
 - **CrossFit® is a registered trademark**. This project should avoid implying official affiliation/endorsement and should avoid using CrossFit logos/branding unless licensed.
 - Workout names and short factual prescriptions (sets/reps/loads/time caps) are generally treated as factual descriptions, but **long-form text, images, and videos from third-party sites** may be copyrighted. Avoid copying long verbatim content.
 - When adding third-party datasets, prefer **permissive licenses** and keep attribution here.
 
-## What’s in the builtin catalog
+## What's in the Builtin Catalog
 
-The catalog is split by intent:
+The catalog is split by category/intent:
 
-- **Benchmarks / named workouts**: high-signal “loggable” workouts (e.g., Girls, Heroes, Open workouts)
-- **Lifts / skills / monostructural**: common PR/test items
-- **Movements** (optional): movement entries meant for search/selection (still loggable, but treated as “skill/test” items)
+| File | Category | SubCategory | Count | Description |
+|------|----------|-------------|-------|-------------|
+| `benchmarks_girls.json` | Benchmark | Girls | 33 | Classic & New Girls WODs |
+| `benchmarks_heroes.json` | Benchmark | Heroes | 100 | Hero/Tribute WODs |
+| `benchmarks_notable.json` | Benchmark | Notable | 48 | Community benchmarks |
+| `benchmarks_open.json` | Benchmark | Open | 72 | CrossFit Open 2011-2025 |
+| `benchmarks_games.json` | Benchmark | Games | 50 | CrossFit Games events |
+| `lifts.json` | Lift | - | 26 | Barbell & Olympic lifts |
+| `monostructural.json` | Monostructural | - | 12 | Cardio/Conditioning |
+| `skills.json` | Skill | - | 37 | Gymnastics & bodyweight |
+| **Total** | | | **377** | |
 
-Each catalog item can optionally carry:
+Each catalog item includes:
 
-- `source`: short provenance label (e.g. `"curated"`, `"CrossFit Open"`)
-- `sourceUrl`: a reference link (optional)
-- `aliases`: alternative names for search
-- `tags`: extra keywords
-- `subCategory`: a finer subtype (e.g. Girls/Heroes/Open)
+- `id`: Unique identifier
+- `name`: Display name
+- `category`: Benchmark, Lift, Monostructural, Skill
+- `subCategory`: Girls, Heroes, Open, Games, Notable (for Benchmarks)
+- `scoreType`: Time, Load, Reps, Rounds+Reps, Distance, Calories
+- `description`: Short workout prescription
+- `tags`: Keywords for search/filtering
+- `aliases`: Alternative names for search
+- `source`: Provenance label
+- `sourceUrl`: Reference link (optional)
 
-## Current sources
+## Current Sources
 
-### Curated (in-repo)
+### Girls Benchmark Workouts
+- **Source**: CrossFit.com FAQ, curated from community consensus
+- **Count**: 33 workouts (Classic Girls + 2021 New Girls)
+- **Reference**: https://www.crossfit.com/faq/wod
 
-- **Girls benchmark workouts**: curated from commonly-cited benchmark definitions and CrossFit community consensus.
-  - Note: we keep descriptions short and factual.
-- **Hero / tribute workouts**: curated list (names + short prescriptions where included).
-- **CrossFit Open workouts**: curated list by year/workout ID (e.g. `24.1`) with short prescriptions.
+### Hero/Tribute Workouts
+- **Source**: CrossFit.com/heroes, garagegymbuilder.com Hero WOD Masterlist
+- **Count**: 100 workouts
+- **Reference**: https://www.crossfit.com/heroes
 
-### External datasets (not bundled yet)
+### CrossFit Open Workouts (2011-2025)
+- **Source**: games.crossfit.com Open archives
+- **Count**: 72 workouts across 15 seasons
+- **Reference**: https://games.crossfit.com/
 
-If we later decide to expand the “Movements” catalog using an external dataset, good candidates include:
+### CrossFit Games Events
+- **Source**: games.crossfit.com Games archives
+- **Count**: 50 competition events
+- **Reference**: https://games.crossfit.com/
+
+### Notable/Community Benchmarks
+- **Source**: wodbase.com, community consensus
+- **Count**: 48 popular community WODs
+- **Reference**: https://www.wodbase.com/benchmark-wods/
+
+### Lifts, Skills, Monostructural
+- **Source**: CrossFit Level 1 Training Guide, community standards
+- **Count**: 75 movements/tests
+
+## External Datasets (Not Bundled)
+
+If we later decide to expand the "Movements" catalog using an external dataset, good candidates include:
 
 - **`yuhonas/free-exercise-db`** (Unlicense): JSON exercise library (generic fitness movements).
 - **`wrkout/exercises.json`** (Unlicense): large movement dataset (generic).
@@ -47,3 +82,18 @@ If/when we import any of these into `src/catalog/`, we should:
 - preserve required **license files / attribution**
 - document any **transformations** (renames, dedupe rules, removed entries)
 
+## Changelog
+
+### v2.0 (January 2026)
+- Expanded catalog from 64 to 377 items
+- Added 13 new Girl WODs (Kelly, Gwen, Hope, Barbara Ann, Lyla, Ellen, Andi, Lane, etc.)
+- Added 87 Hero WODs (total now 100)
+- Added 68 Open workouts (2011-2025)
+- Added 50 CrossFit Games events (new file: benchmarks_games.json)
+- Added 44 Notable/community benchmarks
+- Added 15 lift variations
+- Added 29 gymnastics/skill tests
+- Added 8 monostructural modalities
+
+### v1.0 (Initial)
+- Initial catalog with ~64 items

@@ -38,12 +38,70 @@
     "source": "curated"
   },
   {
+    "id": "sumo-deadlift",
+    "name": "Sumo Deadlift",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Sumo Deadlift",
+    "tags": ["hinge", "barbell", "strength"],
+    "source": "curated"
+  },
+  {
+    "id": "sumo-deadlift-high-pull",
+    "name": "Sumo Deadlift High Pull",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Sumo Deadlift High Pull",
+    "tags": ["hinge", "barbell", "strength"],
+    "aliases": ["SDHP"],
+    "source": "curated"
+  },
+  {
+    "id": "romanian-deadlift",
+    "name": "Romanian Deadlift",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Romanian Deadlift",
+    "tags": ["hinge", "barbell", "strength"],
+    "aliases": ["RDL"],
+    "source": "curated"
+  },
+  {
     "id": "clean",
     "name": "Clean",
     "category": "Lift",
     "scoreType": "Load",
-    "description": "1 Rep Max Clean (power or squat)",
+    "description": "1 Rep Max Clean (squat clean)",
     "tags": ["olympic", "barbell", "strength"],
+    "aliases": ["Squat Clean"],
+    "source": "curated"
+  },
+  {
+    "id": "power-clean",
+    "name": "Power Clean",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Power Clean",
+    "tags": ["olympic", "barbell", "strength"],
+    "source": "curated"
+  },
+  {
+    "id": "hang-clean",
+    "name": "Hang Clean",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Hang Clean (squat)",
+    "tags": ["olympic", "barbell", "strength"],
+    "source": "curated"
+  },
+  {
+    "id": "hang-power-clean",
+    "name": "Hang Power Clean",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Hang Power Clean",
+    "tags": ["olympic", "barbell", "strength"],
+    "aliases": ["HPC"],
     "source": "curated"
   },
   {
@@ -61,8 +119,37 @@
     "name": "Snatch",
     "category": "Lift",
     "scoreType": "Load",
-    "description": "1 Rep Max Snatch (power or squat)",
+    "description": "1 Rep Max Snatch (squat snatch)",
     "tags": ["olympic", "barbell", "strength"],
+    "aliases": ["Squat Snatch"],
+    "source": "curated"
+  },
+  {
+    "id": "power-snatch",
+    "name": "Power Snatch",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Power Snatch",
+    "tags": ["olympic", "barbell", "strength"],
+    "source": "curated"
+  },
+  {
+    "id": "hang-snatch",
+    "name": "Hang Snatch",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Hang Snatch (squat)",
+    "tags": ["olympic", "barbell", "strength"],
+    "source": "curated"
+  },
+  {
+    "id": "hang-power-snatch",
+    "name": "Hang Power Snatch",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Hang Power Snatch",
+    "tags": ["olympic", "barbell", "strength"],
+    "aliases": ["HPS"],
     "source": "curated"
   },
   {
@@ -94,6 +181,24 @@
     "source": "curated"
   },
   {
+    "id": "split-jerk",
+    "name": "Split Jerk",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Split Jerk",
+    "tags": ["jerk", "barbell", "strength"],
+    "source": "curated"
+  },
+  {
+    "id": "squat-jerk",
+    "name": "Squat Jerk",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Squat Jerk",
+    "tags": ["jerk", "barbell", "strength"],
+    "source": "curated"
+  },
+  {
     "id": "bench-press",
     "name": "Bench Press",
     "category": "Lift",
@@ -101,6 +206,41 @@
     "description": "1 Rep Max Bench Press",
     "tags": ["press", "barbell", "strength"],
     "source": "curated"
+  },
+  {
+    "id": "thruster",
+    "name": "Thruster",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Thruster",
+    "tags": ["squat", "press", "barbell", "strength"],
+    "source": "curated"
+  },
+  {
+    "id": "cluster",
+    "name": "Cluster",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Cluster (Squat Clean + Thruster)",
+    "tags": ["olympic", "barbell", "strength"],
+    "source": "curated"
+  },
+  {
+    "id": "weighted-pull-up",
+    "name": "Weighted Pull-up",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Weighted Pull-up (additional weight)",
+    "tags": ["pull", "gymnastics", "strength"],
+    "source": "curated"
+  },
+  {
+    "id": "weighted-dip",
+    "name": "Weighted Dip",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Weighted Dip (additional weight)",
+    "tags": ["press", "gymnastics", "strength"],
+    "source": "curated"
   }
 ]
-

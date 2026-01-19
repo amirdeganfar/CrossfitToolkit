@@ -7,7 +7,8 @@
     "scoreType": "Time",
     "description": "For time: 1 mile Run, 100 Pull-ups, 200 Push-ups, 300 Air Squats, 1 mile Run (20/14 lb vest optional)",
     "tags": ["benchmark", "hero"],
-    "source": "curated"
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
   },
   {
     "id": "dt",
@@ -17,7 +18,8 @@
     "scoreType": "Time",
     "description": "5 RFT: 12 Deadlifts, 9 Hang Power Cleans, 6 Push Jerks (155/105 lb)",
     "tags": ["benchmark", "hero", "barbell"],
-    "source": "curated"
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
   },
   {
     "id": "jt",
@@ -27,7 +29,8 @@
     "scoreType": "Time",
     "description": "21-15-9: Handstand Push-ups, Ring Dips, Push-ups",
     "tags": ["benchmark", "hero", "gymnastics"],
-    "source": "curated"
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
   },
   {
     "id": "michael",
@@ -37,7 +40,8 @@
     "scoreType": "Time",
     "description": "3 RFT: 800m Run, 50 Back Extensions, 50 Sit-ups",
     "tags": ["benchmark", "hero"],
-    "source": "curated"
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
   },
   {
     "id": "badger",
@@ -47,7 +51,8 @@
     "scoreType": "Time",
     "description": "3 RFT: 30 Squat Cleans (95/65 lb), 30 Pull-ups, 800m Run",
     "tags": ["benchmark", "hero"],
-    "source": "curated"
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
   },
   {
     "id": "randy",
@@ -57,7 +62,8 @@
     "scoreType": "Time",
     "description": "75 Power Snatches for time (75/55 lb)",
     "tags": ["benchmark", "hero", "barbell"],
-    "source": "curated"
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
   },
   {
     "id": "nate",
@@ -67,7 +73,8 @@
     "scoreType": "Rounds+Reps",
     "description": "AMRAP 20: 2 Muscle-ups, 4 Handstand Push-ups, 8 KB Swings (70/53 lb)",
     "tags": ["benchmark", "hero", "amrap"],
-    "source": "curated"
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
   },
   {
     "id": "kalsu",
@@ -77,7 +84,8 @@
     "scoreType": "Time",
     "description": "100 Thrusters for time (135/95 lb); start with 5 Burpees, then every minute: 5 Burpees",
     "tags": ["benchmark", "hero"],
-    "source": "curated"
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
   },
   {
     "id": "chad1000x",
@@ -88,7 +96,8 @@
     "description": "1000 weighted box step-ups for time (20\" box; commonly with 45/35 lb ruck/vest)",
     "tags": ["benchmark", "hero", "endurance"],
     "aliases": ["Chad"],
-    "source": "curated"
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
   },
   {
     "id": "manion",
@@ -98,17 +107,19 @@
     "scoreType": "Time",
     "description": "7 RFT: 400m Run, 29 Back Squats (135/95 lb)",
     "tags": ["benchmark", "hero"],
-    "source": "curated"
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
   },
   {
-    "id": "mccghee",
+    "id": "mcghee",
     "name": "McGhee",
     "category": "Benchmark",
     "subCategory": "Heroes",
     "scoreType": "Rounds+Reps",
     "description": "AMRAP 30: 5 Deadlifts (275/185 lb), 13 Push-ups, 9 Box Jumps (24/20\")",
     "tags": ["benchmark", "hero", "amrap"],
-    "source": "curated"
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
   },
   {
     "id": "riley",
@@ -118,7 +129,8 @@
     "scoreType": "Time",
     "description": "For time: 1.5 mile Run, 150 Burpees, 1.5 mile Run",
     "tags": ["benchmark", "hero"],
-    "source": "curated"
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
   },
   {
     "id": "tommy-v",
@@ -126,9 +138,1010 @@
     "category": "Benchmark",
     "subCategory": "Heroes",
     "scoreType": "Time",
-    "description": "For time: 21 Thrusters (115/75), 12 Rope Climbs (15 ft), 15 Thrusters, 9 Rope Climbs, 9 Thrusters, 6 Rope Climbs",
+    "description": "For time: 21 Thrusters (115/75 lb), 12 Rope Climbs (15 ft), 15 Thrusters, 9 Rope Climbs, 9 Thrusters, 6 Rope Climbs",
     "tags": ["benchmark", "hero"],
-    "source": "curated"
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "abbate",
+    "name": "Abbate",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "For time: 1 mile Run, 21 Clean & Jerks (155/105 lb), 800m Run, 21 Clean & Jerks, 1 mile Run",
+    "tags": ["benchmark", "hero", "barbell"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "adam-brown",
+    "name": "Adam Brown",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "2 rounds: 24 Deadlifts (295/205 lb), 24 Box Jumps (24/20\"), 24 Wall Balls (20/14 lb), 24 Bench Press (195/135 lb), 24 Box Jumps, 24 Wall Balls, 24 Cleans (145/100 lb)",
+    "tags": ["benchmark", "hero", "barbell"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "adrian",
+    "name": "Adrian",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "7 RFT: 3 Forward Rolls, 5 Wall Climbs, 7 Toes-to-Bar, 9 Box Jumps (30/24\")",
+    "tags": ["benchmark", "hero", "gymnastics"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "arnie",
+    "name": "Arnie",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "With single KB (70/53 lb): 21 Turkish Get-ups (R), 50 Swings, 21 Overhead Squats (L), 50 Swings, 21 Overhead Squats (R), 50 Swings, 21 Turkish Get-ups (L)",
+    "tags": ["benchmark", "hero", "kettlebell"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "barraza",
+    "name": "Barraza",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Rounds+Reps",
+    "description": "AMRAP 18: 200m Run, 9 Deadlifts (275/185 lb), 6 Burpee Bar Muscle-ups",
+    "tags": ["benchmark", "hero", "barbell"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "bell",
+    "name": "Bell",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "3 RFT: 21 Deadlifts (185/125 lb), 15 Pull-ups, 9 Front Squats (185/125 lb)",
+    "tags": ["benchmark", "hero", "barbell"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "blake",
+    "name": "Blake",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "4 RFT: 100-ft Walking Lunge with 45/25 lb plate overhead, 30 Box Jumps (24/20\"), 20 Wall Balls (20/14 lb), 10 Handstand Push-ups",
+    "tags": ["benchmark", "hero", "gymnastics"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "bradshaw",
+    "name": "Bradshaw",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "10 RFT: 3 Handstand Push-ups, 6 Deadlifts (225/155 lb), 12 Pull-ups, 24 Double-unders",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "brehm",
+    "name": "Brehm",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "For time: 10 Rope Climbs (15 ft), 20 Back Squats (225/155 lb), 30 Handstand Push-ups, Row 40 calories",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "brenton",
+    "name": "Brenton",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "5 RFT: 100-ft Bear Crawl, 100-ft Standing Broad Jump",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "brian",
+    "name": "Brian",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "3 RFT: 5 Rope Climbs (15 ft), 25 Back Squats (185/125 lb)",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "bulger",
+    "name": "Bulger",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "10 RFT: 150m Run, 7 Chest-to-Bar Pull-ups, 7 Front Squats (135/95 lb), 7 Handstand Push-ups",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "bull",
+    "name": "Bull",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "2 RFT: 200 Double-unders, 50 Overhead Squats (135/95 lb), 50 Pull-ups, 1 mile Run",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "clovis",
+    "name": "Clovis",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "For time: 10 mile Run, 150 Burpee Pull-ups (partition as needed)",
+    "tags": ["benchmark", "hero", "endurance"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "coe",
+    "name": "Coe",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "10 RFT: 10 Thrusters (95/65 lb), 10 Ring Push-ups",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "dae-han",
+    "name": "Dae Han",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "3 RFT: 800m Run holding 45 lb barbell, 3 Rope Climbs (15 ft), 12 Thrusters (135/95 lb)",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "daniel",
+    "name": "Daniel",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "For time: 50 Pull-ups, 400m Run, 21 Thrusters (95/65 lb), 800m Run, 21 Thrusters, 400m Run, 50 Pull-ups",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "danny",
+    "name": "Danny",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Rounds+Reps",
+    "description": "AMRAP 20: 30 Box Jumps (24/20\"), 20 Push Press (115/75 lb), 30 Pull-ups",
+    "tags": ["benchmark", "hero", "amrap"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "desforges",
+    "name": "Desforges",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "5 RFT: 12 Deadlifts (225/155 lb), 20 Pull-ups, 12 Clean & Jerks (135/95 lb), 20 Knees-to-Elbows",
+    "tags": ["benchmark", "hero", "barbell"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "donny",
+    "name": "Donny",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "21-15-9-9-15-21: Deadlifts (225/155 lb) & Burpees",
+    "tags": ["benchmark", "hero", "barbell"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "erin",
+    "name": "Erin",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "5 RFT: 15 Dumbbell Split Cleans (40/25 lb), 21 Pull-ups",
+    "tags": ["benchmark", "hero", "dumbbell"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "falkel",
+    "name": "Falkel",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Rounds+Reps",
+    "description": "AMRAP 25: 8 Handstand Push-ups, 8 Box Jumps (30/24\"), 1 Rope Climb (15 ft)",
+    "tags": ["benchmark", "hero", "amrap"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "forrest",
+    "name": "Forrest",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "3 RFT: 20 L-Pull-ups, 30 Toes-to-Bar, 40 Burpees, 800m Run",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "garrett",
+    "name": "Garrett",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "3 RFT: 75 Air Squats, 25 Ring Handstand Push-ups, 25 L-Pull-ups",
+    "tags": ["benchmark", "hero", "gymnastics"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "gator",
+    "name": "Gator",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "8 RFT: 5 Front Squats (185/125 lb), 26 Ring Push-ups",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "glen",
+    "name": "Glen",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "For time: 30 Clean & Jerks (135/95 lb), 1 mile Run, 10 Rope Climbs (15 ft), 1 mile Run, 100 Burpees",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "griff",
+    "name": "Griff",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "For time: 800m Run, 400m Run backwards, 800m Run, 400m Run backwards",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "hall",
+    "name": "Hall",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "5 RFT (rest 2 min): 3 Cleans (225/155 lb), 200m Sprint, 20 KB Snatches (53/35 lb, 10 each arm)",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "hamilton",
+    "name": "Hamilton",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "3 RFT: 1000m Row, 50 Push-ups, 1000m Run, 50 Pull-ups",
+    "tags": ["benchmark", "hero", "endurance"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "hammer",
+    "name": "Hammer",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "5 RFT (rest 90 sec): 5 Power Cleans (135/95 lb), 10 Front Squats, 5 Jerks, 20 Pull-ups",
+    "tags": ["benchmark", "hero", "barbell"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "hansen",
+    "name": "Hansen",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "5 RFT: 30 KB Swings (70/53 lb), 30 Burpees, 30 GHD Sit-ups",
+    "tags": ["benchmark", "hero", "kettlebell"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "helton",
+    "name": "Helton",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "3 RFT: 800m Run, 30 Dumbbell Squat Cleans (50/35 lb), 30 Burpees",
+    "tags": ["benchmark", "hero", "dumbbell"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "holleyman",
+    "name": "Holleyman",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "30 RFT: 5 Wall Balls (20/14 lb), 3 Handstand Push-ups, 1 Power Clean (225/155 lb)",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "hotshots-19",
+    "name": "Hotshots 19",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "6 RFT: 30 Air Squats, 19 Power Cleans (135/95 lb), 7 Strict Pull-ups, 400m Run",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "jared",
+    "name": "Jared",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "4 RFT: 800m Run, 40 Pull-ups, 70 Push-ups",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "jason",
+    "name": "Jason",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "For time: 100 Air Squats, 5 Muscle-ups, 75 Air Squats, 10 Muscle-ups, 50 Air Squats, 15 Muscle-ups, 25 Air Squats, 20 Muscle-ups",
+    "tags": ["benchmark", "hero", "gymnastics"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "josh",
+    "name": "Josh",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "21-15-9: Overhead Squats (95/65 lb) & Pull-ups",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "joshie",
+    "name": "Joshie",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "3 RFT: 21 DB Snatches (40/25 lb), 21 Pull-ups, 21 Burpee Box Jump-Overs (24/20\"), 800m Run",
+    "tags": ["benchmark", "hero", "dumbbell"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "justin",
+    "name": "Justin",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "For time: 30-20-10 Back Squats (BW), Bench Press (BW), Strict Pull-ups",
+    "tags": ["benchmark", "hero", "barbell"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "klepto",
+    "name": "Klepto",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "4 RFT: 27 Box Jumps (24/20\"), 20 Burpees, 11 Squat Cleans (145/100 lb)",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "ledesma",
+    "name": "Ledesma",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Rounds+Reps",
+    "description": "AMRAP 20: 5 Parallette Handstand Push-ups, 10 Toes-Through-Rings, 15 Medicine Ball Cleans (20/14 lb)",
+    "tags": ["benchmark", "hero", "amrap"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "lee",
+    "name": "Lee",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "5 RFT: 400m Run, 1 Deadlift (345/235 lb), 3 Squat Cleans (185/125 lb), 5 Push Jerks (185/125 lb), 3 Muscle-ups, 1 Rope Climb (15 ft)",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "loredo",
+    "name": "Loredo",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "6 RFT: 24 Air Squats, 24 Push-ups, 24 Walking Lunges, 400m Run",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "luce",
+    "name": "Luce",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "3 RFT wearing 20/14 lb vest: 1000m Run, 10 Muscle-ups, 100 Air Squats",
+    "tags": ["benchmark", "hero", "vest"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "lumberjack-20",
+    "name": "Lumberjack 20",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "For time: 20 Deadlifts (275/185 lb), 400m Run, 20 KB Swings (70/53 lb), 400m Run, 20 Overhead Squats (115/75 lb), 400m Run, 20 Burpees, 400m Run, 20 C2B Pull-ups, 400m Run, 20 Box Jumps (24/20\"), 400m Run, 20 DB Squat Cleans (45/30 lb), 400m Run",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "maloney",
+    "name": "Maloney",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "For time: 1000m Row, then 4 RFT: 15 Deadlifts (135/95 lb), 15 Box Jumps (24/20\"), 15 Wall Balls (20/14 lb), then 1000m Row",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "maxton",
+    "name": "Maxton",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "5 RFT: 5 Muscle-ups, 10 Power Cleans (135/95 lb), 20 Wall Balls (20/14 lb), 400m Run",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "mccluskey",
+    "name": "McCluskey",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "3 RFT: 9 Muscle-ups, 15 Burpee Pull-ups, 21 Pull-ups, 800m Run",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "moore",
+    "name": "Moore",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Rounds+Reps",
+    "description": "AMRAP 20: 1 Rope Climb (15 ft), 400m Run, max Handstand Push-ups",
+    "tags": ["benchmark", "hero", "amrap"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "mr-joshua",
+    "name": "Mr. Joshua",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "5 RFT: 400m Run, 30 GHD Sit-ups, 15 Deadlifts (250/175 lb)",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "nick",
+    "name": "Nick",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "12 RFT: 10 Dumbbell Hang Squat Cleans (45/30 lb), 6 Handstand Push-ups on Dumbbells",
+    "tags": ["benchmark", "hero", "dumbbell"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "nutts",
+    "name": "Nutts",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "For time: 10 Handstand Push-ups, 15 Deadlifts (250/175 lb), 25 Box Jumps (30/24\"), 50 Pull-ups, 100 Wall Balls (20/14 lb), 200 Double-unders, 400m Run with 45/25 lb plate",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "paul",
+    "name": "Paul",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "5 RFT: 50 Double-unders, 35 Knees-to-Elbows, 20 ft Overhead Walking Lunge (185/125 lb)",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "rahoi",
+    "name": "Rahoi",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Rounds+Reps",
+    "description": "AMRAP 12: 12 Box Jumps (24/20\"), 6 Thrusters (95/65 lb), 6 Bar-facing Burpees",
+    "tags": ["benchmark", "hero", "amrap"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "rankel",
+    "name": "Rankel",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Rounds+Reps",
+    "description": "AMRAP 20: 6 Deadlifts (225/155 lb), 7 Burpee Pull-ups, 10 KB Swings (70/53 lb), 200m Run",
+    "tags": ["benchmark", "hero", "amrap"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "rene",
+    "name": "Rene",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "7 RFT: 400m Run, 21 Walking Lunges, 15 Pull-ups, 9 Burpees",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "ricky",
+    "name": "Ricky",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Rounds+Reps",
+    "description": "AMRAP 20: 10 Pull-ups, 5 Dumbbell Deadlifts (75/50 lb), 8 Push Press (135/95 lb)",
+    "tags": ["benchmark", "hero", "amrap"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "rj",
+    "name": "RJ",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "5 RFT: 800m Run, 5 Rope Climbs (15 ft), 50 Push-ups",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "roney",
+    "name": "Roney",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "4 RFT: 200m Run, 11 Thrusters (135/95 lb), 200m Run, 11 Push Press, 200m Run, 11 Bench Press",
+    "tags": ["benchmark", "hero", "barbell"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "roy",
+    "name": "Roy",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "5 RFT: 15 Deadlifts (225/155 lb), 20 Box Jumps (24/20\"), 25 Pull-ups",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "ryan",
+    "name": "Ryan",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "5 RFT: 7 Muscle-ups, 21 Burpees",
+    "tags": ["benchmark", "hero", "gymnastics"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "santora",
+    "name": "Santora",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "3 RFT (1 min rest between rounds): 1 min Squat Cleans (155/105 lb), 1 min Shuttle Sprints, 1 min Deadlifts (245/165 lb), 1 min Burpees, 1 min Push Jerks (155/105 lb)",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "schmalls",
+    "name": "Schmalls",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "For time: 800m Run, 17 Chest-to-Bar Pull-ups, 10 Power Cleans (185/125 lb), 800m Run, 17 Chest-to-Bar Pull-ups, 10 Power Cleans",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "severin",
+    "name": "Severin",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "For time: 50 Strict Pull-ups, 100 Push-ups (hands off floor), 5km Run. Optional body armor.",
+    "tags": ["benchmark", "hero", "endurance"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "ship",
+    "name": "Ship",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "9 RFT: 7 Squat Cleans (185/125 lb), 8 Burpee Box Jump-Overs (36/30\")",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "small",
+    "name": "Small",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "3 RFT: 1000m Row, 50 Burpees, 50 Box Jumps (24/20\"), 800m Run",
+    "tags": ["benchmark", "hero", "endurance"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "strange",
+    "name": "Strange",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "8 RFT: 600m Run, 11 Weighted Pull-ups (53/35 lb), 11 Walking Lunges with KBs (53/35 lb), 11 KB Thrusters",
+    "tags": ["benchmark", "hero", "kettlebell"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "the-seven",
+    "name": "The Seven",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "7 RFT: 7 Handstand Push-ups, 7 Thrusters (135/95 lb), 7 Knees-to-Elbows, 7 Deadlifts (245/165 lb), 7 Burpees, 7 KB Swings (70/53 lb), 7 Pull-ups",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "tom",
+    "name": "Tom",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Rounds+Reps",
+    "description": "AMRAP 25: 7 Muscle-ups, 11 Thrusters (155/105 lb), 14 Toes-to-Bar",
+    "tags": ["benchmark", "hero", "amrap"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "tully",
+    "name": "Tully",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "4 RFT: 200m Swim, 23 Dumbbell Squat Cleans (40/25 lb)",
+    "tags": ["benchmark", "hero", "swimming"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "tumilson",
+    "name": "Tumilson",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "8 RFT: 200m Run, 11 Dumbbell Burpee Deadlifts (60/40 lb)",
+    "tags": ["benchmark", "hero", "dumbbell"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "tyler",
+    "name": "Tyler",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "5 RFT: 7 Muscle-ups, 21 Sumo Deadlift High Pulls (95/65 lb)",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "walsh",
+    "name": "Walsh",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "4 RFT: 22 Burpee Pull-ups, 22 Back Squats (185/125 lb), 400m Run with 45/25 lb plate overhead",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "war-frank",
+    "name": "War Frank",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "3 RFT: 25 Muscle-ups, 100 Air Squats, 35 GHD Sit-ups",
+    "tags": ["benchmark", "hero", "gymnastics"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "white",
+    "name": "White",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "5 RFT: 3 Rope Climbs (15 ft), 10 Toes-to-Bar, 21 Walking Lunges with 45/25 lb plate overhead, 400m Run",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "whitten",
+    "name": "Whitten",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "5 RFT: 22 KB Swings (70/53 lb), 22 Box Jumps (24/20\"), 400m Run, 22 Burpees, 22 Wall Balls (20/14 lb)",
+    "tags": ["benchmark", "hero", "kettlebell"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "wilmot",
+    "name": "Wilmot",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "6 RFT: 50 Air Squats, 25 Ring Dips",
+    "tags": ["benchmark", "hero", "gymnastics"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "wittman",
+    "name": "Wittman",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "7 RFT: 15 KB Swings (53/35 lb), 15 Power Cleans (95/65 lb), 15 Box Jumps (24/20\")",
+    "tags": ["benchmark", "hero", "kettlebell"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "wood",
+    "name": "Wood",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "5 RFT (rest 1 min): 400m Run, 10 Burpee Box Jump-Overs (24/20\"), 10 Sumo Deadlift High Pulls (95/65 lb), 10 Thrusters (95/65 lb)",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "zembiec",
+    "name": "Zembiec",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "5 RFT: 11 Back Squats (185/125 lb), 7 Strict Burpee Pull-ups, 400m Run",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "zeus",
+    "name": "Zeus",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "3 RFT: 30 Wall Balls (20/14 lb), 30 Sumo Deadlift High Pulls (75/55 lb), 30 Box Jumps (20\"), 30 Push Press (75/55 lb), Row 30 cal, 30 Push-ups, 10 Back Squats (BW)",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "capoot",
+    "name": "Capoot",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "For time: 100 Push-ups, 800m Run, 75 Push-ups, 1200m Run, 50 Push-ups, 1600m Run, 25 Push-ups, 2000m Run",
+    "tags": ["benchmark", "hero", "endurance"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "collin",
+    "name": "Collin",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "6 RFT: 400m Sandbag Carry (50/35 lb), 12 Push Press (115/75 lb), 12 Box Jumps (24/20\"), 12 Sumo Deadlift High Pulls (95/65 lb)",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "double-dt",
+    "name": "Double DT",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "10 RFT: 12 Deadlifts, 9 Hang Power Cleans, 6 Push Jerks (155/105 lb)",
+    "tags": ["benchmark", "hero", "barbell"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "gaza",
+    "name": "Gaza",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "5 RFT: 35 KB Swings (53/35 lb), 30 Push-ups, 25 Pull-ups, 20 Box Jumps (30/24\"), 1 mile Run",
+    "tags": ["benchmark", "hero", "endurance"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "eva-strong",
+    "name": "Eva Strong",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "5 RFT: 500m Row, 30 KB Swings (53/35 lb), 30 Pull-ups",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "garbo",
+    "name": "Garbo",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "For time: 100 Box Jump-Overs (24/20\"), 100 Bar-over Burpees, 100 Shoulder-to-Overhead (135/95 lb), 100 Deadlifts (185/125 lb)",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "mccartney",
+    "name": "McCartney",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "5 RFT: 20 Pull-ups, 40 Push-ups, 60 Air Squats, 1 mile Run",
+    "tags": ["benchmark", "hero", "endurance"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "pike",
+    "name": "Pike",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "5 RFT: 20 Thrusters (75/55 lb), 10 Strict Ring Dips, 20 Push-ups, 10 Strict Handstand Push-ups, 50-ft Bear Crawl",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "rocket",
+    "name": "Rocket",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Rounds+Reps",
+    "description": "AMRAP 30: 50-yd Swim, 10 Push-ups, 15 Air Squats",
+    "tags": ["benchmark", "hero", "swimming", "amrap"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
+  },
+  {
+    "id": "bradley",
+    "name": "Bradley",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "10 RFT (30 sec rest): 100m Sprint, 10 Pull-ups, 100m Sprint, 10 Burpees",
+    "tags": ["benchmark", "hero"],
+    "source": "CrossFit",
+    "sourceUrl": "https://www.crossfit.com/heroes"
   }
 ]
-

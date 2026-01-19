@@ -202,6 +202,132 @@
     "description": "9-7-5: Muscle-ups & Snatches (135/95 lb)",
     "tags": ["benchmark", "girl"],
     "source": "curated"
+  },
+
+  {
+    "id": "kelly",
+    "name": "Kelly",
+    "category": "Benchmark",
+    "subCategory": "Girls",
+    "scoreType": "Time",
+    "description": "5 RFT: 400m Run, 30 Box Jumps (24/20\"), 30 Wall Balls (20/14 lb)",
+    "tags": ["benchmark", "girl"],
+    "source": "curated"
+  },
+  {
+    "id": "gwen",
+    "name": "Gwen",
+    "category": "Benchmark",
+    "subCategory": "Girls",
+    "scoreType": "Load",
+    "description": "15-12-9 unbroken Clean & Jerks (touch-and-go from floor). Score is heaviest successful load.",
+    "tags": ["benchmark", "girl", "barbell"],
+    "source": "curated"
+  },
+  {
+    "id": "hope",
+    "name": "Hope",
+    "category": "Benchmark",
+    "subCategory": "Girls",
+    "scoreType": "Reps",
+    "description": "3 rounds of: 1 min Burpees, 1 min Power Snatches (75/55 lb), 1 min Box Jumps (24/20\"), 1 min Thrusters (75/55 lb), 1 min C2B Pull-ups; rest 1 min between rounds",
+    "tags": ["benchmark", "girl", "intervals"],
+    "source": "curated"
+  },
+  {
+    "id": "barbara-ann",
+    "name": "Barbara Ann",
+    "category": "Benchmark",
+    "subCategory": "Girls",
+    "scoreType": "Time",
+    "description": "5 RFT (rest 3 min between rounds): 10 HSPU, 20 Deadlifts (185/125 lb), 30 Sit-ups, 40 Double-unders",
+    "tags": ["benchmark", "girl", "new-girl"],
+    "source": "curated",
+    "sourceUrl": "https://www.crossfit.com/faq/wod"
+  },
+  {
+    "id": "lyla",
+    "name": "Lyla",
+    "category": "Benchmark",
+    "subCategory": "Girls",
+    "scoreType": "Time",
+    "description": "10-9-8-7-6-5-4-3-2-1: Muscle-ups & Bodyweight Clean & Jerks",
+    "tags": ["benchmark", "girl", "new-girl"],
+    "source": "curated",
+    "sourceUrl": "https://www.crossfit.com/faq/wod"
+  },
+  {
+    "id": "ellen",
+    "name": "Ellen",
+    "category": "Benchmark",
+    "subCategory": "Girls",
+    "scoreType": "Time",
+    "description": "3 RFT: 20 Burpees, 21 Single-DB Snatches (50/35 lb), 12 Dual-DB Thrusters (50/35 lb)",
+    "tags": ["benchmark", "girl", "new-girl", "dumbbell"],
+    "source": "curated",
+    "sourceUrl": "https://www.crossfit.com/faq/wod"
+  },
+  {
+    "id": "andi",
+    "name": "Andi",
+    "category": "Benchmark",
+    "subCategory": "Girls",
+    "scoreType": "Time",
+    "description": "For time: 100 Hang Power Snatches, 100 Push Presses, 100 Sumo Deadlift High Pulls, 100 Front Squats (65/45 lb)",
+    "tags": ["benchmark", "girl", "new-girl", "barbell"],
+    "source": "curated",
+    "sourceUrl": "https://www.crossfit.com/faq/wod"
+  },
+  {
+    "id": "lane",
+    "name": "Lane",
+    "category": "Benchmark",
+    "subCategory": "Girls",
+    "scoreType": "Reps",
+    "description": "5 rounds for max reps: 3/4-bodyweight Hang Power Snatches + Handstand Push-ups; rest as needed between rounds",
+    "tags": ["benchmark", "girl", "new-girl"],
+    "source": "curated",
+    "sourceUrl": "https://www.crossfit.com/faq/wod"
+  },
+  {
+    "id": "maggie",
+    "name": "Maggie",
+    "category": "Benchmark",
+    "subCategory": "Girls",
+    "scoreType": "Time",
+    "description": "5 RFT: 20 Handstand Push-ups, 40 Pull-ups, 60 Pistols (alternating)",
+    "tags": ["benchmark", "girl", "gymnastics"],
+    "source": "curated"
+  },
+  {
+    "id": "marguerita",
+    "name": "Marguerita",
+    "category": "Benchmark",
+    "subCategory": "Girls",
+    "scoreType": "Time",
+    "description": "3 RFT: 800m Run, 50 Thrusters (75/55 lb)",
+    "tags": ["benchmark", "girl"],
+    "source": "curated"
+  },
+  {
+    "id": "candy",
+    "name": "Candy",
+    "category": "Benchmark",
+    "subCategory": "Girls",
+    "scoreType": "Time",
+    "description": "5 RFT: 20 Pull-ups, 40 Push-ups, 60 Air Squats",
+    "tags": ["benchmark", "girl"],
+    "source": "curated"
+  },
+  {
+    "id": "christine",
+    "name": "Christine",
+    "category": "Benchmark",
+    "subCategory": "Girls",
+    "scoreType": "Time",
+    "description": "3 RFT: 500m Row, 12 Deadlifts (BW), 21 Box Jumps (20\")",
+    "tags": ["benchmark", "girl"],
+    "source": "curated"
   }
 ]
 

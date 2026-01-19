@@ -10,23 +10,88 @@
     "source": "curated"
   },
   {
+    "id": "strict-pullups-max",
+    "name": "Strict Pull-ups (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken strict pull-ups",
+    "tags": ["gymnastics", "pull", "strict"],
+    "source": "curated"
+  },
+  {
+    "id": "kipping-pullups-max",
+    "name": "Kipping Pull-ups (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken kipping pull-ups",
+    "tags": ["gymnastics", "pull", "kipping"],
+    "source": "curated"
+  },
+  {
+    "id": "butterfly-pullups-max",
+    "name": "Butterfly Pull-ups (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken butterfly pull-ups",
+    "tags": ["gymnastics", "pull", "kipping"],
+    "source": "curated"
+  },
+  {
+    "id": "c2b-pullups-max",
+    "name": "C2B Pull-ups (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken chest-to-bar pull-ups",
+    "tags": ["gymnastics", "pull"],
+    "aliases": ["Chest-to-Bar Pull-ups (Max)"],
+    "source": "curated"
+  },
+  {
     "id": "hspu-max",
     "name": "HSPU (Max)",
     "category": "Skill",
     "scoreType": "Reps",
-    "description": "Max unbroken handstand push-ups",
+    "description": "Max unbroken handstand push-ups (kipping)",
     "tags": ["gymnastics", "press", "inversion"],
     "aliases": ["Handstand Push-ups (Max)", "Max HSPU"],
     "source": "curated"
   },
   {
-    "id": "muscle-ups-max",
-    "name": "Muscle-ups (Max)",
+    "id": "strict-hspu-max",
+    "name": "Strict HSPU (Max)",
     "category": "Skill",
     "scoreType": "Reps",
-    "description": "Max unbroken muscle-ups (ring or bar)",
+    "description": "Max unbroken strict handstand push-ups",
+    "tags": ["gymnastics", "press", "inversion", "strict"],
+    "source": "curated"
+  },
+  {
+    "id": "ring-muscle-ups-max",
+    "name": "Ring Muscle-ups (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken ring muscle-ups",
     "tags": ["gymnastics", "pull", "rings"],
-    "aliases": ["Max MU", "Max Muscle-ups"],
+    "aliases": ["Max Ring MU"],
+    "source": "curated"
+  },
+  {
+    "id": "bar-muscle-ups-max",
+    "name": "Bar Muscle-ups (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken bar muscle-ups",
+    "tags": ["gymnastics", "pull"],
+    "aliases": ["Max Bar MU"],
+    "source": "curated"
+  },
+  {
+    "id": "strict-muscle-ups-max",
+    "name": "Strict Muscle-ups (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken strict muscle-ups",
+    "tags": ["gymnastics", "pull", "rings", "strict"],
     "source": "curated"
   },
   {
@@ -40,6 +105,24 @@
     "source": "curated"
   },
   {
+    "id": "single-unders-max",
+    "name": "Single-unders (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken single-unders",
+    "tags": ["jump-rope", "skill"],
+    "source": "curated"
+  },
+  {
+    "id": "triple-unders-max",
+    "name": "Triple-unders (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken triple-unders",
+    "tags": ["jump-rope", "skill"],
+    "source": "curated"
+  },
+  {
     "id": "toes-to-bar-max",
     "name": "Toes-to-Bar (Max)",
     "category": "Skill",
@@ -49,7 +132,16 @@
     "aliases": ["TTB (Max)", "Max Toes-to-bar"],
     "source": "curated"
   },
-
+  {
+    "id": "knees-to-elbows-max",
+    "name": "Knees-to-Elbows (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken knees-to-elbows",
+    "tags": ["gymnastics", "core", "pull"],
+    "aliases": ["K2E (Max)"],
+    "source": "curated"
+  },
   {
     "id": "handstand-walk-max-distance",
     "name": "Handstand Walk (Max Distance)",
@@ -65,19 +157,191 @@
     "name": "Rope Climb (Max)",
     "category": "Skill",
     "scoreType": "Reps",
-    "description": "Max rope climbs (for time cap or unbroken)",
+    "description": "Max rope climbs (15 ft, for time cap or unbroken)",
     "tags": ["gymnastics", "pull", "rope"],
     "source": "curated"
   },
   {
+    "id": "legless-rope-climb-max",
+    "name": "Legless Rope Climb (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max legless rope climbs (15 ft)",
+    "tags": ["gymnastics", "pull", "rope", "strict"],
+    "source": "curated"
+  },
+  {
+    "id": "ring-dip-max",
+    "name": "Ring Dip (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken ring dips (kipping allowed)",
+    "tags": ["gymnastics", "press", "rings"],
+    "source": "curated"
+  },
+  {
     "id": "strict-ring-dip-max",
-    "name": "Ring Dip (Strict, Max)",
+    "name": "Strict Ring Dip (Max)",
     "category": "Skill",
     "scoreType": "Reps",
     "description": "Max strict ring dips",
-    "tags": ["gymnastics", "press", "rings"],
+    "tags": ["gymnastics", "press", "rings", "strict"],
     "aliases": ["Strict Dips (Rings)"],
+    "source": "curated"
+  },
+  {
+    "id": "bar-dip-max",
+    "name": "Bar Dip (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken bar dips",
+    "tags": ["gymnastics", "press"],
+    "source": "curated"
+  },
+  {
+    "id": "pistol-squat-max",
+    "name": "Pistol Squat (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max alternating pistol squats (single-leg squats)",
+    "tags": ["gymnastics", "squat"],
+    "aliases": ["Pistols (Max)"],
+    "source": "curated"
+  },
+  {
+    "id": "wall-walk-max",
+    "name": "Wall Walk (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max wall walks",
+    "tags": ["gymnastics", "inversion"],
+    "source": "curated"
+  },
+  {
+    "id": "push-ups-max",
+    "name": "Push-ups (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken push-ups",
+    "tags": ["gymnastics", "press"],
+    "source": "curated"
+  },
+  {
+    "id": "box-jump-max-height",
+    "name": "Box Jump (Max Height)",
+    "category": "Skill",
+    "scoreType": "Distance",
+    "description": "Max height box jump (single attempt)",
+    "tags": ["plyometric"],
+    "source": "curated"
+  },
+  {
+    "id": "box-jump-max-reps",
+    "name": "Box Jump (Max Reps)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken box jumps (24/20\")",
+    "tags": ["plyometric"],
+    "source": "curated"
+  },
+  {
+    "id": "burpees-max",
+    "name": "Burpees (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max burpees in set time or unbroken",
+    "tags": ["conditioning"],
+    "source": "curated"
+  },
+  {
+    "id": "wall-ball-max",
+    "name": "Wall Ball (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken wall balls (20/14 lb)",
+    "tags": ["conditioning"],
+    "source": "curated"
+  },
+  {
+    "id": "sit-ups-max",
+    "name": "Sit-ups (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken sit-ups",
+    "tags": ["core"],
+    "source": "curated"
+  },
+  {
+    "id": "ghd-sit-ups-max",
+    "name": "GHD Sit-ups (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken GHD sit-ups",
+    "tags": ["core", "ghd"],
+    "source": "curated"
+  },
+  {
+    "id": "hip-extension-max",
+    "name": "Hip Extension (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken hip extensions (GHD or back extension)",
+    "tags": ["core", "ghd"],
+    "aliases": ["Back Extension (Max)"],
+    "source": "curated"
+  },
+  {
+    "id": "air-squats-max",
+    "name": "Air Squats (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken air squats",
+    "tags": ["squat"],
+    "source": "curated"
+  },
+  {
+    "id": "handstand-hold-max",
+    "name": "Handstand Hold (Max Time)",
+    "category": "Skill",
+    "scoreType": "Time",
+    "description": "Max freestanding handstand hold time",
+    "tags": ["gymnastics", "inversion", "hold"],
+    "source": "curated"
+  },
+  {
+    "id": "l-sit-hold-max",
+    "name": "L-Sit Hold (Max Time)",
+    "category": "Skill",
+    "scoreType": "Time",
+    "description": "Max L-sit hold time",
+    "tags": ["gymnastics", "core", "hold"],
+    "source": "curated"
+  },
+  {
+    "id": "hollow-hold-max",
+    "name": "Hollow Hold (Max Time)",
+    "category": "Skill",
+    "scoreType": "Time",
+    "description": "Max hollow body hold time",
+    "tags": ["gymnastics", "core", "hold"],
+    "source": "curated"
+  },
+  {
+    "id": "plank-hold-max",
+    "name": "Plank Hold (Max Time)",
+    "category": "Skill",
+    "scoreType": "Time",
+    "description": "Max plank hold time",
+    "tags": ["core", "hold"],
+    "source": "curated"
+  },
+  {
+    "id": "peg-board-max",
+    "name": "Peg Board (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max peg board ascents",
+    "tags": ["gymnastics", "pull"],
     "source": "curated"
   }
 ]
-

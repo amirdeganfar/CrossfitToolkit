@@ -1,0 +1,39 @@
+---
+name: general
+description: General development and UI guidelines
+---
+
+# UI Development Guidelines
+
+## Before Completing UI Changes
+
+When making ANY changes to the user interface:
+
+1. **Always remind the user** to:
+   - Run the appropriate MCP server to test the changes
+   - Take a screenshot to verify the UI renders correctly
+   - Check that all interactive elements work as expected
+
+2. **Verification Checklist**:
+   - Layout renders correctly
+   - Responsive design works on different screen sizes
+   - No console errors
+   - All buttons/links are functional
+   - Styling matches design requirements
+
+3. **After Changes**:
+   - Ask the user to confirm the UI looks correct
+   - Request feedback on any issues
+   - Offer to make adjustments if needed
+
+## Important Notes
+
+- Never assume UI changes work without user verification
+- Always provide clear testing instructions
+- Be proactive about asking for visual confirmation
+
+
+# Implementation of Plans
+
+**Always remind the user** to:
+1. implement the plan step by step, and ask me to review after each step

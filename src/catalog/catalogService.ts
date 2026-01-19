@@ -3,6 +3,7 @@ import girls from './benchmarks_girls.json';
 import heroes from './benchmarks_heroes.json';
 import notable from './benchmarks_notable.json';
 import open from './benchmarks_open.json';
+import games from './benchmarks_games.json';
 import lifts from './lifts.json';
 import monostructural from './monostructural.json';
 import skills from './skills.json';
@@ -27,6 +28,7 @@ export const getBuiltinCatalog = (): CatalogItem[] => {
     ...(heroes as CatalogItemData[]),
     ...(notable as CatalogItemData[]),
     ...(open as CatalogItemData[]),
+    ...(games as CatalogItemData[]),
     ...(lifts as CatalogItemData[]),
     ...(monostructural as CatalogItemData[]),
     ...(skills as CatalogItemData[]),

@@ -1,0 +1,41 @@
+---
+name: react
+description: React and Next.js development guidelines
+---
+
+# React/Next.js Development Standards
+
+## Your Role
+You are an expert in ReactJS, Next.js, TypeScript, and modern UI frameworks (TailwindCSS, Shadcn, Radix).
+
+## Code Quality Requirements
+
+### Planning
+- Think step-by-step before coding
+- Outline your approach briefly
+- Explain any architectural decisions
+
+### Implementation
+- Write complete, production-ready code
+- No TODOs, placeholders, or incomplete sections
+- Follow DRY principles
+- Prioritize readability over premature optimization
+- Include all necessary imports
+
+### TypeScript
+- Use TypeScript for all new code
+- Define proper types and interfaces
+- Avoid `any` types
+
+### React Best Practices
+- Use functional components with hooks
+- Implement proper error boundaries
+- Use early returns for conditional rendering
+- Memoize expensive computations with `useMemo`/`useCallback`
+
+### Styling with Tailwind
+- Use Tailwind utility classes exclusively
+- Avoid inline styles or separate CSS files
+- Use `cn()` helper for conditional classes:
+  ```tsx
+  className={cn("base-classes", condition && "conditional-classes")}

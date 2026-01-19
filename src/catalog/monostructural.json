@@ -22,14 +22,36 @@
     "source": "curated"
   },
   {
-    "id": "bike-cals",
-    "name": "Assault Bike (Cal)",
+    "id": "assault-bike",
+    "name": "Assault Bike",
     "category": "Monostructural",
     "scoreType": "Time",
     "description": "Assault Bike for time — log by distance or calories",
     "metrics": "distance+calories",
     "tags": ["cardio", "engine", "bike"],
-    "aliases": ["Assault Bike", "Air Bike", "Echo Bike"],
+    "aliases": ["Air Bike", "Assault Bike (Cal)"],
+    "source": "curated"
+  },
+  {
+    "id": "echo-bike",
+    "name": "Echo Bike",
+    "category": "Monostructural",
+    "scoreType": "Time",
+    "description": "Echo Bike for time — log by distance or calories",
+    "metrics": "distance+calories",
+    "tags": ["cardio", "engine", "bike"],
+    "aliases": ["Rogue Echo Bike"],
+    "source": "curated"
+  },
+  {
+    "id": "bike-erg",
+    "name": "Bike Erg",
+    "category": "Monostructural",
+    "scoreType": "Time",
+    "description": "Concept2 Bike Erg for time — log by distance or calories",
+    "metrics": "distance+calories",
+    "tags": ["cardio", "engine", "erg", "bike"],
+    "aliases": ["Concept2 Bike"],
     "source": "curated"
   },
   {
@@ -42,6 +64,67 @@
     "tags": ["cardio", "engine", "erg"],
     "aliases": ["SkiErg", "Concept2 Ski"],
     "source": "curated"
+  },
+  {
+    "id": "swim",
+    "name": "Swim",
+    "category": "Monostructural",
+    "scoreType": "Time",
+    "description": "Swimming for time — specify distance when logging",
+    "metrics": "distance",
+    "tags": ["cardio", "engine", "swimming"],
+    "aliases": ["Swimming", "Pool Swim", "Open Water Swim"],
+    "source": "curated"
+  },
+  {
+    "id": "sled-push",
+    "name": "Sled Push",
+    "category": "Monostructural",
+    "scoreType": "Time",
+    "description": "Sled push for time — specify distance and weight when logging",
+    "metrics": "distance",
+    "tags": ["cardio", "sled", "strength-endurance"],
+    "source": "curated"
+  },
+  {
+    "id": "sled-pull",
+    "name": "Sled Pull",
+    "category": "Monostructural",
+    "scoreType": "Time",
+    "description": "Sled pull for time — specify distance and weight when logging",
+    "metrics": "distance",
+    "tags": ["cardio", "sled", "strength-endurance"],
+    "source": "curated"
+  },
+  {
+    "id": "farmers-carry",
+    "name": "Farmers Carry",
+    "category": "Monostructural",
+    "scoreType": "Time",
+    "description": "Farmers carry for time — specify distance and weight when logging",
+    "metrics": "distance",
+    "tags": ["carry", "grip", "strength-endurance"],
+    "aliases": ["Farmer's Walk"],
+    "source": "curated"
+  },
+  {
+    "id": "yoke-carry",
+    "name": "Yoke Carry",
+    "category": "Monostructural",
+    "scoreType": "Time",
+    "description": "Yoke carry for time — specify distance and weight when logging",
+    "metrics": "distance",
+    "tags": ["carry", "strongman", "strength-endurance"],
+    "source": "curated"
+  },
+  {
+    "id": "sandbag-carry",
+    "name": "Sandbag Carry",
+    "category": "Monostructural",
+    "scoreType": "Time",
+    "description": "Sandbag carry for time — specify distance and weight when logging",
+    "metrics": "distance",
+    "tags": ["carry", "sandbag", "strength-endurance"],
+    "source": "curated"
   }
 ]
-
