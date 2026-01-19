@@ -1,0 +1,44 @@
+[
+  {
+    "id": "fight-gone-bad",
+    "name": "Fight Gone Bad",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Reps",
+    "description": "3 rounds: 1:00 Wall Balls (20/14), 1:00 Sumo Deadlift High Pull (75/55), 1:00 Box Jumps (20\"), 1:00 Push Press (75/55), 1:00 Row (cal); rest 1:00 between rounds",
+    "tags": ["benchmark", "notable", "intervals"],
+    "aliases": ["FGB"],
+    "source": "curated"
+  },
+  {
+    "id": "filthy-fifty",
+    "name": "Filthy Fifty",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "For time: 50 Box Jumps, 50 Jumping Pull-ups, 50 KB Swings, 50 Walking Lunges, 50 Knees-to-Elbows, 50 Push Press, 50 Back Extensions, 50 Wall Balls, 50 Burpees, 50 Double-unders",
+    "tags": ["benchmark", "notable", "chip"],
+    "source": "curated"
+  },
+  {
+    "id": "king-kong",
+    "name": "King Kong",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Time",
+    "description": "3 rounds for time: 1 Deadlift (455/320), 2 Muscle-ups, 3 Squat Cleans (250/175), 4 Handstand Push-ups",
+    "tags": ["benchmark", "notable"],
+    "source": "curated"
+  },
+  {
+    "id": "the-chief",
+    "name": "The Chief",
+    "category": "Benchmark",
+    "subCategory": "Notable",
+    "scoreType": "Rounds+Reps",
+    "description": "5 cycles: AMRAP 3: 3 Power Cleans (135/95), 6 Push-ups, 9 Air Squats; rest 1:00 between cycles",
+    "tags": ["benchmark", "notable", "intervals"],
+    "source": "curated"
+  }
+]
+

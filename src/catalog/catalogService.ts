@@ -1,5 +1,11 @@
 import type { CatalogItem } from '../types/catalog';
-import catalogData from './catalog.json';
+import girls from './benchmarks_girls.json';
+import heroes from './benchmarks_heroes.json';
+import notable from './benchmarks_notable.json';
+import open from './benchmarks_open.json';
+import lifts from './lifts.json';
+import monostructural from './monostructural.json';
+import skills from './skills.json';
 
 /**
  * Catalog Service - Abstraction layer for catalog data access
@@ -16,7 +22,23 @@ type CatalogItemData = Omit<CatalogItem, 'isBuiltin' | 'isFavorite' | 'createdAt
  * Future: fetch('/api/catalog')
  */
 export const getBuiltinCatalog = (): CatalogItem[] => {
-  return (catalogData as CatalogItemData[]).map((item) => ({
+  const merged = [
+    ...(girls as CatalogItemData[]),
+    ...(heroes as CatalogItemData[]),
+    ...(notable as CatalogItemData[]),
+    ...(open as CatalogItemData[]),
+    ...(lifts as CatalogItemData[]),
+    ...(monostructural as CatalogItemData[]),
+    ...(skills as CatalogItemData[]),
+  ];
+
+  // Deduplicate by ID (first wins) to prevent accidental duplicates across files.
+  const byId = new Map<string, CatalogItemData>();
+  for (const item of merged) {
+    if (!byId.has(item.id)) byId.set(item.id, item);
+  }
+
+  return [...byId.values()].map((item) => ({
     ...item,
     isBuiltin: true,
     isFavorite: false,
@@ -29,15 +51,7 @@ export const getBuiltinCatalog = (): CatalogItem[] => {
  * Future: fetch(`/api/catalog/${id}`)
  */
 export const getBuiltinCatalogItemById = (id: string): CatalogItem | undefined => {
-  const item = (catalogData as CatalogItemData[]).find((item) => item.id === id);
-  if (!item) return undefined;
-  
-  return {
-    ...item,
-    isBuiltin: true,
-    isFavorite: false,
-    createdAt: 0,
-  };
+  return getBuiltinCatalog().find((item) => item.id === id);
 };
 
 /**

@@ -9,6 +9,21 @@ export type Category =
   | 'Custom';        // User-created items
 
 /**
+ * Optional subtype classification for richer filtering/search.
+ * Kept separate from `Category` to avoid breaking existing UI flows.
+ */
+export type SubCategory =
+  | 'Girls'
+  | 'Heroes'
+  | 'Open'
+  | 'Games'
+  | 'Notable'
+  | 'Movement'
+  | 'Equipment'
+  | 'Test'
+  | 'Other';
+
+/**
  * How the result is scored
  */
 export type ScoreType = 
@@ -36,8 +51,13 @@ export interface CatalogItem {
   id: string;
   name: string;
   category: Category;
+  subCategory?: SubCategory;
+  tags?: string[];
   scoreType: ScoreType;
   description?: string;
+  aliases?: string[];      // Alternative names for search (e.g. "C&J", "Clean and Jerk")
+  source?: string;         // Provenance label (e.g. "curated", "CrossFit Open", "community")
+  sourceUrl?: string;      // Optional URL to the original reference
   isBuiltin: boolean;      // true for seed items, false for user-created
   isFavorite: boolean;     // user preference
   createdAt: number;       // timestamp
@@ -83,8 +103,13 @@ export interface CustomItem {
   id: string;
   name: string;
   category: Category;
+  subCategory?: SubCategory;
+  tags?: string[];
   scoreType: ScoreType;
   description?: string;
+  aliases?: string[];
+  source?: string;
+  sourceUrl?: string;
   createdAt: number;
   metrics?: MetricType;
 }

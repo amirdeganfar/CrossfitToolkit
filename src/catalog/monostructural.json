@@ -1,0 +1,47 @@
+[
+  {
+    "id": "run",
+    "name": "Run",
+    "category": "Monostructural",
+    "scoreType": "Time",
+    "description": "Running for time — specify distance when logging",
+    "metrics": "distance",
+    "tags": ["cardio", "engine"],
+    "aliases": ["Running"],
+    "source": "curated"
+  },
+  {
+    "id": "row",
+    "name": "Row",
+    "category": "Monostructural",
+    "scoreType": "Time",
+    "description": "Rowing for time — log by distance or calories",
+    "metrics": "distance+calories",
+    "tags": ["cardio", "engine", "erg"],
+    "aliases": ["RowErg", "Concept2 Row"],
+    "source": "curated"
+  },
+  {
+    "id": "bike-cals",
+    "name": "Assault Bike (Cal)",
+    "category": "Monostructural",
+    "scoreType": "Time",
+    "description": "Assault Bike for time — log by distance or calories",
+    "metrics": "distance+calories",
+    "tags": ["cardio", "engine", "bike"],
+    "aliases": ["Assault Bike", "Air Bike", "Echo Bike"],
+    "source": "curated"
+  },
+  {
+    "id": "ski-erg",
+    "name": "Ski Erg",
+    "category": "Monostructural",
+    "scoreType": "Time",
+    "description": "Ski Erg for time — log by distance or calories",
+    "metrics": "distance+calories",
+    "tags": ["cardio", "engine", "erg"],
+    "aliases": ["SkiErg", "Concept2 Ski"],
+    "source": "curated"
+  }
+]
+

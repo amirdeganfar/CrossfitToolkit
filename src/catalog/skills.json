@@ -1,0 +1,83 @@
+[
+  {
+    "id": "pullups-max",
+    "name": "Pull-ups (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken pull-ups (strict or kipping)",
+    "tags": ["gymnastics", "pull"],
+    "aliases": ["Pullups", "Max Pull-ups"],
+    "source": "curated"
+  },
+  {
+    "id": "hspu-max",
+    "name": "HSPU (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken handstand push-ups",
+    "tags": ["gymnastics", "press", "inversion"],
+    "aliases": ["Handstand Push-ups (Max)", "Max HSPU"],
+    "source": "curated"
+  },
+  {
+    "id": "muscle-ups-max",
+    "name": "Muscle-ups (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken muscle-ups (ring or bar)",
+    "tags": ["gymnastics", "pull", "rings"],
+    "aliases": ["Max MU", "Max Muscle-ups"],
+    "source": "curated"
+  },
+  {
+    "id": "double-unders-max",
+    "name": "Double-unders (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken double-unders",
+    "tags": ["jump-rope", "skill"],
+    "aliases": ["DUs (Max)", "Max Double-unders"],
+    "source": "curated"
+  },
+  {
+    "id": "toes-to-bar-max",
+    "name": "Toes-to-Bar (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken toes-to-bar",
+    "tags": ["gymnastics", "core", "pull"],
+    "aliases": ["TTB (Max)", "Max Toes-to-bar"],
+    "source": "curated"
+  },
+
+  {
+    "id": "handstand-walk-max-distance",
+    "name": "Handstand Walk (Max Distance)",
+    "category": "Skill",
+    "scoreType": "Distance",
+    "description": "Max handstand walk distance (single attempt or best of session)",
+    "tags": ["gymnastics", "inversion", "walk"],
+    "aliases": ["HS Walk"],
+    "source": "curated"
+  },
+  {
+    "id": "rope-climb-max",
+    "name": "Rope Climb (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max rope climbs (for time cap or unbroken)",
+    "tags": ["gymnastics", "pull", "rope"],
+    "source": "curated"
+  },
+  {
+    "id": "strict-ring-dip-max",
+    "name": "Ring Dip (Strict, Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max strict ring dips",
+    "tags": ["gymnastics", "press", "rings"],
+    "aliases": ["Strict Dips (Rings)"],
+    "source": "curated"
+  }
+]
+

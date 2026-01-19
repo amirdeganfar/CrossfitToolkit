@@ -1,0 +1,48 @@
+[
+  {
+    "id": "open-25-1",
+    "name": "Open 25.1",
+    "category": "Benchmark",
+    "subCategory": "Open",
+    "scoreType": "Reps",
+    "description": "AMRAP 15: Lateral Burpees over DB + DB Hang Clean-to-Overhead (start 3 reps each; +3 reps each round) + 30 ft Walking Lunge",
+    "tags": ["open", "benchmark"],
+    "aliases": ["25.1"],
+    "source": "CrossFit Open",
+    "sourceUrl": "https://games.crossfit.com/"
+  },
+  {
+    "id": "open-12-1",
+    "name": "Open 12.1",
+    "category": "Benchmark",
+    "subCategory": "Open",
+    "scoreType": "Reps",
+    "description": "AMRAP 7: Burpees",
+    "tags": ["open", "benchmark"],
+    "aliases": ["12.1"],
+    "source": "CrossFit Open"
+  },
+  {
+    "id": "open-11-1",
+    "name": "Open 11.1",
+    "category": "Benchmark",
+    "subCategory": "Open",
+    "scoreType": "Reps",
+    "description": "AMRAP 10: 30 Double-unders, 15 Power Snatches (75/55 lb)",
+    "tags": ["open", "benchmark"],
+    "aliases": ["11.1", "14.1 (similar)"],
+    "source": "CrossFit Open"
+  },
+  {
+    "id": "open-14-1",
+    "name": "Open 14.1",
+    "category": "Benchmark",
+    "subCategory": "Open",
+    "scoreType": "Reps",
+    "description": "AMRAP 10: 30 Double-unders, 15 Power Snatches (75/55 lb)",
+    "tags": ["open", "benchmark"],
+    "aliases": ["14.1"],
+    "source": "CrossFit Open"
+  }
+]
+

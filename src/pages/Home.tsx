@@ -85,7 +85,14 @@ export const Home = () => {
 
   // Fetch item names for recent logs
   useEffect(() => {
+    let cancelled = false;
+
     const fetchItemNames = async () => {
+      if (recentLogs.length === 0) {
+        if (!cancelled) setRecentLogsWithItems([]);
+        return;
+      }
+
       const logsWithItems = await Promise.all(
         recentLogs.map(async (log) => {
           const item = await db.getCatalogItemById(log.catalogItemId);
@@ -103,14 +110,15 @@ export const Home = () => {
           };
         })
       );
-      setRecentLogsWithItems(logsWithItems);
+
+      if (!cancelled) setRecentLogsWithItems(logsWithItems);
     };
 
-    if (recentLogs.length > 0) {
-      fetchItemNames();
-    } else {
-      setRecentLogsWithItems([]);
-    }
+    void fetchItemNames();
+
+    return () => {
+      cancelled = true;
+    };
   }, [recentLogs]);
 
   const handleSearchFocus = () => {

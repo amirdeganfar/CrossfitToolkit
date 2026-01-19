@@ -1,0 +1,106 @@
+[
+  {
+    "id": "back-squat",
+    "name": "Back Squat",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Back Squat",
+    "tags": ["squat", "barbell", "strength"],
+    "aliases": ["Squat"],
+    "source": "curated"
+  },
+  {
+    "id": "front-squat",
+    "name": "Front Squat",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Front Squat",
+    "tags": ["squat", "barbell", "strength"],
+    "source": "curated"
+  },
+  {
+    "id": "overhead-squat",
+    "name": "Overhead Squat",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Overhead Squat",
+    "tags": ["squat", "barbell", "overhead", "strength"],
+    "aliases": ["OHS"],
+    "source": "curated"
+  },
+  {
+    "id": "deadlift",
+    "name": "Deadlift",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Deadlift",
+    "tags": ["hinge", "barbell", "strength"],
+    "source": "curated"
+  },
+  {
+    "id": "clean",
+    "name": "Clean",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Clean (power or squat)",
+    "tags": ["olympic", "barbell", "strength"],
+    "source": "curated"
+  },
+  {
+    "id": "clean-and-jerk",
+    "name": "Clean & Jerk",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Clean & Jerk",
+    "tags": ["olympic", "barbell", "strength"],
+    "aliases": ["C&J", "Clean and Jerk"],
+    "source": "curated"
+  },
+  {
+    "id": "snatch",
+    "name": "Snatch",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Snatch (power or squat)",
+    "tags": ["olympic", "barbell", "strength"],
+    "source": "curated"
+  },
+  {
+    "id": "strict-press",
+    "name": "Strict Press",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Strict Press",
+    "tags": ["press", "barbell", "strength"],
+    "aliases": ["Shoulder Press"],
+    "source": "curated"
+  },
+  {
+    "id": "push-press",
+    "name": "Push Press",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Push Press",
+    "tags": ["press", "barbell", "strength"],
+    "source": "curated"
+  },
+  {
+    "id": "push-jerk",
+    "name": "Push Jerk",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Push Jerk",
+    "tags": ["jerk", "barbell", "strength"],
+    "source": "curated"
+  },
+  {
+    "id": "bench-press",
+    "name": "Bench Press",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Bench Press",
+    "tags": ["press", "barbell", "strength"],
+    "source": "curated"
+  }
+]
+

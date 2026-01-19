@@ -1,0 +1,134 @@
+[
+  {
+    "id": "murph",
+    "name": "Murph",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "For time: 1 mile Run, 100 Pull-ups, 200 Push-ups, 300 Air Squats, 1 mile Run (20/14 lb vest optional)",
+    "tags": ["benchmark", "hero"],
+    "source": "curated"
+  },
+  {
+    "id": "dt",
+    "name": "DT",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "5 RFT: 12 Deadlifts, 9 Hang Power Cleans, 6 Push Jerks (155/105 lb)",
+    "tags": ["benchmark", "hero", "barbell"],
+    "source": "curated"
+  },
+  {
+    "id": "jt",
+    "name": "JT",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "21-15-9: Handstand Push-ups, Ring Dips, Push-ups",
+    "tags": ["benchmark", "hero", "gymnastics"],
+    "source": "curated"
+  },
+  {
+    "id": "michael",
+    "name": "Michael",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "3 RFT: 800m Run, 50 Back Extensions, 50 Sit-ups",
+    "tags": ["benchmark", "hero"],
+    "source": "curated"
+  },
+  {
+    "id": "badger",
+    "name": "Badger",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "3 RFT: 30 Squat Cleans (95/65 lb), 30 Pull-ups, 800m Run",
+    "tags": ["benchmark", "hero"],
+    "source": "curated"
+  },
+  {
+    "id": "randy",
+    "name": "Randy",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "75 Power Snatches for time (75/55 lb)",
+    "tags": ["benchmark", "hero", "barbell"],
+    "source": "curated"
+  },
+  {
+    "id": "nate",
+    "name": "Nate",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Rounds+Reps",
+    "description": "AMRAP 20: 2 Muscle-ups, 4 Handstand Push-ups, 8 KB Swings (70/53 lb)",
+    "tags": ["benchmark", "hero", "amrap"],
+    "source": "curated"
+  },
+  {
+    "id": "kalsu",
+    "name": "Kalsu",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "100 Thrusters for time (135/95 lb); start with 5 Burpees, then every minute: 5 Burpees",
+    "tags": ["benchmark", "hero"],
+    "source": "curated"
+  },
+  {
+    "id": "chad1000x",
+    "name": "CHAD1000X",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "1000 weighted box step-ups for time (20\" box; commonly with 45/35 lb ruck/vest)",
+    "tags": ["benchmark", "hero", "endurance"],
+    "aliases": ["Chad"],
+    "source": "curated"
+  },
+  {
+    "id": "manion",
+    "name": "Manion",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "7 RFT: 400m Run, 29 Back Squats (135/95 lb)",
+    "tags": ["benchmark", "hero"],
+    "source": "curated"
+  },
+  {
+    "id": "mccghee",
+    "name": "McGhee",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Rounds+Reps",
+    "description": "AMRAP 30: 5 Deadlifts (275/185 lb), 13 Push-ups, 9 Box Jumps (24/20\")",
+    "tags": ["benchmark", "hero", "amrap"],
+    "source": "curated"
+  },
+  {
+    "id": "riley",
+    "name": "Riley",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "For time: 1.5 mile Run, 150 Burpees, 1.5 mile Run",
+    "tags": ["benchmark", "hero"],
+    "source": "curated"
+  },
+  {
+    "id": "tommy-v",
+    "name": "Tommy V",
+    "category": "Benchmark",
+    "subCategory": "Heroes",
+    "scoreType": "Time",
+    "description": "For time: 21 Thrusters (115/75), 12 Rope Climbs (15 ft), 15 Thrusters, 9 Rope Climbs, 9 Thrusters, 6 Rope Climbs",
+    "tags": ["benchmark", "hero"],
+    "source": "curated"
+  }
+]
+
