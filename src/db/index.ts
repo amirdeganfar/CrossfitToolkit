@@ -1,26 +1,77 @@
 import Dexie, { type EntityTable } from 'dexie';
-import type { CatalogItem, PRLog, UserSettings } from '../types/catalog';
-import { getBuiltinCatalog } from '../catalog/seed';
+import type { CatalogItem, PRLog, UserSettings, Favorite, CustomItem } from '../types/catalog';
+import { getBuiltinCatalog, getBuiltinCatalogItemById } from '../catalog/catalogService';
 
 /**
  * CrossfitToolkit IndexedDB Database
+ * 
+ * Schema v2: Catalog items moved to static JSON file.
+ * DB now only stores user data: favorites, custom items, PR logs, settings.
  */
 class CrossfitToolkitDB extends Dexie {
-  catalogItems!: EntityTable<CatalogItem, 'id'>;
+  favorites!: EntityTable<Favorite, 'id'>;
+  customItems!: EntityTable<CustomItem, 'id'>;
   prLogs!: EntityTable<PRLog, 'id'>;
   settings!: EntityTable<UserSettings & { id: string }, 'id'>;
 
   constructor() {
     super('CrossfitToolkitDB');
 
+    // Version 1: Original schema with catalogItems (deprecated)
     this.version(1).stores({
-      // Catalog items indexed by id, category, name, and favorite status
       catalogItems: 'id, category, name, isFavorite, isBuiltin',
-      // PR logs indexed by id, catalogItemId, date, and variant
       prLogs: 'id, catalogItemId, date, variant',
-      // Settings (singleton with id='default')
       settings: 'id',
     });
+
+    // Version 2: Catalog items moved to JSON, DB stores only user data
+    this.version(2)
+      .stores({
+        // Remove catalogItems table (set to null)
+        catalogItems: null,
+        // New tables for user data
+        favorites: 'id',
+        customItems: 'id, category, name',
+        prLogs: 'id, catalogItemId, date, variant',
+        settings: 'id',
+      })
+      .upgrade(async (tx) => {
+        console.log('[DB] Migrating from v1 to v2...');
+        
+        // Get old catalogItems table
+        const oldCatalogItems = tx.table('catalogItems');
+        const allItems = await oldCatalogItems.toArray();
+        
+        // Extract favorites (items where isFavorite is true)
+        const favoriteIds = allItems
+          .filter((item: CatalogItem) => item.isFavorite)
+          .map((item: CatalogItem) => ({ id: item.id }));
+        
+        if (favoriteIds.length > 0) {
+          await tx.table('favorites').bulkAdd(favoriteIds);
+          console.log(`[DB] Migrated ${favoriteIds.length} favorites`);
+        }
+        
+        // Extract custom items (non-builtin items)
+        const customItems = allItems
+          .filter((item: CatalogItem) => !item.isBuiltin)
+          .map((item: CatalogItem) => ({
+            id: item.id,
+            name: item.name,
+            category: item.category,
+            scoreType: item.scoreType,
+            description: item.description,
+            createdAt: item.createdAt,
+            metrics: item.metrics,
+          }));
+        
+        if (customItems.length > 0) {
+          await tx.table('customItems').bulkAdd(customItems);
+          console.log(`[DB] Migrated ${customItems.length} custom items`);
+        }
+        
+        console.log('[DB] Migration complete');
+      });
   }
 }
 
@@ -28,38 +79,9 @@ class CrossfitToolkitDB extends Dexie {
 export const db = new CrossfitToolkitDB();
 
 /**
- * Initialize database with seed data if empty
+ * Initialize database
  */
 export const initializeDatabase = async (): Promise<void> => {
-  const count = await db.catalogItems.count();
-  const builtinItems = getBuiltinCatalog();
-  
-  if (count === 0) {
-    // Seed with builtin catalog
-    await db.catalogItems.bulkAdd(builtinItems);
-    console.log(`[DB] Seeded ${builtinItems.length} catalog items`);
-  } else {
-    // Update existing builtin items with latest seed data (migration)
-    // This ensures scoreType and description changes are reflected
-    for (const seedItem of builtinItems) {
-      const existing = await db.catalogItems.get(seedItem.id);
-      if (existing && existing.isBuiltin) {
-        // Preserve user preferences (isFavorite), update everything else
-        await db.catalogItems.update(seedItem.id, {
-          name: seedItem.name,
-          category: seedItem.category,
-          scoreType: seedItem.scoreType,
-          description: seedItem.description,
-        });
-      } else if (!existing) {
-        // Add new builtin items that don't exist yet
-        await db.catalogItems.add(seedItem);
-        console.log(`[DB] Added new builtin item: ${seedItem.name}`);
-      }
-    }
-    console.log('[DB] Synced builtin catalog items');
-  }
-
   // Ensure default settings exist
   const settings = await db.settings.get('default');
   if (!settings) {
@@ -70,6 +92,8 @@ export const initializeDatabase = async (): Promise<void> => {
     });
     console.log('[DB] Created default settings');
   }
+  
+  console.log('[DB] Initialized');
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -77,10 +101,31 @@ export const initializeDatabase = async (): Promise<void> => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
- * Get all catalog items
+ * Get all catalog items (builtin + custom, with favorites applied)
  */
 export const getAllCatalogItems = async (): Promise<CatalogItem[]> => {
-  return db.catalogItems.toArray();
+  // Get favorites and custom items from DB
+  const [favorites, customItems] = await Promise.all([
+    db.favorites.toArray(),
+    db.customItems.toArray(),
+  ]);
+  
+  const favoriteIds = new Set(favorites.map((f) => f.id));
+  
+  // Get builtin items from catalog service and apply favorites
+  const builtinItems = getBuiltinCatalog().map((item) => ({
+    ...item,
+    isFavorite: favoriteIds.has(item.id),
+  }));
+  
+  // Convert custom items to CatalogItem format
+  const customCatalogItems: CatalogItem[] = customItems.map((item) => ({
+    ...item,
+    isBuiltin: false,
+    isFavorite: favoriteIds.has(item.id),
+  }));
+  
+  return [...builtinItems, ...customCatalogItems];
 };
 
 /**
@@ -89,14 +134,16 @@ export const getAllCatalogItems = async (): Promise<CatalogItem[]> => {
 export const getCatalogItemsByCategory = async (
   category: CatalogItem['category']
 ): Promise<CatalogItem[]> => {
-  return db.catalogItems.where('category').equals(category).toArray();
+  const allItems = await getAllCatalogItems();
+  return allItems.filter((item) => item.category === category);
 };
 
 /**
  * Get favorite catalog items
  */
 export const getFavoriteCatalogItems = async (): Promise<CatalogItem[]> => {
-  return db.catalogItems.where('isFavorite').equals(1).toArray();
+  const allItems = await getAllCatalogItems();
+  return allItems.filter((item) => item.isFavorite);
 };
 
 /**
@@ -105,7 +152,28 @@ export const getFavoriteCatalogItems = async (): Promise<CatalogItem[]> => {
 export const getCatalogItemById = async (
   id: string
 ): Promise<CatalogItem | undefined> => {
-  return db.catalogItems.get(id);
+  // Check builtin catalog first
+  const builtinItem = getBuiltinCatalogItemById(id);
+  if (builtinItem) {
+    const favorite = await db.favorites.get(id);
+    return {
+      ...builtinItem,
+      isFavorite: !!favorite,
+    };
+  }
+  
+  // Check custom items
+  const customItem = await db.customItems.get(id);
+  if (customItem) {
+    const favorite = await db.favorites.get(id);
+    return {
+      ...customItem,
+      isBuiltin: false,
+      isFavorite: !!favorite,
+    };
+  }
+  
+  return undefined;
 };
 
 /**
@@ -115,18 +183,21 @@ export const searchCatalogItems = async (
   query: string
 ): Promise<CatalogItem[]> => {
   const lowerQuery = query.toLowerCase();
-  return db.catalogItems
-    .filter((item) => item.name.toLowerCase().includes(lowerQuery))
-    .toArray();
+  const allItems = await getAllCatalogItems();
+  return allItems.filter((item) => 
+    item.name.toLowerCase().includes(lowerQuery)
+  );
 };
 
 /**
  * Toggle favorite status for a catalog item
  */
 export const toggleFavorite = async (id: string): Promise<void> => {
-  const item = await db.catalogItems.get(id);
-  if (item) {
-    await db.catalogItems.update(id, { isFavorite: !item.isFavorite });
+  const existing = await db.favorites.get(id);
+  if (existing) {
+    await db.favorites.delete(id);
+  } else {
+    await db.favorites.add({ id });
   }
 };
 
@@ -134,13 +205,12 @@ export const toggleFavorite = async (id: string): Promise<void> => {
  * Add a custom catalog item
  */
 export const addCustomCatalogItem = async (
-  item: Omit<CatalogItem, 'id' | 'isBuiltin' | 'createdAt'>
+  item: Omit<CatalogItem, 'id' | 'isBuiltin' | 'isFavorite' | 'createdAt'>
 ): Promise<string> => {
   const id = `custom-${Date.now()}`;
-  await db.catalogItems.add({
+  await db.customItems.add({
     ...item,
     id,
-    isBuiltin: false,
     createdAt: Date.now(),
   });
   return id;
@@ -302,18 +372,22 @@ export const updateSettings = async (
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
- * Export all data as JSON
+ * Export all user data as JSON
  */
 export const exportData = async (): Promise<string> => {
-  const catalogItems = await db.catalogItems.toArray();
-  const prLogs = await db.prLogs.toArray();
-  const settings = await getSettings();
+  const [favorites, customItems, prLogs, settings] = await Promise.all([
+    db.favorites.toArray(),
+    db.customItems.toArray(),
+    db.prLogs.toArray(),
+    getSettings(),
+  ]);
 
   return JSON.stringify(
     {
-      version: 1,
+      version: 2,
       exportedAt: new Date().toISOString(),
-      catalogItems,
+      favorites,
+      customItems,
       prLogs,
       settings,
     },
@@ -328,21 +402,85 @@ export const exportData = async (): Promise<string> => {
 export const importData = async (json: string): Promise<void> => {
   const data = JSON.parse(json);
 
-  if (data.version !== 1) {
+  // Handle v1 format (legacy)
+  if (data.version === 1) {
+    await importV1Data(data);
+    return;
+  }
+
+  if (data.version !== 2) {
     throw new Error('Unsupported data format version');
   }
 
-  // Clear existing data
-  await db.catalogItems.clear();
-  await db.prLogs.clear();
+  // Clear existing user data
+  await Promise.all([
+    db.favorites.clear(),
+    db.customItems.clear(),
+    db.prLogs.clear(),
+  ]);
 
   // Import new data
-  if (data.catalogItems?.length > 0) {
-    await db.catalogItems.bulkAdd(data.catalogItems);
+  if (data.favorites?.length > 0) {
+    await db.favorites.bulkAdd(data.favorites);
+  }
+  if (data.customItems?.length > 0) {
+    await db.customItems.bulkAdd(data.customItems);
   }
   if (data.prLogs?.length > 0) {
     await db.prLogs.bulkAdd(data.prLogs);
   }
+  if (data.settings) {
+    await db.settings.put({ id: 'default', ...data.settings });
+  }
+};
+
+/**
+ * Import legacy v1 data format
+ */
+const importV1Data = async (data: {
+  catalogItems?: CatalogItem[];
+  prLogs?: PRLog[];
+  settings?: UserSettings;
+}): Promise<void> => {
+  // Clear existing user data
+  await Promise.all([
+    db.favorites.clear(),
+    db.customItems.clear(),
+    db.prLogs.clear(),
+  ]);
+
+  if (data.catalogItems?.length) {
+    // Extract favorites
+    const favorites = data.catalogItems
+      .filter((item) => item.isFavorite)
+      .map((item) => ({ id: item.id }));
+    
+    if (favorites.length > 0) {
+      await db.favorites.bulkAdd(favorites);
+    }
+
+    // Extract custom items
+    const customItems = data.catalogItems
+      .filter((item) => !item.isBuiltin)
+      .map((item) => ({
+        id: item.id,
+        name: item.name,
+        category: item.category,
+        scoreType: item.scoreType,
+        description: item.description,
+        createdAt: item.createdAt,
+        metrics: item.metrics,
+      }));
+    
+    if (customItems.length > 0) {
+      await db.customItems.bulkAdd(customItems);
+    }
+  }
+
+  if (data.prLogs?.length) {
+    await db.prLogs.bulkAdd(data.prLogs);
+  }
+
   if (data.settings) {
     await db.settings.put({ id: 'default', ...data.settings });
   }

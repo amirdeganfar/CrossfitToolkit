@@ -1,0 +1,216 @@
+[
+  {
+    "id": "fran",
+    "name": "Fran",
+    "category": "Benchmark",
+    "scoreType": "Time",
+    "description": "21-15-9: Thrusters (95/65 lb) & Pull-ups"
+  },
+  {
+    "id": "grace",
+    "name": "Grace",
+    "category": "Benchmark",
+    "scoreType": "Time",
+    "description": "30 Clean & Jerks for time (135/95 lb)"
+  },
+  {
+    "id": "helen",
+    "name": "Helen",
+    "category": "Benchmark",
+    "scoreType": "Time",
+    "description": "3 RFT: 400m Run, 21 KB Swings (53/35 lb), 12 Pull-ups"
+  },
+  {
+    "id": "diane",
+    "name": "Diane",
+    "category": "Benchmark",
+    "scoreType": "Time",
+    "description": "21-15-9: Deadlifts (225/155 lb) & Handstand Push-ups"
+  },
+  {
+    "id": "elizabeth",
+    "name": "Elizabeth",
+    "category": "Benchmark",
+    "scoreType": "Time",
+    "description": "21-15-9: Cleans (135/95 lb) & Ring Dips"
+  },
+  {
+    "id": "cindy",
+    "name": "Cindy",
+    "category": "Benchmark",
+    "scoreType": "Rounds+Reps",
+    "description": "20 min AMRAP: 5 Pull-ups, 10 Push-ups, 15 Air Squats"
+  },
+  {
+    "id": "murph",
+    "name": "Murph",
+    "category": "Benchmark",
+    "scoreType": "Time",
+    "description": "1 mile Run, 100 Pull-ups, 200 Push-ups, 300 Squats, 1 mile Run (20/14 lb vest)"
+  },
+  {
+    "id": "jackie",
+    "name": "Jackie",
+    "category": "Benchmark",
+    "scoreType": "Time",
+    "description": "1000m Row, 50 Thrusters (45/35 lb), 30 Pull-ups"
+  },
+  {
+    "id": "isabel",
+    "name": "Isabel",
+    "category": "Benchmark",
+    "scoreType": "Time",
+    "description": "30 Snatches for time (135/95 lb)"
+  },
+  {
+    "id": "karen",
+    "name": "Karen",
+    "category": "Benchmark",
+    "scoreType": "Time",
+    "description": "150 Wall Balls for time (20/14 lb)"
+  },
+  {
+    "id": "back-squat",
+    "name": "Back Squat",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Back Squat"
+  },
+  {
+    "id": "front-squat",
+    "name": "Front Squat",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Front Squat"
+  },
+  {
+    "id": "overhead-squat",
+    "name": "Overhead Squat",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Overhead Squat"
+  },
+  {
+    "id": "deadlift",
+    "name": "Deadlift",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Deadlift"
+  },
+  {
+    "id": "clean",
+    "name": "Clean",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Clean (squat or power)"
+  },
+  {
+    "id": "clean-and-jerk",
+    "name": "Clean & Jerk",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Clean & Jerk"
+  },
+  {
+    "id": "snatch",
+    "name": "Snatch",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Snatch (squat or power)"
+  },
+  {
+    "id": "strict-press",
+    "name": "Strict Press",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Strict Press"
+  },
+  {
+    "id": "push-press",
+    "name": "Push Press",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Push Press"
+  },
+  {
+    "id": "push-jerk",
+    "name": "Push Jerk",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Push Jerk"
+  },
+  {
+    "id": "bench-press",
+    "name": "Bench Press",
+    "category": "Lift",
+    "scoreType": "Load",
+    "description": "1 Rep Max Bench Press"
+  },
+  {
+    "id": "run",
+    "name": "Run",
+    "category": "Monostructural",
+    "scoreType": "Time",
+    "description": "Running for time — specify distance when logging",
+    "metrics": "distance"
+  },
+  {
+    "id": "row",
+    "name": "Row",
+    "category": "Monostructural",
+    "scoreType": "Time",
+    "description": "Rowing for time — log by distance or calories",
+    "metrics": "distance+calories"
+  },
+  {
+    "id": "bike-cals",
+    "name": "Assault Bike (Cal)",
+    "category": "Monostructural",
+    "scoreType": "Time",
+    "description": "Assault Bike for time — log by distance or calories",
+    "metrics": "distance+calories"
+  },
+  {
+    "id": "ski-erg",
+    "name": "Ski Erg",
+    "category": "Monostructural",
+    "scoreType": "Time",
+    "description": "Ski Erg for time — log by distance or calories",
+    "metrics": "distance+calories"
+  },
+  {
+    "id": "pullups-max",
+    "name": "Pull-ups (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken strict or kipping pull-ups"
+  },
+  {
+    "id": "hspu-max",
+    "name": "HSPU (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken handstand push-ups"
+  },
+  {
+    "id": "muscle-ups-max",
+    "name": "Muscle-ups (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken ring or bar muscle-ups"
+  },
+  {
+    "id": "double-unders-max",
+    "name": "Double-unders (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken double-unders"
+  },
+  {
+    "id": "toes-to-bar-max",
+    "name": "Toes-to-Bar (Max)",
+    "category": "Skill",
+    "scoreType": "Reps",
+    "description": "Max unbroken toes-to-bar"
+  }
+]

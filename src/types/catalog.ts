@@ -68,3 +68,23 @@ export interface UserSettings {
   weightUnit: 'kg' | 'lb';
   distanceUnit: 'm' | 'ft';
 }
+
+/**
+ * Favorite item reference (stores only the itemId)
+ */
+export interface Favorite {
+  id: string; // Same as the catalog item ID
+}
+
+/**
+ * Custom catalog item created by user (stored in DB)
+ */
+export interface CustomItem {
+  id: string;
+  name: string;
+  category: Category;
+  scoreType: ScoreType;
+  description?: string;
+  createdAt: number;
+  metrics?: MetricType;
+}
