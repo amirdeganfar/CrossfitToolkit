@@ -4,6 +4,7 @@ import { ArrowLeft, Star, Plus, Trash2, Loader2, TrendingUp, TrendingDown, Chevr
 import { useCatalogStore, useCatalogItem } from '../stores/catalogStore';
 import { useInitialize } from '../hooks/useInitialize';
 import { LogResultModal } from '../components/LogResultModal';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { PercentageCalculator } from '../components/PercentageCalculator';
 import { isDualMetricItem, isDistanceOnlyItem } from '../utils/itemMetrics';
 import * as db from '../db';
@@ -219,6 +220,7 @@ export const ItemDetail = () => {
   const [bestByCalories, setBestByCalories] = useState<Map<number, PRLog>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [deleteLogId, setDeleteLogId] = useState<string | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   // Use utility functions for metric type detection
@@ -306,10 +308,15 @@ export const ItemDetail = () => {
     await fetchLogsAndBests(id, item);
   };
 
-  const handleDeleteLog = async (logId: string) => {
-    if (window.confirm('Delete this log?')) {
-      await deletePRLog(logId);
+  const handleDeleteLog = (logId: string) => {
+    setDeleteLogId(logId);
+  };
+
+  const confirmDeleteLog = async () => {
+    if (deleteLogId) {
+      await deletePRLog(deleteLogId);
       await refreshLogs();
+      setDeleteLogId(null);
     }
   };
 
@@ -769,7 +776,7 @@ export const ItemDetail = () => {
                                 e.stopPropagation();
                                 handleDeleteLog(log.id);
                               }}
-                              className="p-2 -m-2 rounded-lg text-[var(--color-border)] hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
+                              className="p-2 -m-2 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-60 group-hover:opacity-100"
                               aria-label="Delete log"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -821,7 +828,7 @@ export const ItemDetail = () => {
                   </div>
                   <button
                     onClick={() => handleDeleteLog(log.id)}
-                    className="p-2 -m-2 rounded-lg text-[var(--color-border)] hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
+                    className="p-2 -m-2 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-60 group-hover:opacity-100"
                     aria-label="Delete log"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -855,6 +862,19 @@ export const ItemDetail = () => {
           item={item}
           onClose={() => setShowModal(false)}
           onSuccess={handleModalSuccess}
+        />
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {deleteLogId && (
+        <ConfirmDialog
+          title="Delete Log"
+          message="Are you sure you want to delete this log? This action cannot be undone."
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+          isDestructive
+          onConfirm={confirmDeleteLog}
+          onCancel={() => setDeleteLogId(null)}
         />
       )}
     </div>
