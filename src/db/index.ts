@@ -94,6 +94,7 @@ export const initializeDatabase = async (): Promise<void> => {
       id: 'default',
       weightUnit: 'kg',
       distanceUnit: 'm',
+      hasSeenOnboarding: false,
     });
     console.log('[DB] Created default settings');
   }
@@ -360,7 +361,7 @@ export const deletePRLog = async (id: string): Promise<void> => {
  */
 export const getSettings = async (): Promise<UserSettings> => {
   const settings = await db.settings.get('default');
-  return settings ?? { weightUnit: 'kg', distanceUnit: 'm' };
+  return settings ?? { weightUnit: 'kg', distanceUnit: 'm', hasSeenOnboarding: false };
 };
 
 /**

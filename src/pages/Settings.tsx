@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Download, Upload, Check, AlertCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, Download, Upload, Check, AlertCircle, Loader2, HelpCircle, ChevronRight } from 'lucide-react';
 import { useCatalogStore } from '../stores/catalogStore';
 import { useInitialize } from '../hooks/useInitialize';
 
@@ -278,6 +278,31 @@ export const Settings = () => {
               Permanently delete all PRs, favorites, and settings
             </p>
           </div>
+        </button>
+      </section>
+
+      {/* Help section */}
+      <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden">
+        <div className="px-4 py-3 border-b border-[var(--color-border)]">
+          <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
+            Help
+          </h2>
+        </div>
+
+        <button
+          onClick={() => navigate('/onboarding')}
+          className="w-full px-4 py-3 flex items-center justify-between hover:bg-[var(--color-surface-elevated)] transition-colors text-left"
+        >
+          <div className="flex items-center gap-3">
+            <HelpCircle className="w-5 h-5 text-[var(--color-text-muted)]" />
+            <div>
+              <span className="text-[var(--color-text)]">View Tutorial</span>
+              <p className="text-xs text-[var(--color-text-muted)]">
+                Learn how to use the app and install it
+              </p>
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)]" />
         </button>
       </section>
 

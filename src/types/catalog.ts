@@ -88,6 +88,7 @@ export interface PRLog {
 export interface UserSettings {
   weightUnit: 'kg' | 'lb';
   distanceUnit: 'm' | 'ft';
+  hasSeenOnboarding?: boolean;
 }
 
 /**
