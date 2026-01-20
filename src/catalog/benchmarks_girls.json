@@ -5,7 +5,8 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Time",
-    "description": "For time: 100 Pull-ups, 100 Push-ups, 100 Sit-ups, 100 Air Squats",
+    "description": "For time",
+    "movements": ["100 Pull-ups", "100 Push-ups", "100 Sit-ups", "100 Air Squats"],
     "tags": ["benchmark", "girl"],
     "source": "curated"
   },
@@ -15,7 +16,8 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Time",
-    "description": "5 RFT (rest 3:00 between rounds): 20 Pull-ups, 30 Push-ups, 40 Sit-ups, 50 Air Squats",
+    "description": "5 RFT (rest 3:00 between rounds)",
+    "movements": ["20 Pull-ups", "30 Push-ups", "40 Sit-ups", "50 Air Squats"],
     "tags": ["benchmark", "girl"],
     "source": "curated"
   },
@@ -25,18 +27,19 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Rounds+Reps",
-    "description": "EMOM 30: 5 Pull-ups, 10 Push-ups, 15 Air Squats",
+    "description": "EMOM 30",
+    "movements": ["5 Pull-ups", "10 Push-ups", "15 Air Squats"],
     "tags": ["benchmark", "girl", "emom"],
     "source": "curated"
   },
-
   {
     "id": "fran",
     "name": "Fran",
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Time",
-    "description": "21-15-9: Thrusters (95/65 lb) & Pull-ups",
+    "description": "21-15-9",
+    "movements": ["Thrusters (95/65 lb)", "Pull-ups"],
     "tags": ["benchmark", "girl"],
     "source": "curated"
   },
@@ -46,7 +49,8 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Time",
-    "description": "21-15-9: Cleans (135/95 lb) & Ring Dips",
+    "description": "21-15-9",
+    "movements": ["Cleans (135/95 lb)", "Ring Dips"],
     "tags": ["benchmark", "girl"],
     "source": "curated"
   },
@@ -56,7 +60,8 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Time",
-    "description": "21-15-9: Deadlifts (225/155 lb) & Handstand Push-ups",
+    "description": "21-15-9",
+    "movements": ["Deadlifts (225/155 lb)", "Handstand Push-ups"],
     "tags": ["benchmark", "girl"],
     "source": "curated"
   },
@@ -66,7 +71,8 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Time",
-    "description": "30 Clean & Jerks for time (135/95 lb)",
+    "description": "For time",
+    "movements": ["30 Clean & Jerks (135/95 lb)"],
     "tags": ["benchmark", "girl"],
     "aliases": ["30 Clean and Jerks"],
     "source": "curated"
@@ -77,7 +83,8 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Time",
-    "description": "3 RFT: 400m Run, 21 KB Swings (53/35 lb), 12 Pull-ups",
+    "description": "3 RFT",
+    "movements": ["400m Run", "21 KB Swings (53/35 lb)", "12 Pull-ups"],
     "tags": ["benchmark", "girl"],
     "source": "curated"
   },
@@ -87,7 +94,8 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Time",
-    "description": "30 Snatches for time (135/95 lb)",
+    "description": "For time",
+    "movements": ["30 Snatches (135/95 lb)"],
     "tags": ["benchmark", "girl"],
     "source": "curated"
   },
@@ -97,7 +105,8 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Time",
-    "description": "1000m Row, 50 Thrusters (45/35 lb), 30 Pull-ups",
+    "description": "For time",
+    "movements": ["1000m Row", "50 Thrusters (45/35 lb)", "30 Pull-ups"],
     "tags": ["benchmark", "girl"],
     "source": "curated"
   },
@@ -107,18 +116,19 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Time",
-    "description": "150 Wall Balls for time (20/14 lb)",
+    "description": "For time",
+    "movements": ["150 Wall Balls (20/14 lb)"],
     "tags": ["benchmark", "girl"],
     "source": "curated"
   },
-
   {
     "id": "cindy",
     "name": "Cindy",
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Rounds+Reps",
-    "description": "AMRAP 20: 5 Pull-ups, 10 Push-ups, 15 Air Squats",
+    "description": "AMRAP 20",
+    "movements": ["5 Pull-ups", "10 Push-ups", "15 Air Squats"],
     "tags": ["benchmark", "girl", "amrap"],
     "source": "curated"
   },
@@ -128,7 +138,8 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Time",
-    "description": "10-9-8-7-6-5-4-3-2-1: Deadlift (1.5×BW), Bench Press (BW), Clean (0.75×BW)",
+    "description": "10-9-8-7-6-5-4-3-2-1",
+    "movements": ["Deadlift (1.5×BW)", "Bench Press (BW)", "Clean (0.75×BW)"],
     "tags": ["benchmark", "girl", "barbell"],
     "aliases": ["Three Bars of Death"],
     "source": "curated"
@@ -139,7 +150,8 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Rounds+Reps",
-    "description": "AMRAP 20: 5 Handstand Push-ups, 10 Pistols, 15 Pull-ups",
+    "description": "AMRAP 20",
+    "movements": ["5 Handstand Push-ups", "10 Pistols", "15 Pull-ups"],
     "tags": ["benchmark", "girl", "amrap", "gymnastics"],
     "source": "curated"
   },
@@ -149,7 +161,8 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Time",
-    "description": "5 RFT: 400m Run, 15 Overhead Squats (95/65 lb)",
+    "description": "5 RFT",
+    "movements": ["400m Run", "15 Overhead Squats (95/65 lb)"],
     "tags": ["benchmark", "girl", "barbell"],
     "source": "curated"
   },
@@ -159,7 +172,8 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Time",
-    "description": "50-40-30-20-10: Double-unders & Sit-ups",
+    "description": "50-40-30-20-10",
+    "movements": ["Double-unders", "Sit-ups"],
     "tags": ["benchmark", "girl"],
     "source": "curated"
   },
@@ -169,7 +183,8 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Rounds+Reps",
-    "description": "AMRAP 20: 400m Run + max Pull-ups each round",
+    "description": "AMRAP 20",
+    "movements": ["400m Run", "Max Pull-ups (each round)"],
     "tags": ["benchmark", "girl", "amrap"],
     "source": "curated"
   },
@@ -179,7 +194,8 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Time",
-    "description": "5 RFT: 800m Run, 30 KB Swings (70/53 lb), 30 Pull-ups",
+    "description": "5 RFT",
+    "movements": ["800m Run", "30 KB Swings (70/53 lb)", "30 Pull-ups"],
     "tags": ["benchmark", "girl"],
     "source": "curated"
   },
@@ -189,7 +205,8 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Reps",
-    "description": "5 rounds (max reps): Bench Press (BW) + Pull-ups",
+    "description": "5 rounds (max reps)",
+    "movements": ["Bench Press (BW)", "Pull-ups"],
     "tags": ["benchmark", "girl"],
     "source": "curated"
   },
@@ -199,18 +216,19 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Time",
-    "description": "9-7-5: Muscle-ups & Snatches (135/95 lb)",
+    "description": "9-7-5",
+    "movements": ["Muscle-ups", "Snatches (135/95 lb)"],
     "tags": ["benchmark", "girl"],
     "source": "curated"
   },
-
   {
     "id": "kelly",
     "name": "Kelly",
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Time",
-    "description": "5 RFT: 400m Run, 30 Box Jumps (24/20\"), 30 Wall Balls (20/14 lb)",
+    "description": "5 RFT",
+    "movements": ["400m Run", "30 Box Jumps (24/20\")", "30 Wall Balls (20/14 lb)"],
     "tags": ["benchmark", "girl"],
     "source": "curated"
   },
@@ -220,7 +238,8 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Load",
-    "description": "15-12-9 unbroken Clean & Jerks (touch-and-go from floor). Score is heaviest successful load.",
+    "description": "15-12-9 unbroken (touch-and-go)",
+    "movements": ["Clean & Jerks"],
     "tags": ["benchmark", "girl", "barbell"],
     "source": "curated"
   },
@@ -230,7 +249,8 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Reps",
-    "description": "3 rounds of: 1 min Burpees, 1 min Power Snatches (75/55 lb), 1 min Box Jumps (24/20\"), 1 min Thrusters (75/55 lb), 1 min C2B Pull-ups; rest 1 min between rounds",
+    "description": "3 rounds (1 min each, rest 1 min between rounds)",
+    "movements": ["Burpees", "Power Snatches (75/55 lb)", "Box Jumps (24/20\")", "Thrusters (75/55 lb)", "C2B Pull-ups"],
     "tags": ["benchmark", "girl", "intervals"],
     "source": "curated"
   },
@@ -240,7 +260,8 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Time",
-    "description": "5 RFT (rest 3 min between rounds): 10 HSPU, 20 Deadlifts (185/125 lb), 30 Sit-ups, 40 Double-unders",
+    "description": "5 RFT (rest 3 min between rounds)",
+    "movements": ["10 HSPU", "20 Deadlifts (185/125 lb)", "30 Sit-ups", "40 Double-unders"],
     "tags": ["benchmark", "girl", "new-girl"],
     "source": "curated",
     "sourceUrl": "https://www.crossfit.com/faq/wod"
@@ -251,7 +272,8 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Time",
-    "description": "10-9-8-7-6-5-4-3-2-1: Muscle-ups & Bodyweight Clean & Jerks",
+    "description": "10-9-8-7-6-5-4-3-2-1",
+    "movements": ["Muscle-ups", "Bodyweight Clean & Jerks"],
     "tags": ["benchmark", "girl", "new-girl"],
     "source": "curated",
     "sourceUrl": "https://www.crossfit.com/faq/wod"
@@ -262,7 +284,8 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Time",
-    "description": "3 RFT: 20 Burpees, 21 Single-DB Snatches (50/35 lb), 12 Dual-DB Thrusters (50/35 lb)",
+    "description": "3 RFT",
+    "movements": ["20 Burpees", "21 Single-DB Snatches (50/35 lb)", "12 Dual-DB Thrusters (50/35 lb)"],
     "tags": ["benchmark", "girl", "new-girl", "dumbbell"],
     "source": "curated",
     "sourceUrl": "https://www.crossfit.com/faq/wod"
@@ -273,7 +296,8 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Time",
-    "description": "For time: 100 Hang Power Snatches, 100 Push Presses, 100 Sumo Deadlift High Pulls, 100 Front Squats (65/45 lb)",
+    "description": "For time (65/45 lb)",
+    "movements": ["100 Hang Power Snatches", "100 Push Presses", "100 Sumo Deadlift High Pulls", "100 Front Squats"],
     "tags": ["benchmark", "girl", "new-girl", "barbell"],
     "source": "curated",
     "sourceUrl": "https://www.crossfit.com/faq/wod"
@@ -284,7 +308,8 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Reps",
-    "description": "5 rounds for max reps: 3/4-bodyweight Hang Power Snatches + Handstand Push-ups; rest as needed between rounds",
+    "description": "5 rounds for max reps (rest as needed)",
+    "movements": ["3/4-bodyweight Hang Power Snatches", "Handstand Push-ups"],
     "tags": ["benchmark", "girl", "new-girl"],
     "source": "curated",
     "sourceUrl": "https://www.crossfit.com/faq/wod"
@@ -295,7 +320,8 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Time",
-    "description": "5 RFT: 20 Handstand Push-ups, 40 Pull-ups, 60 Pistols (alternating)",
+    "description": "5 RFT",
+    "movements": ["20 Handstand Push-ups", "40 Pull-ups", "60 Pistols (alternating)"],
     "tags": ["benchmark", "girl", "gymnastics"],
     "source": "curated"
   },
@@ -305,7 +331,8 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Time",
-    "description": "3 RFT: 800m Run, 50 Thrusters (75/55 lb)",
+    "description": "3 RFT",
+    "movements": ["800m Run", "50 Thrusters (75/55 lb)"],
     "tags": ["benchmark", "girl"],
     "source": "curated"
   },
@@ -315,7 +342,8 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Time",
-    "description": "5 RFT: 20 Pull-ups, 40 Push-ups, 60 Air Squats",
+    "description": "5 RFT",
+    "movements": ["20 Pull-ups", "40 Push-ups", "60 Air Squats"],
     "tags": ["benchmark", "girl"],
     "source": "curated"
   },
@@ -325,9 +353,9 @@
     "category": "Benchmark",
     "subCategory": "Girls",
     "scoreType": "Time",
-    "description": "3 RFT: 500m Row, 12 Deadlifts (BW), 21 Box Jumps (20\")",
+    "description": "3 RFT",
+    "movements": ["500m Row", "12 Deadlifts (BW)", "21 Box Jumps (20\")"],
     "tags": ["benchmark", "girl"],
     "source": "curated"
   }
 ]
-

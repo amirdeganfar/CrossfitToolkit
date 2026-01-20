@@ -55,6 +55,7 @@ export interface CatalogItem {
   tags?: string[];
   scoreType: ScoreType;
   description?: string;
+  movements?: string[];    // Structured list of movements for benchmarks (e.g., ["Thrusters", "Pull-ups"])
   aliases?: string[];      // Alternative names for search (e.g. "C&J", "Clean and Jerk")
   source?: string;         // Provenance label (e.g. "curated", "CrossFit Open", "community")
   sourceUrl?: string;      // Optional URL to the original reference
@@ -107,6 +108,7 @@ export interface CustomItem {
   tags?: string[];
   scoreType: ScoreType;
   description?: string;
+  movements?: string[];    // Structured list of movements for benchmarks
   aliases?: string[];
   source?: string;
   sourceUrl?: string;

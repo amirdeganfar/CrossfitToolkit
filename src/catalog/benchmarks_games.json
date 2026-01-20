@@ -5,7 +5,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: 172-ft Sled Push, 15/18 Bar Muscle-ups, 172-ft Sled Push",
+    "description": "For time",
+    "movements": ["172-ft Sled Push", "15/18 Bar Muscle-ups", "172-ft Sled Push"],
     "tags": ["games", "benchmark", "sled"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -16,7 +17,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "3 RFT: 8 Split Snatches (alternating, 115/75 lb), 7 Bar Muscle-ups, 400m Run",
+    "description": "3 RFT",
+    "movements": ["8 Split Snatches (alternating, 115/75 lb)", "7 Bar Muscle-ups", "400m Run"],
     "tags": ["games", "benchmark"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -27,7 +29,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: 1000m Bike, 50 Thrusters (95/65 lb), 30 Bar Muscle-ups",
+    "description": "For time",
+    "movements": ["1000m Bike", "50 Thrusters (95/65 lb)", "30 Bar Muscle-ups"],
     "tags": ["games", "benchmark"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -38,7 +41,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: 27 Thrusters (95/65 lb), 4 Legless Rope Climbs, 21 Thrusters, 3 Legless Rope Climbs, 15 Thrusters, 2 Legless Rope Climbs, 9 Thrusters, 1 Legless Rope Climb",
+    "description": "For time",
+    "movements": ["27 Thrusters (95/65 lb)", "4 Legless Rope Climbs", "21 Thrusters", "3 Legless Rope Climbs", "15 Thrusters", "2 Legless Rope Climbs", "9 Thrusters", "1 Legless Rope Climb"],
     "tags": ["games", "benchmark"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -49,7 +53,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: 6 mile Run with 30/20 lb Ruck",
+    "description": "For time",
+    "movements": ["6 mile Run with 30/20 lb Ruck"],
     "tags": ["games", "benchmark", "endurance"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -60,7 +65,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: 1 mile Run, 50 Ring Muscle-ups, 1 mile Run",
+    "description": "For time",
+    "movements": ["1 mile Run", "50 Ring Muscle-ups", "1 mile Run"],
     "tags": ["games", "benchmark"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -71,7 +77,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: 100 Sandbag Over Shoulder (150/100 lb)",
+    "description": "For time",
+    "movements": ["100 Sandbag Over Shoulder (150/100 lb)"],
     "tags": ["games", "benchmark", "sandbag"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -115,7 +122,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: 500m Ocean Swim",
+    "description": "For time",
+    "movements": ["500m Ocean Swim"],
     "tags": ["games", "benchmark", "swimming"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -126,7 +134,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: 5 Peg Board Ascents",
+    "description": "For time",
+    "movements": ["5 Peg Board Ascents"],
     "tags": ["games", "benchmark", "gymnastics"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -137,7 +146,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "5 RFT: 3 Rope Climbs (15 ft), 5 Squat Cleans (225/155 lb)",
+    "description": "5 RFT",
+    "movements": ["3 Rope Climbs (15 ft)", "5 Squat Cleans (225/155 lb)"],
     "tags": ["games", "benchmark"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -148,7 +158,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: 9-7-5 Muscle-ups, 13-11-9 Squat Snatches (135/95 lb)",
+    "description": "9-7-5",
+    "movements": ["Muscle-ups", "Squat Snatches (135/95 lb)"],
     "tags": ["games", "benchmark"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -159,7 +170,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "5 RFT: 12 Deadlifts (205/145 lb), 9 Hang Power Cleans, 6 Push Jerks",
+    "description": "5 RFT",
+    "movements": ["12 Deadlifts (205/145 lb)", "9 Hang Power Cleans", "6 Push Jerks"],
     "tags": ["games", "benchmark", "barbell"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -170,7 +182,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "21-15-9: Thrusters (135/95 lb) & C2B Pull-ups",
+    "description": "21-15-9",
+    "movements": ["Thrusters (135/95 lb)", "C2B Pull-ups"],
     "tags": ["games", "benchmark"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -181,7 +194,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "21-15-9: Deadlifts (315/205 lb) & Strict Handstand Push-ups",
+    "description": "21-15-9",
+    "movements": ["Deadlifts (315/205 lb)", "Strict Handstand Push-ups"],
     "tags": ["games", "benchmark"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -192,7 +206,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: 100 Burpee Muscle-ups",
+    "description": "For time",
+    "movements": ["100 Burpee Muscle-ups"],
     "tags": ["games", "benchmark", "gymnastics"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -203,7 +218,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: 1.5 km Open Water Swim, 80 km Bike, 11.5 km Run",
+    "description": "For time",
+    "movements": ["1.5 km Open Water Swim", "80 km Bike", "11.5 km Run"],
     "tags": ["games", "benchmark", "endurance", "triathlon"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -214,7 +230,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: 42,195m Row (Full Marathon)",
+    "description": "For time",
+    "movements": ["42,195m Row (Full Marathon)"],
     "tags": ["games", "benchmark", "endurance"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -225,7 +242,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: 21,097m Row (Half Marathon)",
+    "description": "For time",
+    "movements": ["21,097m Row (Half Marathon)"],
     "tags": ["games", "benchmark", "endurance"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -236,7 +254,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: 30 cal Assault Bike, 25 Toes-to-Bar, 20 DB Box Step-Overs (24/20\"), 50-ft DB Overhead Lunge (50/35 lb), 20 DB Box Step-Overs, 25 Toes-to-Bar, 30 cal Assault Bike",
+    "description": "For time",
+    "movements": ["30 cal Assault Bike", "25 Toes-to-Bar", "20 DB Box Step-Overs (24/20\")", "50-ft DB Overhead Lunge (50/35 lb)", "20 DB Box Step-Overs", "25 Toes-to-Bar", "30 cal Assault Bike"],
     "tags": ["games", "benchmark"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -247,7 +266,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: 21-15-9 Snatches (135/95 lb), run 50m after each set",
+    "description": "21-15-9 (run 50m after each set)",
+    "movements": ["Snatches (135/95 lb)"],
     "tags": ["games", "benchmark"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -258,7 +278,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: 400m Handstand Walk",
+    "description": "For time",
+    "movements": ["400m Handstand Walk"],
     "tags": ["games", "benchmark", "gymnastics"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -324,18 +345,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Calories",
-    "description": "For calories: 3 minute all-out Echo Bike sprint",
-    "tags": ["games", "benchmark"],
-    "source": "CrossFit Games",
-    "sourceUrl": "https://games.crossfit.com/"
-  },
-  {
-    "id": "games-assault-bike-sprint",
-    "name": "Assault Bike Sprint",
-    "category": "Benchmark",
-    "subCategory": "Games",
-    "scoreType": "Calories",
-    "description": "For calories: 3 minute all-out Assault Bike sprint",
+    "description": "For calories",
+    "movements": ["3 minute all-out Echo Bike sprint"],
     "tags": ["games", "benchmark"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -346,7 +357,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: 100m Yoke Carry (heavy)",
+    "description": "For time",
+    "movements": ["100m Yoke Carry (heavy)"],
     "tags": ["games", "benchmark", "strongman"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -357,7 +369,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: 560 lb Pig Flip for distance",
+    "description": "For time",
+    "movements": ["560 lb Pig Flip for distance"],
     "tags": ["games", "benchmark", "strongman"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -368,7 +381,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: Lift 5 Atlas Stones to platforms (ascending weights)",
+    "description": "For time",
+    "movements": ["Lift 5 Atlas Stones to platforms (ascending weights)"],
     "tags": ["games", "benchmark", "strongman"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -379,7 +393,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "Team event: Synchronized Worm movements (Clean, Squat, etc.)",
+    "description": "Team event",
+    "movements": ["Synchronized Worm movements (Clean, Squat, etc.)"],
     "tags": ["games", "benchmark", "team"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -390,7 +405,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "2 rounds: 9-7-5 Muscle-ups & Squat Snatches (135/95 lb)",
+    "description": "2 rounds of 9-7-5",
+    "movements": ["Muscle-ups", "Squat Snatches (135/95 lb)"],
     "tags": ["games", "benchmark"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -401,7 +417,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: 6 km Bike, 1 km Paddleboard",
+    "description": "For time",
+    "movements": ["6 km Bike", "1 km Paddleboard"],
     "tags": ["games", "benchmark", "endurance"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -412,7 +429,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: 7 km Trail Run",
+    "description": "For time",
+    "movements": ["7 km Trail Run"],
     "tags": ["games", "benchmark", "endurance"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -423,7 +441,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: 500m Lake Swim",
+    "description": "For time",
+    "movements": ["500m Lake Swim"],
     "tags": ["games", "benchmark", "swimming"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -434,7 +453,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: Pull heavy sled with rope, sprint to finish",
+    "description": "For time",
+    "movements": ["Pull heavy sled with rope", "Sprint to finish"],
     "tags": ["games", "benchmark", "sled"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -445,7 +465,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: 1.5 km Run, 500m Swim, 1.5 km Run",
+    "description": "For time",
+    "movements": ["1.5 km Run", "500m Swim", "1.5 km Run"],
     "tags": ["games", "benchmark", "endurance"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -456,7 +477,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: 600m Run Sprint",
+    "description": "For time",
+    "movements": ["600m Run Sprint"],
     "tags": ["games", "benchmark"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -467,7 +489,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: 1 Mile Run",
+    "description": "For time",
+    "movements": ["1 Mile Run"],
     "tags": ["games", "benchmark"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -478,7 +501,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: 5K Run",
+    "description": "For time",
+    "movements": ["5K Run"],
     "tags": ["games", "benchmark", "endurance"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -489,7 +513,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: 10K Run",
+    "description": "For time",
+    "movements": ["10K Run"],
     "tags": ["games", "benchmark", "endurance"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -500,7 +525,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: 2000m Row",
+    "description": "For time",
+    "movements": ["2000m Row"],
     "tags": ["games", "benchmark"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -511,7 +537,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Time",
-    "description": "For time: 10,000m Row",
+    "description": "For time",
+    "movements": ["10,000m Row"],
     "tags": ["games", "benchmark", "endurance"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -522,7 +549,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Load",
-    "description": "Find max: 1 Squat Clean, 1 Hang Squat Clean, 1 Jerk",
+    "description": "Find max",
+    "movements": ["1 Squat Clean", "1 Hang Squat Clean", "1 Jerk"],
     "tags": ["games", "benchmark", "barbell"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"
@@ -533,7 +561,8 @@
     "category": "Benchmark",
     "subCategory": "Games",
     "scoreType": "Load",
-    "description": "Find max: 1 Squat Snatch, 1 Hang Squat Snatch, 1 Overhead Squat",
+    "description": "Find max",
+    "movements": ["1 Squat Snatch", "1 Hang Squat Snatch", "1 Overhead Squat"],
     "tags": ["games", "benchmark", "barbell"],
     "source": "CrossFit Games",
     "sourceUrl": "https://games.crossfit.com/"

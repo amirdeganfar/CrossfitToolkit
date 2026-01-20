@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Star, Plus, Trash2, Loader2, TrendingUp, TrendingDown, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Star, Plus, Trash2, Loader2, TrendingUp, TrendingDown, ChevronDown, Info } from 'lucide-react';
 import { useCatalogStore, useCatalogItem } from '../stores/catalogStore';
 import { useInitialize } from '../hooks/useInitialize';
 import { LogResultModal } from '../components/LogResultModal';
@@ -462,6 +462,70 @@ export const ItemDetail = () => {
           <Star className={`w-6 h-6 ${item.isFavorite ? 'fill-current' : ''}`} />
         </button>
       </div>
+
+      {/* Description */}
+      {(item.description || item.movements) && (() => {
+        // If structured movements array exists, use it directly
+        if (item.movements && item.movements.length > 0) {
+          return (
+            <div className="px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl">
+              {item.description && (
+                <div className="flex items-center gap-2 mb-2">
+                  <Info className="w-4 h-4 text-[var(--color-text-muted)] shrink-0" />
+                  <span className="text-sm font-semibold text-[var(--color-text)]">{item.description}</span>
+                </div>
+              )}
+              <ul className={`space-y-1 ${item.description ? 'pl-6' : 'pl-0'}`}>
+                {item.movements.map((movement, idx) => (
+                  <li key={idx} className="text-sm text-[var(--color-text-muted)] flex items-start gap-2">
+                    <span className="text-[var(--color-primary)] mt-1.5">•</span>
+                    <span>{movement}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        }
+
+        // Fallback: Parse description string (for backward compatibility)
+        if (item.description) {
+          const colonIndex = item.description.indexOf(':');
+          const hasFormat = colonIndex > 0 && colonIndex < 30;
+          
+          if (hasFormat) {
+            const format = item.description.slice(0, colonIndex).trim();
+            const movementsPart = item.description.slice(colonIndex + 1).trim();
+            const movements = movementsPart.split(/,\s*(?![^()]*\))/).map(m => m.trim()).filter(Boolean);
+            
+            return (
+              <div className="px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl">
+                <div className="flex items-center gap-2 mb-2">
+                  <Info className="w-4 h-4 text-[var(--color-text-muted)] shrink-0" />
+                  <span className="text-sm font-semibold text-[var(--color-text)]">{format}</span>
+                </div>
+                <ul className="space-y-1 pl-6">
+                  {movements.map((movement, idx) => (
+                    <li key={idx} className="text-sm text-[var(--color-text-muted)] flex items-start gap-2">
+                      <span className="text-[var(--color-primary)] mt-1.5">•</span>
+                      <span>{movement}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          }
+          
+          // Simple description without format prefix
+          return (
+            <div className="flex items-start gap-3 px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl">
+              <Info className="w-4 h-4 text-[var(--color-text-muted)] mt-0.5 shrink-0" />
+              <p className="text-sm text-[var(--color-text-muted)]">{item.description}</p>
+            </div>
+          );
+        }
+
+        return null;
+      })()}
 
       {/* Best PR Card */}
       <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4">
