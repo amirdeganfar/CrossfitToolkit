@@ -1,14 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Star, Plus, Trash2, Loader2, TrendingUp, TrendingDown, ChevronDown, ChevronRight, Dumbbell } from 'lucide-react';
+import { ArrowLeft, Star, Plus, Trash2, Loader2, TrendingUp, TrendingDown, ChevronDown, ChevronRight, Dumbbell, Target } from 'lucide-react';
 import { useCatalogStore, useCatalogItem } from '../stores/catalogStore';
+import { useGoalsStore, useActiveGoalForItem } from '../stores/goalsStore';
 import { useInitialize } from '../hooks/useInitialize';
 import { LogResultModal } from '../components/LogResultModal';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { PercentageCalculator } from '../components/PercentageCalculator';
+import { GoalProgress, GoalModal } from '../components/goals';
 import { isDualMetricItem, isDistanceOnlyItem } from '../utils/itemMetrics';
 import * as db from '../db';
 import type { PRLog, CatalogItem } from '../types/catalog';
+import type { CreateGoalInput, UpdateGoalInput } from '../types/goal';
 
 // Group structure for accordion display
 interface LogGroup {
@@ -209,9 +212,18 @@ export const ItemDetail = () => {
 
   // Store state
   const item = useCatalogItem(id ?? '');
+  const catalogItems = useCatalogStore((state) => state.catalogItems);
   const toggleFavorite = useCatalogStore((state) => state.toggleFavorite);
   const deletePRLog = useCatalogStore((state) => state.deletePRLog);
   const settings = useCatalogStore((state) => state.settings);
+
+  // Goals store - use selectors to avoid infinite loops
+  const goalsIsInitialized = useGoalsStore((s) => s.isInitialized);
+  const goalsInitialize = useGoalsStore((s) => s.initialize);
+  const goalsRefresh = useGoalsStore((s) => s.refreshGoals);
+  const goalsAddGoal = useGoalsStore((s) => s.addGoal);
+  const goalsUpdateGoal = useGoalsStore((s) => s.updateGoal);
+  const activeGoal = useActiveGoalForItem(id ?? '');
 
   // Local state
   const [logs, setLogs] = useState<PRLog[]>([]);
@@ -220,8 +232,16 @@ export const ItemDetail = () => {
   const [bestByCalories, setBestByCalories] = useState<Map<number, PRLog>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showGoalModal, setShowGoalModal] = useState(false);
   const [deleteLogId, setDeleteLogId] = useState<string | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  // Initialize goals store when catalog is ready
+  useEffect(() => {
+    if (isInitialized && !goalsIsInitialized && catalogItems.length > 0) {
+      goalsInitialize(catalogItems, settings.weightUnit);
+    }
+  }, [isInitialized, goalsIsInitialized, catalogItems, settings.weightUnit, goalsInitialize]);
 
   // Use utility functions for metric type detection
   const isDual = isDualMetricItem(item);
@@ -322,6 +342,20 @@ export const ItemDetail = () => {
 
   const handleModalSuccess = async () => {
     await refreshLogs();
+    // Refresh goals to update progress
+    if (goalsIsInitialized) {
+      await goalsRefresh(catalogItems, settings.weightUnit);
+    }
+  };
+
+  const handleSaveGoal = async (
+    input: CreateGoalInput | { id: string; updates: UpdateGoalInput }
+  ) => {
+    if ('id' in input) {
+      await goalsUpdateGoal(input.id, input.updates, catalogItems, settings.weightUnit);
+    } else {
+      await goalsAddGoal(input, catalogItems, settings.weightUnit);
+    }
   };
 
   const formatDate = (timestamp: number): string => {
@@ -536,15 +570,26 @@ export const ItemDetail = () => {
 
       {/* Best PR Card */}
       <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4">
-        <div className="flex items-center gap-2 mb-2">
-          {isLowerBetter ? (
-            <TrendingDown className="w-4 h-4 text-green-400" />
-          ) : (
-            <TrendingUp className="w-4 h-4 text-green-400" />
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            {isLowerBetter ? (
+              <TrendingDown className="w-4 h-4 text-green-400" />
+            ) : (
+              <TrendingUp className="w-4 h-4 text-green-400" />
+            )}
+            <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
+              Best
+            </h2>
+          </div>
+          {!activeGoal && bestLog && (
+            <button
+              onClick={() => setShowGoalModal(true)}
+              className="flex items-center gap-1 text-xs text-[var(--color-primary)] hover:underline"
+            >
+              <Target size={12} />
+              Set Goal
+            </button>
           )}
-          <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
-            Best
-          </h2>
         </div>
         {isLoading ? (
           <div className="flex items-center justify-center h-16">
@@ -646,9 +691,43 @@ export const ItemDetail = () => {
             <p className="text-sm text-[var(--color-text-muted)] mt-1">
               {formatDate(bestLog.date)}
             </p>
+            {/* Goal Progress */}
+            {activeGoal && (
+              <div className="mt-3 pt-3 border-t border-[var(--color-border)]">
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
+                    <Target size={12} className="text-[var(--color-primary)]" />
+                    <span>Goal: {activeGoal.targetResult}</span>
+                  </div>
+                  <button
+                    onClick={() => setShowGoalModal(true)}
+                    className="text-xs text-[var(--color-primary)] hover:underline"
+                  >
+                    Edit
+                  </button>
+                </div>
+                <GoalProgress progress={activeGoal.progress} size="sm" />
+                <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                  {activeGoal.daysRemaining >= 0 
+                    ? `${activeGoal.daysRemaining} days remaining`
+                    : 'Overdue'}
+                </p>
+              </div>
+            )}
           </div>
         ) : (
-          <p className="text-[var(--color-text-muted)]">No results yet</p>
+          <div>
+            <p className="text-[var(--color-text-muted)]">No results yet</p>
+            {!activeGoal && (
+              <button
+                onClick={() => setShowGoalModal(true)}
+                className="mt-2 flex items-center gap-1.5 text-sm text-[var(--color-primary)] hover:underline"
+              >
+                <Target size={14} />
+                Set a goal
+              </button>
+            )}
+          </div>
         )}
       </div>
 
@@ -875,6 +954,18 @@ export const ItemDetail = () => {
           isDestructive
           onConfirm={confirmDeleteLog}
           onCancel={() => setDeleteLogId(null)}
+        />
+      )}
+
+      {/* Goal Modal */}
+      {showGoalModal && item && (
+        <GoalModal
+          items={catalogItems}
+          editGoal={activeGoal || null}
+          preselectedItem={item}
+          weightUnit={settings.weightUnit}
+          onSave={handleSaveGoal}
+          onClose={() => setShowGoalModal(false)}
         />
       )}
     </div>

@@ -1,8 +1,10 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ChevronRight, ChevronDown, Star, Clock, Plus, Loader2, Timer } from 'lucide-react';
+import { Search, ChevronRight, ChevronDown, Star, Clock, Plus, Loader2, Timer, Target } from 'lucide-react';
 import { useCatalogStore } from '../stores/catalogStore';
+import { useGoalsStore, useSortedActiveGoals } from '../stores/goalsStore';
 import { useInitialize } from '../hooks/useInitialize';
+import { GoalProgress } from '../components/goals';
 import type { CatalogItem } from '../types/catalog';
 import * as db from '../db';
 
@@ -49,12 +51,25 @@ export const Home = () => {
   const catalogItems = useCatalogStore((state) => state.catalogItems);
   const favorites = useCatalogStore((state) => state.favorites);
   const recentLogs = useCatalogStore((state) => state.recentLogs);
+  const settings = useCatalogStore((state) => state.settings);
+
+  // Goals store - use selectors to avoid infinite loops
+  const goalsIsInitialized = useGoalsStore((s) => s.isInitialized);
+  const goalsInitialize = useGoalsStore((s) => s.initialize);
+  const activeGoals = useSortedActiveGoals();
   
   // Local state
   const [searchQuery, setSearchQuery] = useState('');
   const [showAutocomplete, setShowAutocomplete] = useState(false);
   const [recentLogsWithItems, setRecentLogsWithItems] = useState<RecentLogWithItem[]>([]);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  // Initialize goals store when catalog is ready
+  useEffect(() => {
+    if (isInitialized && !goalsIsInitialized && catalogItems.length > 0) {
+      goalsInitialize(catalogItems, settings.weightUnit);
+    }
+  }, [isInitialized, goalsIsInitialized, catalogItems, settings.weightUnit, goalsInitialize]);
 
   // Group recent logs by item
   const groupedLogs = useMemo(() => groupLogsByItem(recentLogsWithItems), [recentLogsWithItems]);
@@ -144,6 +159,10 @@ export const Home = () => {
 
   const handleTimer = () => {
     navigate('/clock');
+  };
+
+  const handleGoals = () => {
+    navigate('/goals');
   };
 
   const getCategoryColor = (category: CatalogItem['category']) => {
@@ -334,23 +353,73 @@ export const Home = () => {
         )}
       </section>
 
+      {/* Active Goals Preview */}
+      {activeGoals.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Target className="w-4 h-4 text-[var(--color-primary)]" />
+              <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
+                Active Goals
+              </h2>
+            </div>
+            <button
+              onClick={handleGoals}
+              className="text-xs text-[var(--color-primary)] hover:underline flex items-center gap-1"
+            >
+              View all <ChevronRight className="w-3 h-3" />
+            </button>
+          </div>
+          <div className="space-y-2">
+            {activeGoals.slice(0, 2).map((goal) => (
+              <button
+                key={goal.id}
+                onClick={() => handleItemClick(goal.itemId)}
+                className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-3 text-left hover:border-[var(--color-text-muted)] transition-colors"
+              >
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="font-medium text-[var(--color-text)]">{goal.itemName}</span>
+                  <span className="text-xs text-[var(--color-text-muted)]">
+                    {goal.daysRemaining >= 0 ? `${goal.daysRemaining}d left` : 'Overdue'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mb-1.5 text-sm">
+                  <span className="text-[var(--color-text-muted)]">{goal.currentResult || '—'}</span>
+                  <span className="text-[var(--color-text-muted)]">→</span>
+                  <span className="text-[var(--color-text)]">{goal.targetResult}</span>
+                </div>
+                <GoalProgress progress={goal.progress} size="sm" showLabel={false} />
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Action buttons */}
-      <div className="flex gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <button
           onClick={handleTimer}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-4 bg-[var(--color-surface)] hover:bg-[var(--color-surface-elevated)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] font-semibold transition-colors"
+          className="flex flex-col items-center justify-center gap-1.5 px-3 py-4 bg-[var(--color-surface)] hover:bg-[var(--color-surface-elevated)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] font-medium transition-colors"
           aria-label="Open timer"
         >
           <Timer className="w-5 h-5" />
-          <span>Timer</span>
+          <span className="text-sm">Timer</span>
+        </button>
+        <button
+          onClick={handleGoals}
+          className="flex flex-col items-center justify-center gap-1.5 px-3 py-4 bg-[var(--color-surface)] hover:bg-[var(--color-surface-elevated)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] font-medium transition-colors"
+          aria-label="View goals"
+        >
+          <Target className="w-5 h-5" />
+          <span className="text-sm">Goals</span>
         </button>
         <button
           onClick={handleLogPR}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-4 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] rounded-xl text-white font-semibold transition-colors"
+          className="flex flex-col items-center justify-center gap-1.5 px-3 py-4 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] rounded-xl text-white font-medium transition-colors"
           aria-label="Log a new PR"
         >
           <Plus className="w-5 h-5" />
-          <span>Log PR</span>
+          <span className="text-sm">Log PR</span>
         </button>
       </div>
     </div>

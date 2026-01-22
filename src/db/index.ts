@@ -1,18 +1,21 @@
 import Dexie, { type EntityTable } from 'dexie';
 import type { CatalogItem, PRLog, UserSettings, Favorite, CustomItem } from '../types/catalog';
+import type { Goal } from '../types/goal';
 import { getBuiltinCatalog, getBuiltinCatalogItemById } from '../catalog/catalogService';
 
 /**
  * CrossfitToolkit IndexedDB Database
  * 
  * Schema v2: Catalog items moved to static JSON file.
- * DB now only stores user data: favorites, custom items, PR logs, settings.
+ * Schema v3: Added goals table for Goal Setting & Tracking feature.
+ * DB now only stores user data: favorites, custom items, PR logs, settings, goals.
  */
 class CrossfitToolkitDB extends Dexie {
   favorites!: EntityTable<Favorite, 'id'>;
   customItems!: EntityTable<CustomItem, 'id'>;
   prLogs!: EntityTable<PRLog, 'id'>;
   settings!: EntityTable<UserSettings & { id: string }, 'id'>;
+  goals!: EntityTable<Goal, 'id'>;
 
   constructor() {
     super('CrossfitToolkitDB');
@@ -77,6 +80,15 @@ class CrossfitToolkitDB extends Dexie {
         
         console.log('[DB] Migration complete');
       });
+
+    // Version 3: Added goals table for Goal Setting & Tracking
+    this.version(3).stores({
+      favorites: 'id',
+      customItems: 'id, category, name',
+      prLogs: 'id, catalogItemId, date, variant',
+      settings: 'id',
+      goals: '++id, itemId, status, targetDate',
+    });
   }
 }
 
@@ -381,20 +393,22 @@ export const updateSettings = async (
  * Export all user data as JSON
  */
 export const exportData = async (): Promise<string> => {
-  const [favorites, customItems, prLogs, settings] = await Promise.all([
+  const [favorites, customItems, prLogs, goals, settings] = await Promise.all([
     db.favorites.toArray(),
     db.customItems.toArray(),
     db.prLogs.toArray(),
+    db.goals.toArray(),
     getSettings(),
   ]);
 
   return JSON.stringify(
     {
-      version: 2,
+      version: 3,
       exportedAt: new Date().toISOString(),
       favorites,
       customItems,
       prLogs,
+      goals,
       settings,
     },
     null,
@@ -414,7 +428,13 @@ export const importData = async (json: string): Promise<void> => {
     return;
   }
 
-  if (data.version !== 2) {
+  // Handle v2 format (no goals)
+  if (data.version === 2) {
+    await importV2Data(data);
+    return;
+  }
+
+  if (data.version !== 3) {
     throw new Error('Unsupported data format version');
   }
 
@@ -423,6 +443,7 @@ export const importData = async (json: string): Promise<void> => {
     db.favorites.clear(),
     db.customItems.clear(),
     db.prLogs.clear(),
+    db.goals.clear(),
   ]);
 
   // Import new data
@@ -433,6 +454,39 @@ export const importData = async (json: string): Promise<void> => {
     await db.customItems.bulkAdd(data.customItems);
   }
   if (data.prLogs?.length > 0) {
+    await db.prLogs.bulkAdd(data.prLogs);
+  }
+  if (data.goals?.length > 0) {
+    await db.goals.bulkAdd(data.goals);
+  }
+  if (data.settings) {
+    await db.settings.put({ id: 'default', ...data.settings });
+  }
+};
+
+/**
+ * Import v2 data format (no goals)
+ */
+const importV2Data = async (data: {
+  favorites?: { id: string }[];
+  customItems?: CustomItem[];
+  prLogs?: PRLog[];
+  settings?: UserSettings;
+}): Promise<void> => {
+  // Clear existing user data
+  await Promise.all([
+    db.favorites.clear(),
+    db.customItems.clear(),
+    db.prLogs.clear(),
+  ]);
+
+  if (data.favorites?.length) {
+    await db.favorites.bulkAdd(data.favorites);
+  }
+  if (data.customItems?.length) {
+    await db.customItems.bulkAdd(data.customItems);
+  }
+  if (data.prLogs?.length) {
     await db.prLogs.bulkAdd(data.prLogs);
   }
   if (data.settings) {
@@ -495,4 +549,123 @@ const importV1Data = async (data: {
   if (data.settings) {
     await db.settings.put({ id: 'default', ...data.settings });
   }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// GOAL OPERATIONS
+// ═══════════════════════════════════════════════════════════════════════════
+
+import type { Goal, CreateGoalInput, UpdateGoalInput, GoalStatus } from '../types/goal';
+
+/**
+ * Get all goals
+ */
+export const getAllGoals = async (): Promise<Goal[]> => {
+  return db.goals.toArray();
+};
+
+/**
+ * Get goals by status
+ */
+export const getGoalsByStatus = async (status: GoalStatus): Promise<Goal[]> => {
+  return db.goals.where('status').equals(status).toArray();
+};
+
+/**
+ * Get active goals
+ */
+export const getActiveGoals = async (): Promise<Goal[]> => {
+  return getGoalsByStatus('active');
+};
+
+/**
+ * Get goal by ID
+ */
+export const getGoalById = async (id: string): Promise<Goal | undefined> => {
+  return db.goals.get(id);
+};
+
+/**
+ * Get active goal for a specific item
+ */
+export const getActiveGoalForItem = async (
+  itemId: string,
+  variant?: Goal['variant'],
+  reps?: number
+): Promise<Goal | undefined> => {
+  const activeGoals = await db.goals
+    .where('itemId')
+    .equals(itemId)
+    .and((goal) => goal.status === 'active')
+    .toArray();
+
+  // Find goal matching variant and reps if specified
+  return activeGoals.find((goal) => {
+    const variantMatch = variant === undefined || goal.variant === variant;
+    const repsMatch = reps === undefined || goal.reps === reps;
+    return variantMatch && repsMatch;
+  });
+};
+
+/**
+ * Get all goals for a specific item
+ */
+export const getGoalsForItem = async (itemId: string): Promise<Goal[]> => {
+  return db.goals.where('itemId').equals(itemId).toArray();
+};
+
+/**
+ * Add a new goal
+ */
+export const addGoal = async (input: CreateGoalInput): Promise<string> => {
+  const id = `goal-${Date.now()}`;
+  const now = new Date().toISOString().split('T')[0];
+  
+  await db.goals.add({
+    id,
+    itemId: input.itemId,
+    targetValue: input.targetValue,
+    targetDate: input.targetDate,
+    createdAt: now,
+    status: 'active',
+    variant: input.variant,
+    reps: input.reps,
+  });
+  
+  return id;
+};
+
+/**
+ * Update an existing goal
+ */
+export const updateGoal = async (
+  id: string,
+  updates: UpdateGoalInput
+): Promise<void> => {
+  await db.goals.update(id, updates);
+};
+
+/**
+ * Mark a goal as achieved
+ */
+export const achieveGoal = async (id: string): Promise<void> => {
+  const now = new Date().toISOString().split('T')[0];
+  await db.goals.update(id, {
+    status: 'achieved',
+    achievedAt: now,
+  });
+};
+
+/**
+ * Cancel a goal
+ */
+export const cancelGoal = async (id: string): Promise<void> => {
+  await db.goals.update(id, { status: 'cancelled' });
+};
+
+/**
+ * Delete a goal
+ */
+export const deleteGoal = async (id: string): Promise<void> => {
+  await db.goals.delete(id);
 };
