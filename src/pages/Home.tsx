@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ChevronRight, ChevronDown, Star, Clock, Plus, Loader2 } from 'lucide-react';
+import { Search, ChevronRight, ChevronDown, Star, Clock, Plus, Loader2, Timer } from 'lucide-react';
 import { useCatalogStore } from '../stores/catalogStore';
 import { useInitialize } from '../hooks/useInitialize';
 import type { CatalogItem } from '../types/catalog';
@@ -140,6 +140,10 @@ export const Home = () => {
 
   const handleLogPR = () => {
     navigate('/search');
+  };
+
+  const handleTimer = () => {
+    navigate('/clock');
   };
 
   const getCategoryColor = (category: CatalogItem['category']) => {
@@ -330,15 +334,25 @@ export const Home = () => {
         )}
       </section>
 
-      {/* Log PR button */}
-      <button
-        onClick={handleLogPR}
-        className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] rounded-xl text-white font-semibold transition-colors"
-        aria-label="Log a new PR"
-      >
-        <Plus className="w-5 h-5" />
-        <span>Log PR</span>
-      </button>
+      {/* Action buttons */}
+      <div className="flex gap-3">
+        <button
+          onClick={handleTimer}
+          className="flex-1 flex items-center justify-center gap-2 px-4 py-4 bg-[var(--color-surface)] hover:bg-[var(--color-surface-elevated)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] font-semibold transition-colors"
+          aria-label="Open timer"
+        >
+          <Timer className="w-5 h-5" />
+          <span>Timer</span>
+        </button>
+        <button
+          onClick={handleLogPR}
+          className="flex-1 flex items-center justify-center gap-2 px-4 py-4 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] rounded-xl text-white font-semibold transition-colors"
+          aria-label="Log a new PR"
+        >
+          <Plus className="w-5 h-5" />
+          <span>Log PR</span>
+        </button>
+      </div>
     </div>
   );
 };

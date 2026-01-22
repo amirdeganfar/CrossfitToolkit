@@ -1,5 +1,5 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Settings, Home, Search } from 'lucide-react';
+import { Settings, Home, Search, Timer } from 'lucide-react';
 
 export const Layout = () => {
   const navigate = useNavigate();
@@ -15,6 +15,10 @@ export const Layout = () => {
 
   const handleSearchClick = () => {
     navigate('/search');
+  };
+
+  const handleClockClick = () => {
+    navigate('/clock');
   };
 
   const isActive = (path: string) => location.pathname === path;
@@ -71,6 +75,16 @@ export const Layout = () => {
           >
             <Search className="w-5 h-5" />
             <span className="text-xs">Search</span>
+          </button>
+          <button
+            onClick={handleClockClick}
+            className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
+              isActive('/clock') ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-muted)]'
+            }`}
+            aria-label="Clock"
+          >
+            <Timer className="w-5 h-5" />
+            <span className="text-xs">Clock</span>
           </button>
           <button
             onClick={handleSettingsClick}

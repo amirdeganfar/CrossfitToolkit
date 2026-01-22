@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Download, Upload, Check, AlertCircle, Loader2, HelpCircle, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Download, Upload, Check, AlertCircle, Loader2, HelpCircle, ChevronRight, Timer, Minus, Plus } from 'lucide-react';
 import { useCatalogStore } from '../stores/catalogStore';
+import { useClockStore } from '../stores/clockStore';
 import { useInitialize } from '../hooks/useInitialize';
 
 export const Settings = () => {
@@ -14,6 +15,12 @@ export const Settings = () => {
   const updateSettings = useCatalogStore((state) => state.updateSettings);
   const exportData = useCatalogStore((state) => state.exportData);
   const importData = useCatalogStore((state) => state.importData);
+
+  // Clock store state
+  const countdownSeconds = useClockStore((state) => state.countdownSeconds);
+  const setCountdownSeconds = useClockStore((state) => state.setCountdownSeconds);
+  const soundEnabled = useClockStore((state) => state.soundEnabled);
+  const toggleSound = useClockStore((state) => state.toggleSound);
 
   // Local state
   const [exportStatus, setExportStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -30,6 +37,10 @@ export const Settings = () => {
 
   const handleDistanceUnitChange = async (unit: 'm' | 'ft') => {
     await updateSettings({ distanceUnit: unit });
+  };
+
+  const handleCountdownChange = (delta: number) => {
+    setCountdownSeconds(countdownSeconds + delta);
   };
 
   const handleExport = async () => {
@@ -185,6 +196,63 @@ export const Settings = () => {
               ft
             </button>
           </div>
+        </div>
+      </section>
+
+      {/* Timer section */}
+      <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden">
+        <div className="px-4 py-3 border-b border-[var(--color-border)] flex items-center gap-2">
+          <Timer className="w-4 h-4 text-[var(--color-text-muted)]" />
+          <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
+            Timer
+          </h2>
+        </div>
+
+        {/* Countdown duration */}
+        <div className="px-4 py-3 flex items-center justify-between border-b border-[var(--color-border)]">
+          <div>
+            <span className="text-[var(--color-text)]">Countdown</span>
+            <p className="text-xs text-[var(--color-text-muted)]">Seconds before timer starts</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => handleCountdownChange(-1)}
+              disabled={countdownSeconds <= 3}
+              className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface-elevated)] rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <Minus className="w-4 h-4" />
+            </button>
+            <span className="font-mono text-lg font-semibold text-[var(--color-text)] min-w-[40px] text-center">
+              {countdownSeconds}s
+            </span>
+            <button
+              onClick={() => handleCountdownChange(1)}
+              disabled={countdownSeconds >= 30}
+              className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface-elevated)] rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Sound toggle */}
+        <div className="px-4 py-3 flex items-center justify-between">
+          <div>
+            <span className="text-[var(--color-text)]">Sound</span>
+            <p className="text-xs text-[var(--color-text-muted)]">Beeps and alerts</p>
+          </div>
+          <button
+            onClick={toggleSound}
+            className={`relative w-12 h-7 rounded-full transition-colors ${
+              soundEnabled ? 'bg-[var(--color-primary)]' : 'bg-[var(--color-surface-elevated)]'
+            }`}
+          >
+            <span
+              className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform ${
+                soundEnabled ? 'left-6' : 'left-1'
+              }`}
+            />
+          </button>
         </div>
       </section>
 
