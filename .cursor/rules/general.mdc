@@ -1,6 +1,6 @@
 ---
-name: general
-description: General development and UI guidelines
+globs:
+alwaysApply: true
 ---
 
 # UI Development Guidelines

@@ -1,0 +1,52 @@
+---
+alwaysApply: true
+---
+
+# CrossfitToolkit - Best Practices
+
+## Code Quality
+- Always follow best practices - no shortcuts or hacks
+- Keep functions small and focused (single responsibility)
+- Write readable, self-documenting code that's easy to follow
+- Split complex logic into smaller, composable functions
+- Prefer clarity over cleverness
+
+## Component Structure
+- Place components in `src/components/` with PascalCase naming
+- Co-locate component-specific hooks and utilities
+- Use barrel exports (`index.ts`) for clean imports
+
+## State Management (Zustand)
+- Keep stores in `src/stores/` with descriptive names (e.g., `useSettingsStore.ts`)
+- Use selectors to prevent unnecessary re-renders: `const unit = useSettingsStore(s => s.weightUnit)`
+- Persist to IndexedDB for offline-first data
+
+## Database (Dexie/IndexedDB)
+- Define schema in a single `src/db/` module
+- Use transactions for multi-table operations
+- Always handle offline scenarios gracefully
+
+## PWA Considerations
+- Test service worker updates regularly
+- Cache catalog JSON files for offline access
+- Provide clear offline/online status indicators
+
+## Performance
+- Lazy load pages with `React.lazy()` and `Suspense`
+- Memoize expensive calculations (PR aggregations, filtering)
+- Use virtual lists for large catalog views
+
+## Styling (TailwindCSS 4)
+- Use design tokens from `tailwind.config` for consistency
+- Prefer `cn()` utility for conditional classes
+- Mobile-first responsive design (`sm:`, `md:`, `lg:` breakpoints)
+
+## Type Safety
+- Define shared types in `src/types/`
+- Use strict typing for catalog items, PR logs, and timer states
+- Avoid `any` - use `unknown` with type guards when needed
+
+## Testing
+- Test timer logic and PR calculations thoroughly
+- Mock Dexie for unit tests
+- Test offline behavior in PWA mode

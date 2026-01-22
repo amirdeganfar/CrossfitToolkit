@@ -1,0 +1,53 @@
+---
+alwaysApply: true
+---
+
+# CrossfitToolkit - Project Specifications
+
+## Overview
+A Progressive Web App (PWA) for CrossFit athletes to browse workouts, track PRs, and use training timers. Offline-first, mobile-optimized.
+
+## Tech Stack
+- **Framework**: React 19 + TypeScript
+- **Build**: Vite 7, PWA-enabled
+- **Styling**: TailwindCSS 4
+- **State**: Zustand
+- **Database**: IndexedDB via Dexie
+- **Routing**: React Router 7
+- **Icons**: Lucide React
+
+## Core Features
+1. **Catalog Browser**: 377+ benchmarks, lifts, monostructural movements, and skills
+2. **PR Tracking**: Log results with variants (Rx/Scaled/Rx+), supports Time/Load/Reps/Rounds+Reps/Distance/Calories
+3. **Workout Timer**: AMRAP, EMOM, Tabata, For Time, countdown modes with audio cues
+4. **Search & Filter**: By category, subcategory (Girls/Heroes/Open/Games), favorites
+5. **Offline Support**: Full PWA with service worker
+
+## Data Models
+- `CatalogItem`: id, name, category, subCategory, scoreType, movements[], aliases[]
+- `PRLog`: catalogItemId, result, resultValue, variant, date, reps?, distance?, calories?
+- `UserSettings`: weightUnit (kg/lb), distanceUnit (m/ft), hasSeenOnboarding
+
+## Pages
+- `/` - Home (quick actions, recent PRs)
+- `/search` - Catalog search & filter
+- `/item/:id` - Item detail with PR history
+- `/clock` - Workout timer
+- `/settings` - User preferences
+- `/onboarding` - First-run setup
+
+## Catalog Structure
+JSON files in `src/catalog/`:
+- `benchmarks_girls.json`, `benchmarks_heroes.json`, `benchmarks_open.json`, `benchmarks_games.json`, `benchmarks_notable.json`
+- `lifts.json`, `monostructural.json`, `skills.json`
+
+## Future Features
+See `docs/FEATURE_REQUIREMENTS.md` for detailed specs on:
+- Progress Charts & Analytics
+- WOD Generator
+- Goal Setting
+- Equipment Filter
+- Movement Substitutions
+- Body Metrics Tracking
+- Training Log/Journal
+- Warm-up Generator

@@ -1,6 +1,6 @@
 ---
-name: react
-description: React and Next.js development guidelines
+globs:
+alwaysApply: true
 ---
 
 # React/Next.js Development Standards
