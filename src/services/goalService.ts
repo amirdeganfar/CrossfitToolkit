@@ -1,6 +1,6 @@
 import type { CatalogItem, PRLog, ScoreType } from '../types/catalog';
 import type { Goal, GoalWithProgress, TrendStatus } from '../types/goal';
-import { formatSecondsToTime, parseRoundsReps } from '../utils/resultParser';
+import { formatSecondsToTime } from '../utils/resultParser';
 import * as db from '../db';
 
 /**

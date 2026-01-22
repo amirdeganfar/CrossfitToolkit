@@ -1,6 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie';
 import type { CatalogItem, PRLog, UserSettings, Favorite, CustomItem } from '../types/catalog';
-import type { Goal } from '../types/goal';
+import type { Goal, CreateGoalInput, UpdateGoalInput, GoalStatus } from '../types/goal';
 import { getBuiltinCatalog, getBuiltinCatalogItemById } from '../catalog/catalogService';
 
 /**
@@ -554,8 +554,6 @@ const importV1Data = async (data: {
 // ═══════════════════════════════════════════════════════════════════════════
 // GOAL OPERATIONS
 // ═══════════════════════════════════════════════════════════════════════════
-
-import type { Goal, CreateGoalInput, UpdateGoalInput, GoalStatus } from '../types/goal';
 
 /**
  * Get all goals
