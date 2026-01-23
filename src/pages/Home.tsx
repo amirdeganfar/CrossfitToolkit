@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Search, ChevronRight, ChevronDown, Star, Clock, Plus, Loader2, Timer, Target } from 'lucide-react';
 import { useCatalogStore } from '../stores/catalogStore';
 import { useGoalsStore, useSortedActiveGoals } from '../stores/goalsStore';
+import { useCheckInStore } from '../stores/checkInStore';
 import { useInitialize } from '../hooks/useInitialize';
 import { GoalProgress } from '../components/goals';
+import { QuickCheckIn, RecoveryAlert } from '../components/recovery';
 import type { CatalogItem } from '../types/catalog';
 import * as db from '../db';
 
@@ -57,6 +59,10 @@ export const Home = () => {
   const goalsIsInitialized = useGoalsStore((s) => s.isInitialized);
   const goalsInitialize = useGoalsStore((s) => s.initialize);
   const activeGoals = useSortedActiveGoals();
+
+  // Check-in store
+  const checkInIsInitialized = useCheckInStore((s) => s.isInitialized);
+  const checkInInitialize = useCheckInStore((s) => s.initialize);
   
   // Local state
   const [searchQuery, setSearchQuery] = useState('');
@@ -70,6 +76,13 @@ export const Home = () => {
       goalsInitialize(catalogItems, settings.weightUnit);
     }
   }, [isInitialized, goalsIsInitialized, catalogItems, settings.weightUnit, goalsInitialize]);
+
+  // Initialize check-in store
+  useEffect(() => {
+    if (isInitialized && !checkInIsInitialized) {
+      checkInInitialize();
+    }
+  }, [isInitialized, checkInIsInitialized, checkInInitialize]);
 
   // Group recent logs by item
   const groupedLogs = useMemo(() => groupLogsByItem(recentLogsWithItems), [recentLogsWithItems]);
@@ -192,6 +205,9 @@ export const Home = () => {
 
   return (
     <div className="space-y-6">
+      {/* Recovery Alert (shown when score >= 3) */}
+      <RecoveryAlert />
+
       {/* Search bar with autocomplete */}
       <div className="relative">
         <div className="relative">
@@ -238,6 +254,9 @@ export const Home = () => {
           </div>
         )}
       </div>
+
+      {/* Quick Check-in Widget */}
+      <QuickCheckIn />
 
       {/* Favorites section */}
       <section>

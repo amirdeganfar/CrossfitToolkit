@@ -1,6 +1,7 @@
 import Dexie, { type EntityTable } from 'dexie';
 import type { CatalogItem, PRLog, UserSettings, Favorite, CustomItem } from '../types/catalog';
 import type { Goal, CreateGoalInput, UpdateGoalInput, GoalStatus } from '../types/goal';
+import type { DailyCheckIn } from '../types/training';
 import { getBuiltinCatalog, getBuiltinCatalogItemById } from '../catalog/catalogService';
 
 /**
@@ -8,7 +9,8 @@ import { getBuiltinCatalog, getBuiltinCatalogItemById } from '../catalog/catalog
  * 
  * Schema v2: Catalog items moved to static JSON file.
  * Schema v3: Added goals table for Goal Setting & Tracking feature.
- * DB now only stores user data: favorites, custom items, PR logs, settings, goals.
+ * Schema v4: Added dailyCheckIns table for Recovery Insights feature.
+ * DB now only stores user data: favorites, custom items, PR logs, settings, goals, check-ins.
  */
 class CrossfitToolkitDB extends Dexie {
   favorites!: EntityTable<Favorite, 'id'>;
@@ -16,6 +18,7 @@ class CrossfitToolkitDB extends Dexie {
   prLogs!: EntityTable<PRLog, 'id'>;
   settings!: EntityTable<UserSettings & { id: string }, 'id'>;
   goals!: EntityTable<Goal, 'id'>;
+  dailyCheckIns!: EntityTable<DailyCheckIn, 'id'>;
 
   constructor() {
     super('CrossfitToolkitDB');
@@ -88,6 +91,16 @@ class CrossfitToolkitDB extends Dexie {
       prLogs: 'id, catalogItemId, date, variant',
       settings: 'id',
       goals: '++id, itemId, status, targetDate',
+    });
+
+    // Version 4: Added dailyCheckIns table for Recovery Insights
+    this.version(4).stores({
+      favorites: 'id',
+      customItems: 'id, category, name',
+      prLogs: 'id, catalogItemId, date, variant',
+      settings: 'id',
+      goals: '++id, itemId, status, targetDate',
+      dailyCheckIns: 'id, date, type',
     });
   }
 }
@@ -393,22 +406,24 @@ export const updateSettings = async (
  * Export all user data as JSON
  */
 export const exportData = async (): Promise<string> => {
-  const [favorites, customItems, prLogs, goals, settings] = await Promise.all([
+  const [favorites, customItems, prLogs, goals, dailyCheckIns, settings] = await Promise.all([
     db.favorites.toArray(),
     db.customItems.toArray(),
     db.prLogs.toArray(),
     db.goals.toArray(),
+    db.dailyCheckIns.toArray(),
     getSettings(),
   ]);
 
   return JSON.stringify(
     {
-      version: 3,
+      version: 4,
       exportedAt: new Date().toISOString(),
       favorites,
       customItems,
       prLogs,
       goals,
+      dailyCheckIns,
       settings,
     },
     null,
@@ -434,7 +449,13 @@ export const importData = async (json: string): Promise<void> => {
     return;
   }
 
-  if (data.version !== 3) {
+  // Handle v3 format (no dailyCheckIns)
+  if (data.version === 3) {
+    await importV3Data(data);
+    return;
+  }
+
+  if (data.version !== 4) {
     throw new Error('Unsupported data format version');
   }
 
@@ -444,6 +465,7 @@ export const importData = async (json: string): Promise<void> => {
     db.customItems.clear(),
     db.prLogs.clear(),
     db.goals.clear(),
+    db.dailyCheckIns.clear(),
   ]);
 
   // Import new data
@@ -457,6 +479,44 @@ export const importData = async (json: string): Promise<void> => {
     await db.prLogs.bulkAdd(data.prLogs);
   }
   if (data.goals?.length > 0) {
+    await db.goals.bulkAdd(data.goals);
+  }
+  if (data.dailyCheckIns?.length > 0) {
+    await db.dailyCheckIns.bulkAdd(data.dailyCheckIns);
+  }
+  if (data.settings) {
+    await db.settings.put({ id: 'default', ...data.settings });
+  }
+};
+
+/**
+ * Import v3 data format (no dailyCheckIns)
+ */
+const importV3Data = async (data: {
+  favorites?: { id: string }[];
+  customItems?: CustomItem[];
+  prLogs?: PRLog[];
+  goals?: Goal[];
+  settings?: UserSettings;
+}): Promise<void> => {
+  // Clear existing user data
+  await Promise.all([
+    db.favorites.clear(),
+    db.customItems.clear(),
+    db.prLogs.clear(),
+    db.goals.clear(),
+  ]);
+
+  if (data.favorites?.length) {
+    await db.favorites.bulkAdd(data.favorites);
+  }
+  if (data.customItems?.length) {
+    await db.customItems.bulkAdd(data.customItems);
+  }
+  if (data.prLogs?.length) {
+    await db.prLogs.bulkAdd(data.prLogs);
+  }
+  if (data.goals?.length) {
     await db.goals.bulkAdd(data.goals);
   }
   if (data.settings) {
