@@ -89,6 +89,8 @@ export interface UserSettings {
   weightUnit: 'kg' | 'lb';
   distanceUnit: 'm' | 'ft';
   hasSeenOnboarding?: boolean;
+  /** Minimum hours of sleep considered "good" for recovery scoring. Default: 7 */
+  minSleepHours?: number;
 }
 
 /**

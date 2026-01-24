@@ -12,6 +12,7 @@ import type {
 } from '../types/training';
 import * as checkInService from '../services/checkInService';
 import { calculateRecoveryScore } from '../services/recoveryScoreService';
+import { getSettings } from '../db';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // STORE TYPES
@@ -20,6 +21,8 @@ import { calculateRecoveryScore } from '../services/recoveryScoreService';
 interface CheckInState {
   // Data
   todayCheckIn: DailyCheckIn | null;
+  selectedDate: string; // ISO date string YYYY-MM-DD
+  selectedCheckIn: DailyCheckIn | null;
   consecutiveDays: number;
   recoveryScore: RecoveryScore | null;
 
@@ -32,6 +35,7 @@ interface CheckInState {
 
   // Actions
   initialize: () => Promise<void>;
+  setSelectedDate: (date: string) => Promise<void>;
   saveTrainingCheckIn: (input: TrainingCheckInInput) => Promise<void>;
   saveRestDay: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -44,6 +48,8 @@ interface CheckInState {
 export const useCheckInStore = create<CheckInState>((set, get) => ({
   // Initial state
   todayCheckIn: null,
+  selectedDate: checkInService.getTodayDate(),
+  selectedCheckIn: null,
   consecutiveDays: 0,
   recoveryScore: null,
   isLoading: false,
@@ -61,21 +67,25 @@ export const useCheckInStore = create<CheckInState>((set, get) => ({
     set({ isLoading: true });
 
     try {
-      const [todayCheckIn, consecutiveDays, isFirstCheckIn, hasLongGap] = await Promise.all([
+      const [todayCheckIn, consecutiveDays, isFirstCheckIn, hasLongGap, settings] = await Promise.all([
         checkInService.getTodayCheckIn(),
         checkInService.getConsecutiveTrainingDays(),
         checkInService.isFirstCheckIn(),
         checkInService.hasLongGap(),
+        getSettings(),
       ]);
 
-      // Calculate recovery score
+      // Calculate recovery score with user's min sleep setting
       const recoveryScore = calculateRecoveryScore({
         consecutiveDays,
         checkIn: todayCheckIn,
+        minSleepHours: settings.minSleepHours,
       });
 
       set({
         todayCheckIn,
+        selectedDate: checkInService.getTodayDate(),
+        selectedCheckIn: todayCheckIn, // Default to today
         consecutiveDays,
         recoveryScore,
         isFirstCheckIn,
@@ -90,25 +100,49 @@ export const useCheckInStore = create<CheckInState>((set, get) => ({
   },
 
   /**
-   * Save a training day check-in.
+   * Set the selected date and load the check-in for that date.
+   */
+  setSelectedDate: async (date: string) => {
+    set({ isLoading: true, selectedDate: date });
+
+    try {
+      const checkIn = await checkInService.getCheckInByDate(date);
+      set({
+        selectedCheckIn: checkIn,
+        isLoading: false,
+      });
+    } catch (error) {
+      console.error('[CheckInStore] Failed to load check-in for date:', error);
+      set({ selectedCheckIn: null, isLoading: false });
+    }
+  },
+
+  /**
+   * Save a training day check-in for the selected date.
    */
   saveTrainingCheckIn: async (input: TrainingCheckInInput) => {
+    const { selectedDate } = get();
+    const isToday = selectedDate === checkInService.getTodayDate();
+    
     set({ isSaving: true });
 
     try {
-      const checkIn = await checkInService.saveTrainingCheckIn(input);
+      const [checkIn, settings] = await Promise.all([
+        checkInService.saveTrainingCheckIn(input, selectedDate),
+        getSettings(),
+      ]);
 
-      // Recalculate consecutive days (includes today now)
+      // Recalculate consecutive days
       const consecutiveDays = await checkInService.getConsecutiveTrainingDays();
 
-      // Recalculate recovery score
-      const recoveryScore = calculateRecoveryScore({
-        consecutiveDays,
-        checkIn,
-      });
+      // Recalculate recovery score (only relevant for today)
+      const recoveryScore = isToday
+        ? calculateRecoveryScore({ consecutiveDays, checkIn, minSleepHours: settings.minSleepHours })
+        : get().recoveryScore;
 
       set({
-        todayCheckIn: checkIn,
+        todayCheckIn: isToday ? checkIn : get().todayCheckIn,
+        selectedCheckIn: checkIn,
         consecutiveDays,
         recoveryScore,
         isFirstCheckIn: false,
@@ -122,23 +156,29 @@ export const useCheckInStore = create<CheckInState>((set, get) => ({
   },
 
   /**
-   * Save a rest day check-in.
+   * Save a rest day check-in for the selected date.
    */
   saveRestDay: async () => {
+    const { selectedDate } = get();
+    const isToday = selectedDate === checkInService.getTodayDate();
+    
     set({ isSaving: true });
 
     try {
-      const checkIn = await checkInService.saveRestDayCheckIn();
+      const [checkIn, settings] = await Promise.all([
+        checkInService.saveRestDayCheckIn(selectedDate),
+        getSettings(),
+      ]);
 
       // Rest day resets consecutive counter for scoring purposes
-      const recoveryScore = calculateRecoveryScore({
-        consecutiveDays: 0, // Rest day = 0 for scoring
-        checkIn,
-      });
+      const recoveryScore = isToday
+        ? calculateRecoveryScore({ consecutiveDays: 0, checkIn, minSleepHours: settings.minSleepHours })
+        : get().recoveryScore;
 
       set({
-        todayCheckIn: checkIn,
-        consecutiveDays: 0,
+        todayCheckIn: isToday ? checkIn : get().todayCheckIn,
+        selectedCheckIn: checkIn,
+        consecutiveDays: isToday ? 0 : get().consecutiveDays,
         recoveryScore,
         isFirstCheckIn: false,
         isSaving: false,
@@ -154,16 +194,18 @@ export const useCheckInStore = create<CheckInState>((set, get) => ({
    * Refresh all check-in data.
    */
   refresh: async () => {
-    const [todayCheckIn, consecutiveDays, isFirstCheckIn, hasLongGap] = await Promise.all([
+    const [todayCheckIn, consecutiveDays, isFirstCheckIn, hasLongGap, settings] = await Promise.all([
       checkInService.getTodayCheckIn(),
       checkInService.getConsecutiveTrainingDays(),
       checkInService.isFirstCheckIn(),
       checkInService.hasLongGap(),
+      getSettings(),
     ]);
 
     const recoveryScore = calculateRecoveryScore({
       consecutiveDays,
       checkIn: todayCheckIn,
+      minSleepHours: settings.minSleepHours,
     });
 
     set({

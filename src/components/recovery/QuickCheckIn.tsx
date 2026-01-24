@@ -5,10 +5,12 @@
  * Handles both initial prompt and editing states.
  */
 
-import { useState, useCallback } from 'react';
-import { Loader2, Check, Moon, Edit2 } from 'lucide-react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
+import { Loader2, Check, Moon, Edit2, Calendar } from 'lucide-react';
 import { EmojiSelector } from './EmojiSelector';
+import { DatePicker } from '../DatePicker';
 import { useCheckInStore } from '../../stores/checkInStore';
+import { getTodayDate, formatDateToISO } from '../../services/checkInService';
 import {
   ENERGY_LABELS,
   ENERGY_EMOJIS,
@@ -82,40 +84,98 @@ const SleepSelector = ({ value, onChange, disabled = false }: SleepSelectorProps
 
 export const QuickCheckIn = () => {
   // Store state
-  const todayCheckIn = useCheckInStore((s) => s.todayCheckIn);
+  const selectedDate = useCheckInStore((s) => s.selectedDate);
+  const selectedCheckIn = useCheckInStore((s) => s.selectedCheckIn);
   const isSaving = useCheckInStore((s) => s.isSaving);
+  const isLoading = useCheckInStore((s) => s.isLoading);
   const isFirstCheckIn = useCheckInStore((s) => s.isFirstCheckIn);
+  const setSelectedDate = useCheckInStore((s) => s.setSelectedDate);
   const saveTrainingCheckIn = useCheckInStore((s) => s.saveTrainingCheckIn);
   const saveRestDay = useCheckInStore((s) => s.saveRestDay);
 
+  // Calendar picker state
+  const [showCalendar, setShowCalendar] = useState(false);
+
+  // Date calculations
+  const today = useMemo(() => getTodayDate(), []);
+  const isToday = selectedDate === today;
+  const isOtherDate = !isToday;
+  
+  // Tab active states (Pick Date is active when calendar is open OR a past date is selected)
+  const isTodayActive = isToday && !showCalendar;
+  const isPickDateActive = showCalendar || isOtherDate;
+  const minDate = useMemo(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 30); // 30 days back
+    return date;
+  }, []);
+  const maxDate = useMemo(() => new Date(), []);
+  const selectedDateObj = useMemo(() => new Date(selectedDate + 'T00:00:00'), [selectedDate]);
+
   // Local form state
   const [mode, setMode] = useState<'prompt' | 'training' | 'summary'>(() => {
-    if (todayCheckIn) return 'summary';
+    if (selectedCheckIn) return 'summary';
     return 'prompt';
   });
   const [energy, setEnergy] = useState<MetricValue | undefined>(
-    todayCheckIn?.energy
+    selectedCheckIn?.energy
   );
   const [soreness, setSoreness] = useState<MetricValue | undefined>(
-    todayCheckIn?.soreness
+    selectedCheckIn?.soreness
   );
   const [sleepHours, setSleepHours] = useState<SleepHours | undefined>(
-    todayCheckIn?.sleepHours
+    selectedCheckIn?.sleepHours
   );
 
-  // Sync state when todayCheckIn changes
-  const handleEdit = useCallback(() => {
-    if (todayCheckIn) {
-      setEnergy(todayCheckIn.energy);
-      setSoreness(todayCheckIn.soreness);
-      setSleepHours(todayCheckIn.sleepHours);
+  // Sync mode and form state when selectedCheckIn changes
+  useEffect(() => {
+    if (selectedCheckIn) {
+      setMode('summary');
+      setEnergy(selectedCheckIn.energy);
+      setSoreness(selectedCheckIn.soreness);
+      setSleepHours(selectedCheckIn.sleepHours);
+    } else {
+      setMode('prompt');
+      setEnergy(undefined);
+      setSoreness(undefined);
+      setSleepHours(undefined);
     }
-    setMode('training');
-  }, [todayCheckIn]);
+  }, [selectedCheckIn]);
+
+  // Date navigation handlers
+  const handleTodayClick = useCallback(() => {
+    setSelectedDate(today);
+    setShowCalendar(false);
+  }, [today, setSelectedDate]);
+
+  const handleCalendarDateChange = useCallback((date: Date) => {
+    setSelectedDate(formatDateToISO(date));
+    setShowCalendar(false);
+  }, [setSelectedDate]);
+
+  const handleOtherClick = useCallback(() => {
+    setShowCalendar((prev) => !prev);
+  }, []);
+
+  // Edit handler - go to prompt to choose Training or Rest
+  const handleEdit = useCallback(() => {
+    setMode('prompt');
+  }, []);
 
   const handleTrainingClick = useCallback(() => {
+    // Pre-fill form with existing values if editing a training day
+    if (selectedCheckIn?.type === 'training') {
+      setEnergy(selectedCheckIn.energy);
+      setSoreness(selectedCheckIn.soreness);
+      setSleepHours(selectedCheckIn.sleepHours);
+    } else {
+      // Reset form for new training entry
+      setEnergy(undefined);
+      setSoreness(undefined);
+      setSleepHours(undefined);
+    }
     setMode('training');
-  }, []);
+  }, [selectedCheckIn]);
 
   const handleRestDayClick = useCallback(async () => {
     await saveRestDay();
@@ -131,19 +191,100 @@ export const QuickCheckIn = () => {
 
   const isFormValid = energy !== undefined && soreness !== undefined && sleepHours !== undefined;
 
+  // Format the "other" date for display
+  const formatOtherDate = (dateStr: string) => {
+    const date = new Date(dateStr + 'T00:00:00');
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  // Date selector component (shared across all states)
+  const dateSelector = (
+    <div className="mb-4">
+      {/* Quick date tabs */}
+      <div className="flex gap-2 p-1 bg-[var(--color-bg)] rounded-xl" role="tablist" aria-label="Select date">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={isTodayActive}
+          onClick={handleTodayClick}
+          disabled={isLoading}
+          className={`
+            flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-150
+            ${isTodayActive
+              ? 'bg-[var(--color-primary)] text-white shadow-sm'
+              : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)]'
+            }
+            disabled:opacity-50
+          `}
+        >
+          Today
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={isPickDateActive}
+          onClick={handleOtherClick}
+          disabled={isLoading}
+          className={`
+            flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-150 flex items-center justify-center gap-1.5
+            ${isPickDateActive
+              ? 'bg-[var(--color-primary)] text-white shadow-sm'
+              : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)]'
+            }
+            disabled:opacity-50
+          `}
+        >
+          <Calendar className="w-3.5 h-3.5" />
+          {isOtherDate ? formatOtherDate(selectedDate) : 'Pick Date'}
+        </button>
+      </div>
+
+      {/* Calendar picker (shown when "Pick Date" is clicked) */}
+      {showCalendar && (
+        <div className="mt-3">
+          <DatePicker
+            value={selectedDateObj}
+            onChange={handleCalendarDateChange}
+            minDate={minDate}
+            maxDate={maxDate}
+          />
+        </div>
+      )}
+    </div>
+  );
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <section aria-label="Quick check-in">
+        <div className="flex items-center gap-2 mb-3">
+          <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
+            Quick Check-in
+          </h2>
+        </div>
+        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4">
+          {dateSelector}
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-[var(--color-text-muted)]" />
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   // ─────────────────────────────────────────────────────────────────────────
   // RENDER: Summary State (already checked in)
   // ─────────────────────────────────────────────────────────────────────────
-  if (mode === 'summary' && todayCheckIn) {
-    const isRestDay = todayCheckIn.type === 'rest';
+  if (mode === 'summary' && selectedCheckIn) {
+    const isRestDay = selectedCheckIn.type === 'rest';
 
     return (
-      <section aria-label="Today's check-in summary">
+      <section aria-label="Check-in summary">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Check className="w-4 h-4 text-green-500" />
             <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
-              Today's Check-in
+              {isToday ? "Today's" : 'Daily'} Check-in
             </h2>
           </div>
           <button
@@ -157,6 +298,7 @@ export const QuickCheckIn = () => {
         </div>
 
         <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4">
+          {dateSelector}
           {isRestDay ? (
             <div className="flex items-center gap-2 text-[var(--color-text)]">
               <Moon className="w-5 h-5 text-[var(--color-primary)]" />
@@ -165,24 +307,24 @@ export const QuickCheckIn = () => {
           ) : (
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
-                <div className="text-2xl mb-1">{ENERGY_EMOJIS[todayCheckIn.energy!]}</div>
+                <div className="text-2xl mb-1">{ENERGY_EMOJIS[selectedCheckIn.energy!]}</div>
                 <div className="text-xs text-[var(--color-text-muted)]">Energy</div>
                 <div className="text-sm font-medium text-[var(--color-text)]">
-                  {ENERGY_LABELS[todayCheckIn.energy!]}
+                  {ENERGY_LABELS[selectedCheckIn.energy!]}
                 </div>
               </div>
               <div>
-                <div className="text-2xl mb-1">{SORENESS_EMOJIS[todayCheckIn.soreness!]}</div>
+                <div className="text-2xl mb-1">{SORENESS_EMOJIS[selectedCheckIn.soreness!]}</div>
                 <div className="text-xs text-[var(--color-text-muted)]">Soreness</div>
                 <div className="text-sm font-medium text-[var(--color-text)]">
-                  {SORENESS_LABELS[todayCheckIn.soreness!]}
+                  {SORENESS_LABELS[selectedCheckIn.soreness!]}
                 </div>
               </div>
               <div>
                 <div className="text-2xl mb-1">😴</div>
                 <div className="text-xs text-[var(--color-text-muted)]">Sleep</div>
                 <div className="text-sm font-medium text-[var(--color-text)]">
-                  {SLEEP_LABELS[todayCheckIn.sleepHours!]}
+                  {SLEEP_LABELS[selectedCheckIn.sleepHours!]}
                 </div>
               </div>
             </div>
@@ -193,28 +335,56 @@ export const QuickCheckIn = () => {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // RENDER: Prompt State (no check-in yet)
+  // RENDER: Prompt State (choose Training or Rest Day)
   // ─────────────────────────────────────────────────────────────────────────
   if (mode === 'prompt') {
+    const isEditing = selectedCheckIn !== null;
+    const promptText = isFirstCheckIn
+      ? 'Track how you feel to get recovery insights!'
+      : isEditing
+        ? 'What type of day was this?'
+        : isToday
+          ? 'How are you feeling today?'
+          : 'Did you train on this day?';
+
+    // Highlight current selection when editing
+    const isTrainingSelected = isEditing && selectedCheckIn?.type === 'training';
+    const isRestSelected = isEditing && selectedCheckIn?.type === 'rest';
+
+    const handleCancel = () => setMode('summary');
+
     return (
       <section aria-label="Quick check-in">
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
             Quick Check-in
           </h2>
+          {isEditing && (
+            <button
+              onClick={handleCancel}
+              className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+            >
+              Cancel
+            </button>
+          )}
         </div>
 
         <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4">
+          {dateSelector}
           <p className="text-center text-[var(--color-text)] mb-4">
-            {isFirstCheckIn
-              ? 'Track how you feel to get recovery insights!'
-              : 'How are you feeling today?'}
+            {promptText}
           </p>
 
           <div className="flex gap-3">
             <button
               onClick={handleTrainingClick}
-              className="flex-1 py-3 px-4 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white font-medium rounded-lg transition-colors"
+              className={`
+                flex-1 py-3 px-4 font-medium rounded-lg transition-colors
+                ${isTrainingSelected
+                  ? 'bg-[var(--color-primary)] text-white ring-2 ring-[var(--color-primary)] ring-offset-2 ring-offset-[var(--color-surface)]'
+                  : 'bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white'
+                }
+              `}
               aria-label="Log training day"
             >
               🏋️ Training
@@ -222,7 +392,13 @@ export const QuickCheckIn = () => {
             <button
               onClick={handleRestDayClick}
               disabled={isSaving}
-              className="flex-1 py-3 px-4 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border)] border border-[var(--color-border)] text-[var(--color-text)] font-medium rounded-lg transition-colors disabled:opacity-50"
+              className={`
+                flex-1 py-3 px-4 font-medium rounded-lg transition-colors disabled:opacity-50
+                ${isRestSelected
+                  ? 'bg-[var(--color-surface-elevated)] border-2 border-[var(--color-primary)] text-[var(--color-text)]'
+                  : 'bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border)] border border-[var(--color-border)] text-[var(--color-text)]'
+                }
+              `}
               aria-label="Log rest day"
             >
               {isSaving ? (
@@ -240,15 +416,25 @@ export const QuickCheckIn = () => {
   // ─────────────────────────────────────────────────────────────────────────
   // RENDER: Training Form State
   // ─────────────────────────────────────────────────────────────────────────
+  const handleBackToPrompt = () => setMode('prompt');
+
   return (
     <section aria-label="Quick check-in form">
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
           Quick Check-in
         </h2>
+        <button
+          onClick={handleBackToPrompt}
+          className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+        >
+          Back
+        </button>
       </div>
 
       <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4 space-y-4">
+        {dateSelector}
+        
         {/* Energy */}
         <div>
           <label className="block text-sm font-medium text-[var(--color-text)] mb-2">

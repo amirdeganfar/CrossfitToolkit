@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Download, Upload, Check, AlertCircle, Loader2, HelpCircle, ChevronRight, Timer, Minus, Plus } from 'lucide-react';
+import { ArrowLeft, Download, Upload, Check, AlertCircle, Loader2, HelpCircle, ChevronRight, Timer, Minus, Plus, Moon } from 'lucide-react';
 import { useCatalogStore } from '../stores/catalogStore';
 import { useClockStore } from '../stores/clockStore';
 import { useInitialize } from '../hooks/useInitialize';
@@ -41,6 +41,12 @@ export const Settings = () => {
 
   const handleCountdownChange = (delta: number) => {
     setCountdownSeconds(countdownSeconds + delta);
+  };
+
+  const handleMinSleepChange = async (delta: number) => {
+    const current = settings.minSleepHours ?? 7;
+    const newValue = Math.max(5, Math.min(9, current + delta));
+    await updateSettings({ minSleepHours: newValue });
   };
 
   const handleExport = async () => {
@@ -253,6 +259,43 @@ export const Settings = () => {
               }`}
             />
           </button>
+        </div>
+      </section>
+
+      {/* Recovery section */}
+      <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden">
+        <div className="px-4 py-3 border-b border-[var(--color-border)] flex items-center gap-2">
+          <Moon className="w-4 h-4 text-[var(--color-text-muted)]" />
+          <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
+            Recovery
+          </h2>
+        </div>
+
+        {/* Minimum sleep hours */}
+        <div className="px-4 py-3 flex items-center justify-between">
+          <div>
+            <span className="text-[var(--color-text)]">Min Sleep Hours</span>
+            <p className="text-xs text-[var(--color-text-muted)]">Sleep at or above = no penalty</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => handleMinSleepChange(-1)}
+              disabled={(settings.minSleepHours ?? 7) <= 5}
+              className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface-elevated)] rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <Minus className="w-4 h-4" />
+            </button>
+            <span className="font-mono text-lg font-semibold text-[var(--color-text)] min-w-[40px] text-center">
+              {settings.minSleepHours ?? 7}h
+            </span>
+            <button
+              onClick={() => handleMinSleepChange(1)}
+              disabled={(settings.minSleepHours ?? 7) >= 9}
+              className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface-elevated)] rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </section>
 

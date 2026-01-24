@@ -6,12 +6,12 @@
  */
 
 import {
-  SLEEP_POINT_MAP,
-  SLEEP_UNDER_5_POINTS,
   MAX_CONSECUTIVE_POINTS,
   ENERGY_WEIGHT,
   SORENESS_WEIGHT,
   ALERT_THRESHOLDS,
+  DEFAULT_MIN_SLEEP_HOURS,
+  calculateSleepPointsFromThreshold,
   getConsecutiveMessage,
   getEnergyMessage,
   getSorenessMessage,
@@ -58,11 +58,13 @@ export const calculateSorenessPoints = (soreness: number): number => {
 
 /**
  * Calculate points for sleep hours.
- * Uses threshold-based lookup from config.
+ * Uses user's minimum sleep threshold for scoring.
  */
-export const calculateSleepPoints = (hours: number): number => {
-  if (hours < 5) return SLEEP_UNDER_5_POINTS;
-  return SLEEP_POINT_MAP[hours] ?? 0;
+export const calculateSleepPoints = (
+  hours: number,
+  minSleepHours: number = DEFAULT_MIN_SLEEP_HOURS
+): number => {
+  return calculateSleepPointsFromThreshold(hours, minSleepHours);
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -91,7 +93,8 @@ export const getAlertLevel = (totalScore: number): AlertLevel => {
  */
 export const buildReasons = (
   consecutiveDays: number,
-  checkIn: DailyCheckIn | null
+  checkIn: DailyCheckIn | null,
+  minSleepHours: number = DEFAULT_MIN_SLEEP_HOURS
 ): RecoveryReason[] => {
   const reasons: RecoveryReason[] = [];
 
@@ -135,10 +138,10 @@ export const buildReasons = (
     }
   }
 
-  // Sleep (only if under-rested: <= 7h)
-  if (checkIn.sleepHours && checkIn.sleepHours <= 7) {
-    const points = calculateSleepPoints(checkIn.sleepHours);
-    const message = getSleepMessage(checkIn.sleepHours);
+  // Sleep (only if under user's minimum threshold)
+  if (checkIn.sleepHours && checkIn.sleepHours < minSleepHours) {
+    const points = calculateSleepPoints(checkIn.sleepHours, minSleepHours);
+    const message = getSleepMessage(checkIn.sleepHours, minSleepHours);
     if (message) {
       reasons.push({
         metric: 'sleep',
@@ -158,16 +161,16 @@ export const buildReasons = (
 /**
  * Calculate recovery score from input data.
  *
- * @param input - Consecutive days count and today's check-in (if any)
+ * @param input - Consecutive days count, today's check-in (if any), and user's min sleep hours
  * @returns RecoveryScore with total points, alert level, and reasons
  */
 export const calculateRecoveryScore = (input: RecoveryScoreInput): RecoveryScore => {
-  const { consecutiveDays, checkIn } = input;
+  const { consecutiveDays, checkIn, minSleepHours = DEFAULT_MIN_SLEEP_HOURS } = input;
 
   // If no check-in or rest day, only consecutive days contribute
   if (!checkIn || checkIn.type === 'rest') {
     const consecutivePoints = calculateConsecutivePoints(consecutiveDays);
-    const reasons = buildReasons(consecutiveDays, checkIn);
+    const reasons = buildReasons(consecutiveDays, checkIn, minSleepHours);
 
     return {
       total: consecutivePoints,
@@ -180,11 +183,11 @@ export const calculateRecoveryScore = (input: RecoveryScoreInput): RecoveryScore
   const consecutivePoints = calculateConsecutivePoints(consecutiveDays);
   const energyPoints = checkIn.energy ? calculateEnergyPoints(checkIn.energy) : 0;
   const sorenessPoints = checkIn.soreness ? calculateSorenessPoints(checkIn.soreness) : 0;
-  const sleepPoints = checkIn.sleepHours ? calculateSleepPoints(checkIn.sleepHours) : 0;
+  const sleepPoints = checkIn.sleepHours ? calculateSleepPoints(checkIn.sleepHours, minSleepHours) : 0;
 
   const total = consecutivePoints + energyPoints + sorenessPoints + sleepPoints;
   const level = getAlertLevel(total);
-  const reasons = buildReasons(consecutiveDays, checkIn);
+  const reasons = buildReasons(consecutiveDays, checkIn, minSleepHours);
 
   return {
     total,

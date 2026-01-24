@@ -59,20 +59,28 @@ export const SORENESS_EMOJIS: Record<number, string> = {
 // POINT CALCULATION
 // ═══════════════════════════════════════════════════════════════════════════
 
-/**
- * Sleep hours to fatigue points mapping.
- * Higher points = more fatigued.
- */
-export const SLEEP_POINT_MAP: Record<number, number> = {
-  9: 0,
-  8: 0,
-  7: 1,
-  6: 3,
-  5: 5,
-};
+/** Default minimum sleep hours for "good" recovery */
+export const DEFAULT_MIN_SLEEP_HOURS = 7;
 
-/** Points for sleep < 5 hours */
-export const SLEEP_UNDER_5_POINTS = 6;
+/** Maximum sleep deficit points */
+export const MAX_SLEEP_DEFICIT_POINTS = 6;
+
+/**
+ * Calculate sleep points based on user's minimum sleep threshold.
+ * Points scale with how far below the minimum:
+ * - At or above min: 0 points
+ * - 1 hour below: 2 points
+ * - 2 hours below: 4 points
+ * - 3+ hours below: 6 points (max)
+ */
+export const calculateSleepPointsFromThreshold = (
+  hours: number,
+  minSleepHours: number = DEFAULT_MIN_SLEEP_HOURS
+): number => {
+  if (hours >= minSleepHours) return 0;
+  const deficit = minSleepHours - hours;
+  return Math.min(deficit * 2, MAX_SLEEP_DEFICIT_POINTS);
+};
 
 /** Maximum points from consecutive training days */
 export const MAX_CONSECUTIVE_POINTS = 4;
@@ -157,12 +165,17 @@ export const getSorenessMessage = (value: number): string | null => {
 
 /**
  * Get user-facing message for sleep deficit.
- * Only shown when sleep <= 7.
+ * Only shown when sleep < minSleepHours.
  */
-export const getSleepMessage = (hours: number): string | null => {
-  if (hours <= 5) return 'Significant sleep deficit';
-  if (hours === 6) return 'Insufficient sleep';
-  if (hours === 7) return 'Slightly under-rested';
+export const getSleepMessage = (
+  hours: number,
+  minSleepHours: number = DEFAULT_MIN_SLEEP_HOURS
+): string | null => {
+  if (hours >= minSleepHours) return null;
+  const deficit = minSleepHours - hours;
+  if (deficit >= 3) return 'Significant sleep deficit';
+  if (deficit === 2) return 'Insufficient sleep';
+  if (deficit === 1) return 'Slightly under-rested';
   return null;
 };
 

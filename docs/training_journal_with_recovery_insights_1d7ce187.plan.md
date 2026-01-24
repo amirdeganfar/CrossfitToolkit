@@ -26,8 +26,11 @@ todos:
   - id: emoji-selector
     content: Build EmojiSelector.tsx component for 5-point input
     status: pending
+  - id: date-picker
+    content: Build DatePicker.tsx component for selecting check-in date (default today, past 30 days)
+    status: pending
   - id: quick-checkin
-    content: Build QuickCheckIn.tsx component with energy, soreness, sleep inputs
+    content: Build QuickCheckIn.tsx component with date picker, energy, soreness, sleep inputs
     status: pending
   - id: recovery-alert
     content: Build RecoveryAlert.tsx component with reason display
@@ -74,6 +77,7 @@ src/
 │       ├── QuickCheckIn.tsx         # Fast daily input (energy, soreness, sleep)
 │       ├── RecoveryAlert.tsx        # Alert display with reasons
 │       ├── EmojiSelector.tsx        # 5-point emoji input
+│       ├── DatePicker.tsx           # Date selector (default today, past 30 days)
 │       └── index.ts                 # Barrel exports
 └── pages/
     └── Home.tsx                     # Updated with check-in + alert
@@ -251,12 +255,21 @@ interface RecoveryReason {
 ┌─────────────────────────────────────┐
 │  --- Quick Check-in ---             │
 │  ┌─────────────────────────────────┐│
+│  │  [< Jan 23] [Today: Jan 24] [>] ││  <- Date picker (default today)
+│  │                                 ││
 │  │  Did you train today?           ││
 │  │                                 ││
 │  │  [ Training ]    [ Rest Day ]   ││
 │  └─────────────────────────────────┘│
 └─────────────────────────────────────┘
 ```
+
+**Date Selection:**
+- Default to today
+- Allow selecting past dates (up to 30 days back)
+- No future dates allowed
+- Arrow buttons for quick prev/next day navigation
+- "Today" button to quickly return to current date
 
 - **Training**: Expands to show energy/soreness/sleep inputs
 - **Rest Day**: Immediately saves as rest day (no metrics)
@@ -294,6 +307,12 @@ interface RecoveryReason {
 | New user, no history | Show onboarding prompt in check-in section |
 
 | One check-in per day | Allow edit only, no duplicates |
+
+|| Logging for past date | Date picker shows selected date, "Today" quick return |
+
+|| Past date already logged | Show existing check-in with Edit button |
+
+|| Future date selected | Disabled - cannot log future check-ins |
 
 ---
 

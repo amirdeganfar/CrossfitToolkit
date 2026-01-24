@@ -23,6 +23,13 @@ export const getTodayDate = (): string => {
 };
 
 /**
+ * Format a Date object to ISO date string (YYYY-MM-DD).
+ */
+export const formatDateToISO = (date: Date): string => {
+  return date.toISOString().split('T')[0];
+};
+
+/**
  * Get yesterday's date in ISO format.
  */
 export const getYesterdayDate = (): string => {
@@ -71,12 +78,15 @@ export const getRecentCheckIns = async (limit: number = 7): Promise<DailyCheckIn
 
 /**
  * Create or update a training day check-in.
+ * @param input - Training check-in data
+ * @param date - Optional date (defaults to today)
  */
 export const saveTrainingCheckIn = async (
-  input: TrainingCheckInInput
+  input: TrainingCheckInInput,
+  date?: string
 ): Promise<DailyCheckIn> => {
-  const today = getTodayDate();
-  const existing = await getTodayCheckIn();
+  const targetDate = date ?? getTodayDate();
+  const existing = await getCheckInByDate(targetDate);
 
   if (existing) {
     // Update existing check-in
@@ -99,7 +109,7 @@ export const saveTrainingCheckIn = async (
   const id = `checkin-${Date.now()}`;
   const checkIn: DailyCheckIn = {
     id,
-    date: today,
+    date: targetDate,
     type: 'training',
     energy: input.energy,
     soreness: input.soreness,
@@ -113,10 +123,11 @@ export const saveTrainingCheckIn = async (
 
 /**
  * Create or update a rest day check-in.
+ * @param date - Optional date (defaults to today)
  */
-export const saveRestDayCheckIn = async (): Promise<DailyCheckIn> => {
-  const today = getTodayDate();
-  const existing = await getTodayCheckIn();
+export const saveRestDayCheckIn = async (date?: string): Promise<DailyCheckIn> => {
+  const targetDate = date ?? getTodayDate();
+  const existing = await getCheckInByDate(targetDate);
 
   if (existing) {
     // Update existing to rest day
@@ -139,7 +150,7 @@ export const saveRestDayCheckIn = async (): Promise<DailyCheckIn> => {
   const id = `checkin-${Date.now()}`;
   const checkIn: DailyCheckIn = {
     id,
-    date: today,
+    date: targetDate,
     type: 'rest',
     createdAt: Date.now(),
   };

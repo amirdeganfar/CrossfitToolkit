@@ -117,4 +117,7 @@ export interface RecoveryScoreInput {
 
   /** Today's check-in (if exists) */
   checkIn: DailyCheckIn | null;
+
+  /** User's minimum sleep hours threshold (default: 7) */
+  minSleepHours?: number;
 }

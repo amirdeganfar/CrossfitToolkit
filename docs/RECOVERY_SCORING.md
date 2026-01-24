@@ -38,6 +38,8 @@ The Recovery Scoring system analyzes daily check-in data to provide athletes wit
 | 8h    | Optimal               |
 | 9h+   | Well-rested           |
 
+> **Note:** Users can configure their personal "minimum good sleep" threshold in Settings (default: 7h, range: 5-9h). Sleep at or above this threshold incurs no penalty.
+
 ---
 
 ## Point Calculation
@@ -86,17 +88,25 @@ The algorithm calculates fatigue points for each metric. Higher points = more re
 
 ### Sleep Points
 
-- **Formula**: Threshold-based lookup
+- **Formula**: `(minSleepHours - hours) × 2`, capped at 6
 - **Max Points**: 6
+- **Configurable**: Users set `minSleepHours` in Settings (default: 7, range: 5-9)
+
+| Sleep vs Threshold | Points |
+| ------------------ | ------ |
+| At or above min    | 0      |
+| 1 hour below       | 2      |
+| 2 hours below      | 4      |
+| 3+ hours below     | 6      |
+
+**Example with default (7h):**
 
 | Sleep Hours | Points |
 | ----------- | ------ |
-| 9h+         | 0      |
-| 8h          | 0      |
-| 7h          | 1      |
-| 6h          | 3      |
-| 5h          | 5      |
-| < 5h        | 6      |
+| 7h+         | 0      |
+| 6h          | 2      |
+| 5h          | 4      |
+| 4h or less  | 6      |
 
 ---
 
@@ -172,15 +182,19 @@ Each contributing factor displays a user-friendly message (no raw point values s
 
 All thresholds and messages are defined in `src/config/recoveryScoring.config.ts`:
 
-- `SLEEP_POINT_MAP`: Sleep hours to points mapping
+- `DEFAULT_MIN_SLEEP_HOURS`: Default minimum sleep threshold (7)
+- `calculateSleepPointsFromThreshold()`: Dynamic sleep scoring based on user setting
 - `ALERT_THRESHOLDS`: Score ranges for each alert level
 - `ALERT_MESSAGES`: User-facing titles for each level
 - `REASON_MESSAGES`: Templates for each factor
+
+**User Setting:** `minSleepHours` in Settings page (Recovery section)
 
 ---
 
 ## Changelog
 
-| Version | Date       | Changes                      |
-| ------- | ---------- | ---------------------------- |
-| 1.0     | 2026-01-23 | Initial algorithm design     |
+| Version | Date       | Changes                                      |
+| ------- | ---------- | -------------------------------------------- |
+| 1.1     | 2026-01-24 | Added configurable min sleep hours setting   |
+| 1.0     | 2026-01-23 | Initial algorithm design                     |
