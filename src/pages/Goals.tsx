@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Plus, ChevronDown, Target, Trophy, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, ChevronDown, Trophy, Loader2 } from 'lucide-react';
 import { useCatalogStore } from '../stores/catalogStore';
 import { useGoalsStore, useSortedActiveGoals, useSortedAchievedGoals } from '../stores/goalsStore';
 import { GoalCard, GoalModal } from '../components/goals';
@@ -12,7 +12,6 @@ export const Goals = () => {
   const settings = useCatalogStore((s) => s.settings);
   const isStoreInitialized = useCatalogStore((s) => s.isInitialized);
 
-  // Goals store - use selectors to avoid infinite loops
   const goalsIsInitialized = useGoalsStore((s) => s.isInitialized);
   const goalsIsLoading = useGoalsStore((s) => s.isLoading);
   const goalsInitialize = useGoalsStore((s) => s.initialize);
@@ -32,7 +31,6 @@ export const Goals = () => {
     goal: GoalWithProgress;
   } | null>(null);
 
-  // Initialize goals store when catalog is ready
   useEffect(() => {
     if (isStoreInitialized && !goalsIsInitialized && catalogItems.length > 0) {
       goalsInitialize(catalogItems, settings.weightUnit);
@@ -43,12 +41,7 @@ export const Goals = () => {
     input: CreateGoalInput | { id: string; updates: UpdateGoalInput }
   ) => {
     if ('id' in input) {
-      await goalsUpdateGoal(
-        input.id,
-        input.updates,
-        catalogItems,
-        settings.weightUnit
-      );
+      await goalsUpdateGoal(input.id, input.updates, catalogItems, settings.weightUnit);
     } else {
       await goalsAddGoal(input, catalogItems, settings.weightUnit);
     }
@@ -73,9 +66,7 @@ export const Goals = () => {
 
   const handleConfirmAction = async () => {
     if (!confirmAction) return;
-
     const { type, goal } = confirmAction;
-
     switch (type) {
       case 'achieve':
         await goalsAchieveGoal(goal.id, catalogItems, settings.weightUnit);
@@ -87,7 +78,6 @@ export const Goals = () => {
         await goalsDeleteGoal(goal.id, catalogItems, settings.weightUnit);
         break;
     }
-
     setConfirmAction(null);
   };
 
@@ -111,42 +101,36 @@ export const Goals = () => {
         <div className="flex items-center gap-3 px-4 py-3">
           <Link
             to="/"
-            className="p-2 -ml-1 hover:bg-[var(--color-surface-elevated)] transition-colors rounded-sm"
+            className="p-2 -ml-1 hover:bg-[var(--color-surface-elevated)] transition-colors"
             aria-label="Go back"
           >
             <ArrowLeft className="w-5 h-5 text-[var(--color-text)]" />
           </Link>
-          <h1 className="font-display text-2xl text-[var(--color-text)]">GOALS</h1>
+          <h1 className="font-display text-2xl text-[var(--color-text)] tracking-[0.1em]">MISSIONS</h1>
         </div>
       </header>
 
       <main className="p-4 pb-24 space-y-6">
         {/* Active Goals Section */}
         <section>
-          <div className="flex items-center gap-2 mb-3">
-            <Target size={16} className="text-[var(--color-primary)]" />
-            <h2 className="font-display text-sm tracking-widest text-[var(--color-text-muted)]">
-              ACTIVE
-            </h2>
-            <span className="font-display text-sm text-[var(--color-text-dim)]">
-              ({activeGoals.length})
-            </span>
+          <div className="flex items-center gap-2 mb-3 pb-1 border-b border-[var(--color-border)]">
+            <span className="font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)]">ACTIVE</span>
+            <span className="font-display text-xs text-[var(--color-text-dim)]">({activeGoals.length})</span>
           </div>
 
           {activeGoals.length === 0 ? (
-            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-10 text-center">
-              <Target size={56} className="mx-auto mb-4 text-[var(--color-primary)] opacity-30" />
-              <p className="font-display text-2xl text-[var(--color-text)] mb-2 leading-tight">SET YOUR<br/>FIRST GOAL</p>
-              <p className="text-sm text-[var(--color-text-muted)] mb-6">Track progress toward your PR targets.</p>
+            <div className="py-12 text-center border-l-2 border-[var(--color-primary)] pl-4">
+              <p className="font-display text-2xl text-[var(--color-text)] mb-2 tracking-[0.1em]">NO ACTIVE<br/>MISSIONS</p>
+              <p className="text-xs text-[var(--color-text-muted)] font-display tracking-widest mb-6">SET A GOAL TO TRACK YOUR PROGRESS</p>
               <button
                 onClick={() => setShowModal(true)}
-                className="px-6 py-3 bg-[var(--color-primary)] hover:opacity-90 active:scale-95 text-white rounded-sm font-display tracking-widest text-sm transition-all shadow-[0_0_20px_rgba(232,50,28,0.25)]"
+                className="px-6 py-3 bg-[var(--color-primary)] text-[#0B130B] hover:opacity-90 active:scale-95 font-display tracking-widest text-sm transition-all shadow-[0_0_24px_rgba(212,255,0,0.3)]"
               >
                 SET FIRST GOAL
               </button>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-4">
               {activeGoals.map((goal) => (
                 <GoalCard
                   key={goal.id}
@@ -166,23 +150,19 @@ export const Goals = () => {
           <section>
             <button
               onClick={() => setShowAchieved(!showAchieved)}
-              className="flex items-center gap-2 mb-3 w-full text-left"
+              className="flex items-center gap-2 mb-3 w-full text-left pb-1 border-b border-[var(--color-border)]"
             >
-              <Trophy size={16} className="text-[var(--color-warning)]" />
-              <h2 className="font-display text-sm tracking-widest text-[var(--color-text-muted)]">
-                ACHIEVED
-              </h2>
-              <span className="font-display text-sm text-[var(--color-text-dim)]">
-                ({achievedGoals.length})
-              </span>
+              <Trophy size={14} className="text-[var(--color-warning)]" />
+              <span className="font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)]">ACHIEVED</span>
+              <span className="font-display text-xs text-[var(--color-text-dim)]">({achievedGoals.length})</span>
               <ChevronDown
-                size={16}
+                size={14}
                 className={`ml-auto text-[var(--color-text-muted)] transition-transform ${showAchieved ? 'rotate-180' : ''}`}
               />
             </button>
 
             <div className={`accordion-content ${showAchieved ? 'expanded' : ''}`}>
-              <div className="space-y-2">
+              <div className="space-y-4">
                 {achievedGoals.map((goal) => (
                   <GoalCard
                     key={goal.id}
@@ -197,10 +177,10 @@ export const Goals = () => {
         )}
       </main>
 
-      {/* Floating Action Button — sharp square */}
+      {/* Floating Action Button */}
       <button
         onClick={() => setShowModal(true)}
-        className="fixed bottom-20 right-4 sm:bottom-6 w-14 h-14 bg-[var(--color-primary)] hover:opacity-90 active:scale-90 text-white rounded-sm flex items-center justify-center transition-all shadow-[0_0_24px_rgba(232,50,28,0.35)]"
+        className="fixed bottom-20 right-4 sm:bottom-6 w-14 h-14 bg-[var(--color-primary)] hover:opacity-90 active:scale-90 text-[#0B130B] flex items-center justify-center transition-all shadow-[0_0_24px_rgba(212,255,0,0.3)]"
         aria-label="Add new goal"
       >
         <Plus size={24} />

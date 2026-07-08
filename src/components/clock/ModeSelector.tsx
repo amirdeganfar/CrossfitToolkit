@@ -5,7 +5,7 @@ interface ModeSelectorProps {
 }
 
 /**
- * Timer mode selection — sharp segmented control
+ * Timer mode selection — underline tab style
  */
 export const ModeSelector = ({ onModeChange }: ModeSelectorProps) => {
   const currentMode = useClockStore((state) => state.config.mode);
@@ -27,7 +27,7 @@ export const ModeSelector = ({ onModeChange }: ModeSelectorProps) => {
   };
 
   return (
-    <div className="flex overflow-x-auto gap-1 scrollbar-hide">
+    <div className="flex overflow-x-auto scrollbar-hide border-b border-[var(--color-border)] -mx-4 px-4">
       {modes.map((mode) => (
         <button
           key={mode.id}
@@ -35,12 +35,12 @@ export const ModeSelector = ({ onModeChange }: ModeSelectorProps) => {
           disabled={status !== 'idle'}
           title={mode.description}
           className={`
-            flex-shrink-0 px-4 py-2 font-display text-sm tracking-widest
-            transition-colors duration-150
-            ${status !== 'idle' ? 'opacity-40 cursor-not-allowed' : 'active:scale-95'}
+            flex-shrink-0 px-4 py-2 font-display text-xs tracking-widest
+            transition-colors duration-150 border-b-2 -mb-px
+            ${status !== 'idle' ? 'opacity-40 cursor-not-allowed' : ''}
             ${currentMode === mode.id
-              ? 'bg-[var(--color-primary)] text-white'
-              : 'bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)] hover:border-[var(--color-border-strong)]'
+              ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
+              : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
             }
           `}
         >

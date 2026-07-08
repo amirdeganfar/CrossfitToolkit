@@ -13,10 +13,10 @@ export const Layout = () => {
   const isActive = (path: string) => location.pathname === path;
 
   const navBtn = (active: boolean) =>
-    `relative flex flex-col items-center gap-1 px-5 py-2 transition-colors ${
+    `relative flex flex-col items-center gap-1 px-5 py-2 transition-colors border-t-2 ${
       active
-        ? 'text-[var(--color-primary)] nav-item-active'
-        : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
+        ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
+        : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
     }`;
 
   return (
@@ -25,7 +25,7 @@ export const Layout = () => {
       <header className="sticky top-0 z-50 bg-[var(--color-bg)] border-b border-[var(--color-border)] px-4 py-3">
         <div className="flex items-center justify-between max-w-lg mx-auto">
           <h1
-            className="font-display text-2xl text-[var(--color-text)] cursor-pointer"
+            className="font-display text-lg tracking-[0.15em] text-[var(--color-text)] cursor-pointer"
             onClick={handleHomeClick}
             role="button"
             tabIndex={0}
@@ -33,11 +33,11 @@ export const Layout = () => {
             onKeyDown={(e) => e.key === 'Enter' && handleHomeClick()}
           >
             <span className="text-[var(--color-primary)]">CF</span>
-            {' '}TOOLKIT
+            {' '}/ TOOLKIT
           </h1>
           <button
             onClick={handleSettingsClick}
-            className="p-2 rounded-sm hover:bg-[var(--color-surface-elevated)] transition-colors active:scale-95"
+            className="p-2 hover:bg-[var(--color-surface-elevated)] transition-colors active:scale-95"
             aria-label="Open settings"
           >
             <Settings className="w-5 h-5 text-[var(--color-text-muted)]" />
@@ -60,7 +60,7 @@ export const Layout = () => {
             aria-current={isActive('/') ? 'page' : undefined}
           >
             <Home className="w-6 h-6" />
-            <span className="text-[10px] font-semibold tracking-wide uppercase">Home</span>
+            <span className="font-display text-[9px] tracking-[0.15em]">HOME</span>
           </button>
           <button
             onClick={handleSearchClick}
@@ -69,7 +69,7 @@ export const Layout = () => {
             aria-current={isActive('/search') ? 'page' : undefined}
           >
             <Search className="w-6 h-6" />
-            <span className="text-[10px] font-semibold tracking-wide uppercase">Search</span>
+            <span className="font-display text-[9px] tracking-[0.15em]">SEARCH</span>
           </button>
           <button
             onClick={handleClockClick}
@@ -78,7 +78,7 @@ export const Layout = () => {
             aria-current={isActive('/clock') ? 'page' : undefined}
           >
             <Timer className="w-6 h-6" />
-            <span className="text-[10px] font-semibold tracking-wide uppercase">Clock</span>
+            <span className="font-display text-[9px] tracking-[0.15em]">CLOCK</span>
           </button>
           <button
             onClick={handleSettingsClick}
@@ -87,7 +87,7 @@ export const Layout = () => {
             aria-current={isActive('/settings') ? 'page' : undefined}
           >
             <Settings className="w-6 h-6" />
-            <span className="text-[10px] font-semibold tracking-wide uppercase">Settings</span>
+            <span className="font-display text-[9px] tracking-[0.15em]">CONFIG</span>
           </button>
         </div>
       </nav>

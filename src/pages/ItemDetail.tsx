@@ -15,14 +15,13 @@ import type { CreateGoalInput, UpdateGoalInput } from '../types/goal';
 
 // Group structure for accordion display
 interface LogGroup {
-  key: number | string;  // distance, time, reps, or variant
-  label: string;         // formatted label (e.g., "200m", "2:00", "5RM", "Rx")
+  key: number | string;
+  label: string;
   type: 'distance' | 'calories' | 'reps' | 'variant';
-  logs: PRLog[];         // sorted: PR first, then by date desc
-  bestLog: PRLog;        // the PR for this group
+  logs: PRLog[];
+  bestLog: PRLog;
 }
 
-// Group logs by distance or calories/time, with PR first in each group
 const groupLogs = (
   logs: PRLog[],
   bestByDistance: Map<number, PRLog>,
@@ -30,9 +29,8 @@ const groupLogs = (
   formatDistance: (meters: number) => string
 ): LogGroup[] => {
   const distanceGroups = new Map<number, PRLog[]>();
-  const calorieGroups = new Map<number, PRLog[]>(); // keyed by time (resultValue)
+  const calorieGroups = new Map<number, PRLog[]>();
 
-  // Separate logs by type
   logs.forEach(log => {
     if (log.distance !== undefined) {
       const existing = distanceGroups.get(log.distance) || [];
@@ -47,116 +45,61 @@ const groupLogs = (
 
   const result: LogGroup[] = [];
 
-  // Process distance groups (sorted by distance ascending)
-  Array.from(distanceGroups.keys())
-    .sort((a, b) => a - b)
-    .forEach(distance => {
-      const groupLogs = distanceGroups.get(distance)!;
-      const bestLog = bestByDistance.get(distance);
-      if (!bestLog) return;
-
-      // Sort: PR first, then by date descending
-      const sorted = [...groupLogs].sort((a, b) => {
-        if (a.id === bestLog.id) return -1;
-        if (b.id === bestLog.id) return 1;
-        return b.date - a.date;
-      });
-
-      result.push({
-        key: distance,
-        label: formatDistance(distance),
-        type: 'distance',
-        logs: sorted,
-        bestLog,
-      });
+  Array.from(distanceGroups.keys()).sort((a, b) => a - b).forEach(distance => {
+    const groupLogs = distanceGroups.get(distance)!;
+    const bestLog = bestByDistance.get(distance);
+    if (!bestLog) return;
+    const sorted = [...groupLogs].sort((a, b) => {
+      if (a.id === bestLog.id) return -1;
+      if (b.id === bestLog.id) return 1;
+      return b.date - a.date;
     });
+    result.push({ key: distance, label: formatDistance(distance), type: 'distance', logs: sorted, bestLog });
+  });
 
-  // Process calorie groups (sorted by time ascending)
-  Array.from(calorieGroups.keys())
-    .sort((a, b) => a - b)
-    .forEach(timeSeconds => {
-      const groupLogs = calorieGroups.get(timeSeconds)!;
-      const bestLog = bestByCalories.get(timeSeconds);
-      if (!bestLog) return;
-
-      // Sort: PR first, then by date descending
-      const sorted = [...groupLogs].sort((a, b) => {
-        if (a.id === bestLog.id) return -1;
-        if (b.id === bestLog.id) return 1;
-        return b.date - a.date;
-      });
-
-      // Format time
-      const mins = Math.floor(timeSeconds / 60);
-      const secs = timeSeconds % 60;
-      const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
-
-      result.push({
-        key: timeSeconds,
-        label: timeStr,
-        type: 'calories',
-        logs: sorted,
-        bestLog,
-      });
+  Array.from(calorieGroups.keys()).sort((a, b) => a - b).forEach(timeSeconds => {
+    const groupLogs = calorieGroups.get(timeSeconds)!;
+    const bestLog = bestByCalories.get(timeSeconds);
+    if (!bestLog) return;
+    const sorted = [...groupLogs].sort((a, b) => {
+      if (a.id === bestLog.id) return -1;
+      if (b.id === bestLog.id) return 1;
+      return b.date - a.date;
     });
+    const mins = Math.floor(timeSeconds / 60);
+    const secs = timeSeconds % 60;
+    const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+    result.push({ key: timeSeconds, label: timeStr, type: 'calories', logs: sorted, bestLog });
+  });
 
   return result;
 };
 
-// Group logs by reps (for Lift items), with best (highest weight) first in each group
-const groupLogsByReps = (
-  logs: PRLog[]
-): LogGroup[] => {
+const groupLogsByReps = (logs: PRLog[]): LogGroup[] => {
   const repsGroups = new Map<number, PRLog[]>();
-
-  // Group logs by reps
   logs.forEach(log => {
-    const reps = log.reps ?? 1; // Default to 1RM if no reps specified
+    const reps = log.reps ?? 1;
     const existing = repsGroups.get(reps) || [];
     existing.push(log);
     repsGroups.set(reps, existing);
   });
 
   const result: LogGroup[] = [];
-
-  // Process reps groups (sorted by reps ascending: 1RM, 3RM, 5RM, etc.)
-  Array.from(repsGroups.keys())
-    .sort((a, b) => a - b)
-    .forEach(reps => {
-      const groupLogs = repsGroups.get(reps)!;
-      
-      // Find best log (highest resultValue = heaviest weight)
-      const bestLog = groupLogs.reduce((best, curr) => 
-        curr.resultValue > best.resultValue ? curr : best
-      );
-
-      // Sort: PR first, then by date descending
-      const sorted = [...groupLogs].sort((a, b) => {
-        if (a.id === bestLog.id) return -1;
-        if (b.id === bestLog.id) return 1;
-        return b.date - a.date;
-      });
-
-      result.push({
-        key: reps,
-        label: `${reps}RM`,
-        type: 'reps',
-        logs: sorted,
-        bestLog,
-      });
+  Array.from(repsGroups.keys()).sort((a, b) => a - b).forEach(reps => {
+    const groupLogs = repsGroups.get(reps)!;
+    const bestLog = groupLogs.reduce((best, curr) => curr.resultValue > best.resultValue ? curr : best);
+    const sorted = [...groupLogs].sort((a, b) => {
+      if (a.id === bestLog.id) return -1;
+      if (b.id === bestLog.id) return 1;
+      return b.date - a.date;
     });
-
+    result.push({ key: reps, label: `${reps}RM`, type: 'reps', logs: sorted, bestLog });
+  });
   return result;
 };
 
-// Group logs by variant (for Benchmark/Skill items), with best first in each group
-const groupLogsByVariant = (
-  logs: PRLog[],
-  isLowerBetter: boolean
-): LogGroup[] => {
+const groupLogsByVariant = (logs: PRLog[], isLowerBetter: boolean): LogGroup[] => {
   const variantGroups = new Map<string, PRLog[]>();
-
-  // Group logs by variant
   logs.forEach(log => {
     const variant = log.variant ?? 'Unspecified';
     const existing = variantGroups.get(variant) || [];
@@ -165,8 +108,6 @@ const groupLogsByVariant = (
   });
 
   const result: LogGroup[] = [];
-
-  // Define variant order: Rx+ first, then Rx, then Scaled, then Unspecified
   const variantOrder = ['Rx+', 'Rx', 'Scaled', 'Unspecified'];
   const sortedVariants = Array.from(variantGroups.keys()).sort((a, b) => {
     const aIndex = variantOrder.indexOf(a);
@@ -176,32 +117,17 @@ const groupLogsByVariant = (
 
   sortedVariants.forEach(variant => {
     const groupLogs = variantGroups.get(variant)!;
-    
-    // Find best log based on scoreType
     const bestLog = groupLogs.reduce((best, curr) => {
-      if (isLowerBetter) {
-        return curr.resultValue < best.resultValue ? curr : best;
-      } else {
-        return curr.resultValue > best.resultValue ? curr : best;
-      }
+      if (isLowerBetter) return curr.resultValue < best.resultValue ? curr : best;
+      return curr.resultValue > best.resultValue ? curr : best;
     });
-
-    // Sort: PR first, then by date descending
     const sorted = [...groupLogs].sort((a, b) => {
       if (a.id === bestLog.id) return -1;
       if (b.id === bestLog.id) return 1;
       return b.date - a.date;
     });
-
-    result.push({
-      key: variant,
-      label: variant,
-      type: 'variant',
-      logs: sorted,
-      bestLog,
-    });
+    result.push({ key: variant, label: variant, type: 'variant', logs: sorted, bestLog });
   });
-
   return result;
 };
 
@@ -210,14 +136,12 @@ export const ItemDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { isInitialized, isLoading: isInitializing } = useInitialize();
 
-  // Store state
   const item = useCatalogItem(id ?? '');
   const catalogItems = useCatalogStore((state) => state.catalogItems);
   const toggleFavorite = useCatalogStore((state) => state.toggleFavorite);
   const deletePRLog = useCatalogStore((state) => state.deletePRLog);
   const settings = useCatalogStore((state) => state.settings);
 
-  // Goals store - use selectors to avoid infinite loops
   const goalsIsInitialized = useGoalsStore((s) => s.isInitialized);
   const goalsInitialize = useGoalsStore((s) => s.initialize);
   const goalsRefresh = useGoalsStore((s) => s.refreshGoals);
@@ -225,7 +149,6 @@ export const ItemDetail = () => {
   const goalsUpdateGoal = useGoalsStore((s) => s.updateGoal);
   const activeGoal = useActiveGoalForItem(id ?? '');
 
-  // Local state
   const [logs, setLogs] = useState<PRLog[]>([]);
   const [bestLog, setBestLog] = useState<PRLog | null>(null);
   const [bestByDistance, setBestByDistance] = useState<Map<number, PRLog>>(new Map());
@@ -236,54 +159,37 @@ export const ItemDetail = () => {
   const [deleteLogId, setDeleteLogId] = useState<string | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
-  // Initialize goals store when catalog is ready
   useEffect(() => {
     if (isInitialized && !goalsIsInitialized && catalogItems.length > 0) {
       goalsInitialize(catalogItems, settings.weightUnit);
     }
   }, [isInitialized, goalsIsInitialized, catalogItems, settings.weightUnit, goalsInitialize]);
 
-  // Use utility functions for metric type detection
   const isDual = isDualMetricItem(item);
   const isDistanceOnly = isDistanceOnlyItem(item);
 
-  // Shared function to fetch logs and best PRs for an item
-  const fetchLogsAndBests = useCallback(async (
-    itemId: string,
-    currentItem: CatalogItem | null
-  ) => {
+  const fetchLogsAndBests = useCallback(async (itemId: string, currentItem: CatalogItem | null) => {
     const itemLogs = await db.getPRLogsForItem(itemId);
     setLogs(itemLogs);
-    
+
     if (isDualMetricItem(currentItem)) {
-      // For dual-metric items, get best PRs for BOTH distance and calories
       const bestsByDist = await db.getBestPRsByDistance(itemId);
       const bestsByCal = await db.getBestPRsByCalories(itemId);
       setBestByDistance(bestsByDist);
       setBestByCalories(bestsByCal);
-      const allBests = [
-        ...Array.from(bestsByDist.values()),
-        ...Array.from(bestsByCal.values()),
-      ];
+      const allBests = [...Array.from(bestsByDist.values()), ...Array.from(bestsByCal.values())];
       if (allBests.length > 0) {
-        const overallBest = allBests.reduce((best, curr) => 
-          curr.resultValue < best.resultValue ? curr : best
-        );
-        setBestLog(overallBest);
+        setBestLog(allBests.reduce((best, curr) => curr.resultValue < best.resultValue ? curr : best));
       } else {
         setBestLog(null);
       }
     } else if (isDistanceOnlyItem(currentItem)) {
-      // For distance-only items, get best PRs grouped by distance
       const bestsByDist = await db.getBestPRsByDistance(itemId);
       setBestByDistance(bestsByDist);
       setBestByCalories(new Map());
       if (bestsByDist.size > 0) {
         const allBests = Array.from(bestsByDist.values());
-        const overallBest = allBests.reduce((best, curr) => 
-          curr.resultValue < best.resultValue ? curr : best
-        );
-        setBestLog(overallBest);
+        setBestLog(allBests.reduce((best, curr) => curr.resultValue < best.resultValue ? curr : best));
       } else {
         setBestLog(null);
       }
@@ -295,11 +201,9 @@ export const ItemDetail = () => {
     }
   }, []);
 
-  // Fetch logs for this item
   useEffect(() => {
     const fetchLogs = async () => {
       if (!id || !isInitialized || !item) return;
-      
       setIsLoading(true);
       try {
         await fetchLogsAndBests(id, item);
@@ -309,18 +213,13 @@ export const ItemDetail = () => {
         setIsLoading(false);
       }
     };
-
     fetchLogs();
   }, [id, isInitialized, item, fetchLogsAndBests]);
 
-  const handleBack = () => {
-    navigate(-1);
-  };
+  const handleBack = () => navigate(-1);
 
   const handleFavoriteClick = async () => {
-    if (id) {
-      await toggleFavorite(id);
-    }
+    if (id) await toggleFavorite(id);
   };
 
   const refreshLogs = async () => {
@@ -328,9 +227,7 @@ export const ItemDetail = () => {
     await fetchLogsAndBests(id, item);
   };
 
-  const handleDeleteLog = (logId: string) => {
-    setDeleteLogId(logId);
-  };
+  const handleDeleteLog = (logId: string) => setDeleteLogId(logId);
 
   const confirmDeleteLog = async () => {
     if (deleteLogId) {
@@ -342,15 +239,12 @@ export const ItemDetail = () => {
 
   const handleModalSuccess = async () => {
     await refreshLogs();
-    // Refresh goals to update progress
     if (goalsIsInitialized) {
       await goalsRefresh(catalogItems, settings.weightUnit);
     }
   };
 
-  const handleSaveGoal = async (
-    input: CreateGoalInput | { id: string; updates: UpdateGoalInput }
-  ) => {
+  const handleSaveGoal = async (input: CreateGoalInput | { id: string; updates: UpdateGoalInput }) => {
     if ('id' in input) {
       await goalsUpdateGoal(input.id, input.updates, catalogItems, settings.weightUnit);
     } else {
@@ -358,69 +252,43 @@ export const ItemDetail = () => {
     }
   };
 
-  const formatDate = (timestamp: number): string => {
-    return new Date(timestamp).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  };
+  const formatDate = (timestamp: number): string =>
+    new Date(timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
   const getResultWithUnit = (result: string): string => {
     if (!item) return result;
-    
-    // If result already contains compound format (e.g., "5 reps @ 100kg", "1RM @ 100kg", "200m in 0:30")
-    // just return it as-is
-    if (result.includes('@') || result.includes(' in ') || result.includes('RM')) {
-      return result;
-    }
-    
+    if (result.includes('@') || result.includes(' in ') || result.includes('RM')) return result;
     switch (item.scoreType) {
-      case 'Load':
-        return `${result} ${settings.weightUnit}`;
-      case 'Distance':
-        return `${result} ${settings.distanceUnit}`;
-      case 'Reps':
-        return `${result} reps`;
-      case 'Calories':
-        return `${result} cal`;
-      default:
-        return result;
+      case 'Load':     return `${result} ${settings.weightUnit}`;
+      case 'Distance': return `${result} ${settings.distanceUnit}`;
+      case 'Reps':     return `${result} reps`;
+      case 'Calories': return `${result} cal`;
+      default:         return result;
     }
   };
 
   const isLowerBetter = item?.scoreType === 'Time';
 
-  // Format distance in meters to human-readable format
   const formatDistance = (meters: number): string => {
     if (meters >= 1609.34) {
-      // Convert to miles for distances >= 1 mile
       const miles = meters / 1609.34;
       return miles === 1 ? '1 mile' : `${miles.toFixed(1)} mi`;
     } else if (meters >= 1000) {
-      // Convert to km for distances >= 1km
       const km = meters / 1000;
       return `${km % 1 === 0 ? km.toFixed(0) : km.toFixed(1)}km`;
     }
     return `${meters}m`;
   };
 
-  // Sort distances for display (ascending)
   const sortedDistances = Array.from(bestByDistance.keys()).sort((a, b) => a - b);
-  
-  // Sort times for calorie-based PRs (ascending by time in seconds)
   const sortedCalorieTimes = Array.from(bestByCalories.keys()).sort((a, b) => a - b);
 
-  // Determine grouping type and create grouped logs for accordion display
   const getGroupedLogs = (): LogGroup[] => {
     if (isDual || isDistanceOnly) {
-      // Monostructural items: group by distance or calories/time
       return groupLogs(logs, bestByDistance, bestByCalories, formatDistance);
     } else if (item?.category === 'Lift' && item?.scoreType === 'Load') {
-      // Lift items: group by reps (1RM, 3RM, 5RM, etc.)
       return groupLogsByReps(logs);
     } else if (logs.length > 0) {
-      // All other items (Benchmark, Skill, Custom): group by variant
       return groupLogsByVariant(logs, isLowerBetter);
     }
     return [];
@@ -428,21 +296,26 @@ export const ItemDetail = () => {
 
   const groupedLogs = getGroupedLogs();
 
-  // Toggle accordion group expansion
   const toggleGroup = (groupKey: string) => {
     setExpandedGroups(prev => {
       const next = new Set(prev);
-      if (next.has(groupKey)) {
-        next.delete(groupKey);
-      } else {
-        next.add(groupKey);
-      }
+      if (next.has(groupKey)) next.delete(groupKey);
+      else next.add(groupKey);
       return next;
     });
   };
 
-  // Check if should use grouped display (use grouping when we have groups)
   const useGroupedHistory = groupedLogs.length > 0;
+
+  const getCategoryColor = (category: CatalogItem['category']) => {
+    switch (category) {
+      case 'Benchmark':      return '#D4FF00';
+      case 'Lift':           return '#60A5FA';
+      case 'Monostructural': return '#4ADE80';
+      case 'Skill':          return '#C084FC';
+      default:               return '#FB923C';
+    }
+  };
 
   if (!isInitialized || isInitializing) {
     return (
@@ -456,17 +329,13 @@ export const ItemDetail = () => {
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-3">
-          <button
-            onClick={handleBack}
-            className="p-2.5 -ml-1 rounded-xl hover:bg-[var(--color-surface-elevated)] transition-colors"
-            aria-label="Go back"
-          >
+          <button onClick={handleBack} className="p-2 -ml-1 hover:bg-[var(--color-surface-elevated)] transition-colors" aria-label="Go back">
             <ArrowLeft className="w-5 h-5 text-[var(--color-text-muted)]" />
           </button>
           <h1 className="font-display text-2xl text-[var(--color-text)]">NOT FOUND</h1>
         </div>
-        <div className="flex items-center justify-center h-48 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg">
-          <p className="text-[var(--color-text-muted)]">Item not found</p>
+        <div className="flex items-center justify-center h-48 border border-[var(--color-border)]">
+          <p className="font-display text-sm tracking-widest text-[var(--color-text-muted)]">ITEM NOT FOUND</p>
         </div>
       </div>
     );
@@ -477,39 +346,23 @@ export const ItemDetail = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button
-            onClick={handleBack}
-            className="p-2 -ml-1 rounded-sm hover:bg-[var(--color-surface-elevated)] transition-colors"
-            aria-label="Go back"
-          >
+          <button onClick={handleBack} className="p-2 -ml-1 hover:bg-[var(--color-surface-elevated)] transition-colors" aria-label="Go back">
             <ArrowLeft className="w-5 h-5 text-[var(--color-text-muted)]" />
           </button>
           <div>
-            <h1 className="font-display text-2xl text-[var(--color-text)]">{item.name}</h1>
-            <div className="flex items-center gap-2 mt-0.5">
-              <span
-                className="text-[10px] font-display tracking-widest px-2 py-0.5 rounded-sm"
-                style={{
-                  background: item.category === 'Benchmark' ? 'rgba(245,158,11,0.15)' :
-                              item.category === 'Lift' ? 'rgba(59,130,246,0.15)' :
-                              item.category === 'Monostructural' ? 'rgba(34,197,94,0.15)' :
-                              item.category === 'Skill' ? 'rgba(168,85,247,0.15)' : 'rgba(236,72,153,0.15)',
-                  color: item.category === 'Benchmark' ? '#F59E0B' :
-                         item.category === 'Lift' ? '#3B82F6' :
-                         item.category === 'Monostructural' ? '#22C55E' :
-                         item.category === 'Skill' ? '#A855F7' : '#EC4899',
-                }}
-              >
-                {item.category.toUpperCase()}
-              </span>
-              <span className="text-xs text-[var(--color-text-muted)]">{item.scoreType}</span>
-            </div>
+            <p
+              className="font-display text-[10px] tracking-[0.2em] mb-0.5"
+              style={{ color: getCategoryColor(item.category) }}
+            >
+              {item.category.toUpperCase()} · {item.scoreType.toUpperCase()}
+            </p>
+            <h1 className="font-display text-3xl text-[var(--color-text)] leading-tight">{item.name}</h1>
           </div>
         </div>
         <button
           onClick={handleFavoriteClick}
           className={`p-2 transition-colors ${
-            item.isFavorite ? 'text-[var(--color-warning)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-warning)]'
+            item.isFavorite ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-primary)]'
           }`}
           aria-label={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
         >
@@ -519,20 +372,19 @@ export const ItemDetail = () => {
 
       {/* Description */}
       {(item.description || item.movements) && (() => {
-        // If structured movements array exists, use it directly
         if (item.movements && item.movements.length > 0) {
           return (
-            <div className="px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg">
+            <div className="border-l-2 border-[var(--color-border-strong)] pl-3 py-1">
               {item.description && (
-                <div className="flex items-center gap-2 mb-2">
-                  <Dumbbell className="w-4 h-4 text-[var(--color-text-muted)] shrink-0" />
-                  <span className="text-sm font-semibold text-[var(--color-text)]">{item.description}</span>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Dumbbell className="w-3.5 h-3.5 text-[var(--color-text-muted)] shrink-0" />
+                  <span className="font-display text-sm text-[var(--color-text)] tracking-wider">{item.description}</span>
                 </div>
               )}
-              <ul className={`space-y-1 ${item.description ? 'pl-6' : 'pl-0'}`}>
+              <ul className={`space-y-1 ${item.description ? 'pl-5' : 'pl-0'}`}>
                 {item.movements.map((movement, idx) => (
-                  <li key={idx} className="text-sm text-[var(--color-text-muted)] flex items-start gap-2">
-                    <ChevronRight className="w-4 h-4 text-[var(--color-primary)] shrink-0 mt-0.5" />
+                  <li key={idx} className="text-xs text-[var(--color-text-muted)] flex items-start gap-2">
+                    <ChevronRight className="w-3 h-3 text-[var(--color-primary)] shrink-0 mt-0.5" />
                     <span>{movement}</span>
                   </li>
                 ))}
@@ -540,27 +392,23 @@ export const ItemDetail = () => {
             </div>
           );
         }
-
-        // Fallback: Parse description string (for backward compatibility)
         if (item.description) {
           const colonIndex = item.description.indexOf(':');
           const hasFormat = colonIndex > 0 && colonIndex < 30;
-          
           if (hasFormat) {
             const format = item.description.slice(0, colonIndex).trim();
             const movementsPart = item.description.slice(colonIndex + 1).trim();
             const movements = movementsPart.split(/,\s*(?![^()]*\))/).map(m => m.trim()).filter(Boolean);
-            
             return (
-              <div className="px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <Dumbbell className="w-4 h-4 text-[var(--color-text-muted)] shrink-0" />
-                  <span className="text-sm font-semibold text-[var(--color-text)]">{format}</span>
+              <div className="border-l-2 border-[var(--color-border-strong)] pl-3 py-1">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Dumbbell className="w-3.5 h-3.5 text-[var(--color-text-muted)] shrink-0" />
+                  <span className="font-display text-sm text-[var(--color-text)] tracking-wider">{format}</span>
                 </div>
-                <ul className="space-y-1 pl-6">
+                <ul className="space-y-1 pl-5">
                   {movements.map((movement, idx) => (
-                    <li key={idx} className="text-sm text-[var(--color-text-muted)] flex items-start gap-2">
-                      <ChevronRight className="w-4 h-4 text-[var(--color-primary)] shrink-0 mt-0.5" />
+                    <li key={idx} className="text-xs text-[var(--color-text-muted)] flex items-start gap-2">
+                      <ChevronRight className="w-3 h-3 text-[var(--color-primary)] shrink-0 mt-0.5" />
                       <span>{movement}</span>
                     </li>
                   ))}
@@ -568,95 +416,79 @@ export const ItemDetail = () => {
               </div>
             );
           }
-          
-          // Simple description without format prefix
           return (
-            <div className="flex items-start gap-3 px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg">
-              <Dumbbell className="w-4 h-4 text-[var(--color-text-muted)] mt-0.5 shrink-0" />
-              <p className="text-sm text-[var(--color-text-muted)]">{item.description}</p>
+            <div className="border-l-2 border-[var(--color-border-strong)] pl-3 py-1 flex items-start gap-2">
+              <Dumbbell className="w-3.5 h-3.5 text-[var(--color-text-muted)] mt-0.5 shrink-0" />
+              <p className="text-xs text-[var(--color-text-muted)]">{item.description}</p>
             </div>
           );
         }
-
         return null;
       })()}
 
-      {/* Best PR Card */}
-      <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-4">
-        <div className="flex items-center justify-between mb-2">
+      {/* Best PR — no card, just floating number with rule */}
+      <div className="py-4 border-b border-[var(--color-border)]">
+        <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
             {isLowerBetter ? (
-              <TrendingDown className="w-4 h-4 text-green-400" />
+              <TrendingDown className="w-3.5 h-3.5 text-[var(--color-success)]" />
             ) : (
-              <TrendingUp className="w-4 h-4 text-green-400" />
+              <TrendingUp className="w-3.5 h-3.5 text-[var(--color-success)]" />
             )}
-            <h2 className="font-display text-sm tracking-widest text-[var(--color-text-muted)]">BEST</h2>
+            <span className="font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)]">PERSONAL BEST</span>
           </div>
           {!activeGoal && bestLog && (
             <button
               onClick={() => setShowGoalModal(true)}
-              className="flex items-center gap-1 text-xs text-[var(--color-primary)] hover:underline"
+              className="flex items-center gap-1 font-display text-xs tracking-widest text-[var(--color-primary)] hover:underline"
             >
-              <Target size={12} />
-              Set Goal
+              <Target size={11} />
+              SET GOAL
             </button>
           )}
         </div>
+
         {isLoading ? (
           <div className="flex items-center justify-center h-16">
             <Loader2 className="w-5 h-5 text-[var(--color-text-muted)] animate-spin" />
           </div>
         ) : isDual && (sortedDistances.length > 0 || sortedCalorieTimes.length > 0) ? (
-          // Show best PRs for both distance and calories for dual-metric items (Row, Bike)
-          <div className="space-y-4">
-            {/* Distance-based PRs */}
+          <div className="space-y-3">
             {sortedDistances.length > 0 && (
               <div className="space-y-2">
-                <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide">By Distance</p>
+                <p className="font-display text-[10px] tracking-widest text-[var(--color-text-muted)]">BY DISTANCE</p>
                 {sortedDistances.map((distanceMeters) => {
                   const pr = bestByDistance.get(distanceMeters);
                   if (!pr) return null;
                   return (
                     <div key={distanceMeters} className="flex items-baseline justify-between">
-                      <span className="text-sm font-medium text-[var(--color-text-muted)]">
-                        {formatDistance(distanceMeters)}
-                      </span>
+                      <span className="font-display text-xs tracking-wider text-[var(--color-text-muted)]">{formatDistance(distanceMeters)}</span>
                       <div className="text-right">
                         <span className="font-display text-2xl text-[var(--color-primary)]">
                           {pr.result.includes(' in ') ? pr.result.split(' in ')[1] : pr.result}
                         </span>
-                        <p className="text-xs text-[var(--color-text-muted)]">
-                          {formatDate(pr.date)}
-                        </p>
+                        <p className="font-display text-xs text-[var(--color-text-muted)]">{formatDate(pr.date)}</p>
                       </div>
                     </div>
                   );
                 })}
               </div>
             )}
-            {/* Calorie-based PRs - grouped by time, showing max calories */}
             {sortedCalorieTimes.length > 0 && (
               <div className="space-y-2">
-                <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide">By Time</p>
+                <p className="font-display text-[10px] tracking-widest text-[var(--color-text-muted)]">BY TIME</p>
                 {sortedCalorieTimes.map((timeSeconds) => {
                   const pr = bestByCalories.get(timeSeconds);
                   if (!pr) return null;
-                  // Format time from seconds to MM:SS
                   const mins = Math.floor(timeSeconds / 60);
                   const secs = timeSeconds % 60;
                   const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
                   return (
                     <div key={timeSeconds} className="flex items-baseline justify-between">
-                      <span className="text-sm font-medium text-[var(--color-text-muted)]">
-                        {timeStr}
-                      </span>
+                      <span className="font-display text-xs tracking-wider text-[var(--color-text-muted)]">{timeStr}</span>
                       <div className="text-right">
-                        <span className="font-display text-2xl text-[var(--color-primary)]">
-                          {pr.calories} cal
-                        </span>
-                        <p className="text-xs text-[var(--color-text-muted)]">
-                          {formatDate(pr.date)}
-                        </p>
+                        <span className="font-display text-2xl text-[var(--color-primary)]">{pr.calories} cal</span>
+                        <p className="font-display text-xs text-[var(--color-text-muted)]">{formatDate(pr.date)}</p>
                       </div>
                     </div>
                   );
@@ -665,23 +497,18 @@ export const ItemDetail = () => {
             )}
           </div>
         ) : isDistanceOnly && sortedDistances.length > 0 ? (
-          // Show best PRs grouped by distance for distance-only items (Run)
           <div className="space-y-3">
             {sortedDistances.map((distanceMeters) => {
               const pr = bestByDistance.get(distanceMeters);
               if (!pr) return null;
               return (
                 <div key={distanceMeters} className="flex items-baseline justify-between">
-                  <span className="text-sm font-medium text-[var(--color-text-muted)]">
-                    {formatDistance(distanceMeters)}
-                  </span>
+                  <span className="font-display text-xs tracking-wider text-[var(--color-text-muted)]">{formatDistance(distanceMeters)}</span>
                   <div className="text-right">
                     <span className="font-display text-2xl text-[var(--color-primary)]">
                       {pr.result.includes(' in ') ? pr.result.split(' in ')[1] : pr.result}
                     </span>
-                    <p className="text-xs text-[var(--color-text-muted)]">
-                      {formatDate(pr.date)}
-                    </p>
+                    <p className="font-display text-xs text-[var(--color-text-muted)]">{formatDate(pr.date)}</p>
                   </div>
                 </div>
               );
@@ -689,183 +516,140 @@ export const ItemDetail = () => {
           </div>
         ) : bestLog ? (
           <div>
-            <div className="flex items-baseline gap-2">
-              <span className="font-display text-5xl text-[var(--color-primary)]">
+            <div className="flex items-baseline gap-3">
+              <span className="font-display text-6xl text-[var(--color-primary)]">
                 {getResultWithUnit(bestLog.result)}
               </span>
               {bestLog.variant && (
-                <span className="px-2 py-0.5 text-xs rounded-full bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]">
+                <span className="font-display text-xs tracking-widest text-[var(--color-text-muted)] border border-[var(--color-border-strong)] px-2 py-0.5">
                   {bestLog.variant}
                 </span>
               )}
             </div>
-            <p className="text-xs text-[var(--color-text-muted)] font-display tracking-widest uppercase mt-1">
+            <p className="font-display text-xs text-[var(--color-text-muted)] tracking-widest mt-1">
               {formatDate(bestLog.date)}
             </p>
-            {/* Goal Progress */}
             {activeGoal && (
               <div className="mt-3 pt-3 border-t border-[var(--color-border)]">
                 <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
-                    <Target size={12} className="text-[var(--color-primary)]" />
-                    <span>Goal: {activeGoal.targetResult}</span>
+                  <div className="flex items-center gap-1.5 font-display text-xs tracking-widest text-[var(--color-text-muted)]">
+                    <Target size={11} className="text-[var(--color-primary)]" />
+                    <span>GOAL: {activeGoal.targetResult}</span>
                   </div>
-                  <button
-                    onClick={() => setShowGoalModal(true)}
-                    className="text-xs text-[var(--color-primary)] hover:underline"
-                  >
-                    Edit
+                  <button onClick={() => setShowGoalModal(true)} className="font-display text-xs tracking-widest text-[var(--color-primary)] hover:underline">
+                    EDIT
                   </button>
                 </div>
                 <GoalProgress progress={activeGoal.progress} size="sm" />
-                <p className="text-xs text-[var(--color-text-muted)] mt-1">
-                  {activeGoal.daysRemaining >= 0 
-                    ? `${activeGoal.daysRemaining} days remaining`
-                    : 'Overdue'}
+                <p className="font-display text-xs text-[var(--color-text-muted)] tracking-widest mt-1">
+                  {activeGoal.daysRemaining >= 0 ? `${activeGoal.daysRemaining} DAYS REMAINING` : 'OVERDUE'}
                 </p>
               </div>
             )}
           </div>
         ) : (
           <div>
-            <p className="text-[var(--color-text-muted)]">No results yet</p>
+            <p className="font-display text-sm tracking-widest text-[var(--color-text-muted)]">NO RESULTS YET</p>
             {!activeGoal && (
-              <button
-                onClick={() => setShowGoalModal(true)}
-                className="mt-2 flex items-center gap-1.5 text-sm text-[var(--color-primary)] hover:underline"
-              >
-                <Target size={14} />
-                Set a goal
+              <button onClick={() => setShowGoalModal(true)} className="mt-2 flex items-center gap-1.5 font-display text-sm tracking-wider text-[var(--color-primary)] hover:underline">
+                <Target size={13} />
+                SET A GOAL
               </button>
             )}
           </div>
         )}
       </div>
 
-      {/* Percentage Calculator - only for Lift category with Load scoreType */}
+      {/* Percentage Calculator */}
       {item.category === 'Lift' && item.scoreType === 'Load' && (
         <PercentageCalculator logs={logs} weightUnit={settings.weightUnit} />
       )}
 
       {/* History section */}
       <section>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-display text-xs tracking-widest text-[var(--color-text-muted)]">HISTORY</h2>
+        <div className="flex items-center justify-between mb-2 pb-1 border-b border-[var(--color-border)]">
+          <span className="font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)]">HISTORY</span>
           <span className="font-display text-xs text-[var(--color-text-muted)]">{logs.length} LOGS</span>
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center h-32 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg">
+          <div className="flex items-center justify-center h-32 border border-[var(--color-border)]">
             <Loader2 className="w-5 h-5 text-[var(--color-text-muted)] animate-spin" />
           </div>
         ) : useGroupedHistory ? (
-          /* Grouped accordion view for all items */
-          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
-            {groupedLogs.map((group, groupIndex) => {
+          <div className="divide-y divide-[var(--color-border)]">
+            {groupedLogs.map((group) => {
               const groupKey = `${group.type}-${group.key}`;
               const isExpanded = expandedGroups.has(groupKey);
-              
-              // Format the PR value based on group type
+
               const getPrDisplayValue = () => {
                 switch (group.type) {
-                  case 'distance':
-                    return group.bestLog.result.includes(' in ') 
-                      ? group.bestLog.result.split(' in ')[1] 
-                      : group.bestLog.result;
-                  case 'calories':
-                    return `${group.bestLog.calories} cal`;
-                  case 'reps':
-                    return `${group.bestLog.resultValue} ${settings.weightUnit}`;
-                  case 'variant':
-                    return getResultWithUnit(group.bestLog.result);
+                  case 'distance': return group.bestLog.result.includes(' in ') ? group.bestLog.result.split(' in ')[1] : group.bestLog.result;
+                  case 'calories': return `${group.bestLog.calories} cal`;
+                  case 'reps':     return `${group.bestLog.resultValue} ${settings.weightUnit}`;
+                  case 'variant':  return getResultWithUnit(group.bestLog.result);
                 }
               };
 
               return (
-                <div key={groupKey} className={groupIndex !== groupedLogs.length - 1 ? 'border-b border-[var(--color-border)]' : ''}>
-                  {/* Accordion Header */}
+                <div key={groupKey}>
                   <button
                     onClick={() => toggleGroup(groupKey)}
-                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-[var(--color-surface-elevated)] transition-colors"
+                    className="w-full flex items-center justify-between py-3 hover:bg-[var(--color-surface)] transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <ChevronDown 
-                        className={`w-4 h-4 text-[var(--color-text-muted)] transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
-                      />
-                      <span className="font-semibold text-[var(--color-text)]">
-                        {group.label}
-                      </span>
+                      <ChevronDown className={`w-3.5 h-3.5 text-[var(--color-text-muted)] transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                      <span className="font-display text-sm text-[var(--color-text)] tracking-wider">{group.label}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-[var(--color-primary)]">
-                        {getPrDisplayValue()}
-                      </span>
-                      <span className="px-1.5 py-0.5 text-xs rounded bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]">
-                        {group.logs.length}
-                      </span>
+                      <span className="font-display text-base text-[var(--color-primary)]">{getPrDisplayValue()}</span>
+                      <span className="font-display text-xs text-[var(--color-text-muted)] border border-[var(--color-border)] px-1.5 py-0.5">{group.logs.length}</span>
                     </div>
                   </button>
 
-                  {/* Accordion Content */}
                   <div className={`accordion-content ${isExpanded ? 'expanded' : ''}`}>
                     <div>
                       {group.logs.map((log, logIndex) => {
                         const isPR = log.id === group.bestLog.id;
-                        
-                        // Format display result based on group type
                         const getDisplayResult = () => {
                           switch (group.type) {
-                            case 'distance':
-                              return log.result.includes(' in ') 
-                                ? log.result.split(' in ')[1] 
-                                : log.result;
-                            case 'calories':
-                              return `${log.calories} cal`;
-                            case 'reps':
-                              return `${log.resultValue} ${settings.weightUnit}`;
-                            case 'variant':
-                              return getResultWithUnit(log.result);
+                            case 'distance': return log.result.includes(' in ') ? log.result.split(' in ')[1] : log.result;
+                            case 'calories': return `${log.calories} cal`;
+                            case 'reps':     return `${log.resultValue} ${settings.weightUnit}`;
+                            case 'variant':  return getResultWithUnit(log.result);
                           }
                         };
-                        const displayResult = getDisplayResult();
 
                         return (
                           <div
                             key={log.id}
-                            className={`flex items-center justify-between px-4 py-2 pl-11 group bg-[var(--color-bg)] ${
+                            className={`flex items-center justify-between py-2 pl-10 pr-3 group bg-[var(--color-bg)] ${
                               logIndex !== group.logs.length - 1 ? 'border-b border-[var(--color-border)]/50' : ''
                             }`}
                           >
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
-                                <span className={`text-sm ${
-                                  isPR ? 'font-semibold text-[var(--color-primary)]' : 'text-[var(--color-text)]'
-                                }`}>
-                                  {displayResult}
+                                <span className={`font-display text-sm ${isPR ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
+                                  {getDisplayResult()}
                                 </span>
-                                {/* Show variant badge only when not grouped by variant */}
                                 {group.type !== 'variant' && log.variant && (
-                                  <span className="px-1.5 py-0.5 text-xs rounded-full bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]">
+                                  <span className="font-display text-[10px] tracking-widest border border-[var(--color-border)] px-1 py-0.5 text-[var(--color-text-muted)]">
                                     {log.variant}
                                   </span>
                                 )}
                                 {isPR && (
-                                  <span className="px-1.5 py-0.5 text-xs rounded-full bg-[var(--color-primary)]/20 text-[var(--color-primary)]">
+                                  <span className="font-display text-[10px] tracking-widest bg-[var(--color-primary)]/20 text-[var(--color-primary)] px-1.5 py-0.5">
                                     PR
                                   </span>
                                 )}
                               </div>
-                              <p className="text-xs text-[var(--color-text-muted)]">
-                                {formatDate(log.date)}
-                                {log.notes && ` — ${log.notes}`}
+                              <p className="font-display text-xs text-[var(--color-text-muted)] tracking-widest">
+                                {formatDate(log.date)}{log.notes && ` — ${log.notes}`}
                               </p>
                             </div>
                             <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteLog(log.id);
-                              }}
-                              className="p-2 -m-2 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-60 group-hover:opacity-100"
+                              onClick={(e) => { e.stopPropagation(); handleDeleteLog(log.id); }}
+                              className="p-2 -m-2 text-[var(--color-text-muted)] hover:text-[var(--color-danger)] transition-colors opacity-60 group-hover:opacity-100"
                               aria-label="Delete log"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -880,44 +664,34 @@ export const ItemDetail = () => {
             })}
           </div>
         ) : logs.length > 0 ? (
-          /* Flat list view for non-monostructural items */
-          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
-            {logs.map((log, index) => {
+          <div className="divide-y divide-[var(--color-border)]">
+            {logs.map((log) => {
               const isPR = log.id === bestLog?.id;
-              
               return (
-                <div
-                  key={log.id}
-                  className={`flex items-center justify-between px-4 py-3 group ${
-                    index !== logs.length - 1 ? 'border-b border-[var(--color-border)]' : ''
-                  }`}
-                >
+                <div key={log.id} className="flex items-center justify-between py-3 group">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className={`font-semibold ${
-                        isPR ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'
-                      }`}>
+                      <span className={`font-display text-sm ${isPR ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
                         {getResultWithUnit(log.result)}
                       </span>
                       {log.variant && (
-                        <span className="px-2 py-0.5 text-xs rounded-full bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]">
+                        <span className="font-display text-[10px] tracking-widest border border-[var(--color-border)] px-1.5 py-0.5 text-[var(--color-text-muted)]">
                           {log.variant}
                         </span>
                       )}
                       {isPR && (
-                        <span className="px-2 py-0.5 text-xs rounded-full bg-[var(--color-primary)]/20 text-[var(--color-primary)]">
+                        <span className="font-display text-[10px] tracking-widest bg-[var(--color-primary)]/20 text-[var(--color-primary)] px-1.5 py-0.5">
                           PR
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-[var(--color-text-muted)]">
-                      {formatDate(log.date)}
-                      {log.notes && ` — ${log.notes}`}
+                    <p className="font-display text-xs text-[var(--color-text-muted)] tracking-widest">
+                      {formatDate(log.date)}{log.notes && ` — ${log.notes}`}
                     </p>
                   </div>
                   <button
                     onClick={() => handleDeleteLog(log.id)}
-                    className="p-2 -m-2 rounded-lg text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-60 group-hover:opacity-100"
+                    className="p-2 -m-2 text-[var(--color-text-muted)] hover:text-[var(--color-danger)] transition-colors opacity-60 group-hover:opacity-100"
                     aria-label="Delete log"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -927,9 +701,9 @@ export const ItemDetail = () => {
             })}
           </div>
         ) : (
-          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-6 text-center">
-            <p className="text-[var(--color-text-muted)]">
-              No results logged yet. Add your first one!
+          <div className="py-8 border-t border-[var(--color-border)]">
+            <p className="font-display text-sm tracking-widest text-[var(--color-text-muted)]">
+              NO RESULTS LOGGED YET
             </p>
           </div>
         )}
@@ -939,7 +713,7 @@ export const ItemDetail = () => {
       <div className="sticky bottom-0 bg-[var(--color-bg)] border-t border-[var(--color-border)] p-4 pb-safe -mx-4">
         <button
           onClick={() => setShowModal(true)}
-          className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-[var(--color-primary)] hover:opacity-90 active:scale-[0.98] rounded-sm text-white font-display tracking-widest text-sm transition-all shadow-[0_0_20px_rgba(232,50,28,0.25)]"
+          className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-[var(--color-primary)] text-[#0B130B] hover:opacity-90 active:scale-[0.98] font-display tracking-[0.15em] text-sm transition-all shadow-[0_0_20px_rgba(212,255,0,0.25)]"
           aria-label="Log a result"
         >
           <Plus className="w-5 h-5" /> LOG RESULT
@@ -948,11 +722,7 @@ export const ItemDetail = () => {
 
       {/* Log Result Modal */}
       {showModal && (
-        <LogResultModal
-          item={item}
-          onClose={() => setShowModal(false)}
-          onSuccess={handleModalSuccess}
-        />
+        <LogResultModal item={item} onClose={() => setShowModal(false)} onSuccess={handleModalSuccess} />
       )}
 
       {/* Delete Confirmation Dialog */}

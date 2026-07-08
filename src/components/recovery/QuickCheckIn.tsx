@@ -2,7 +2,7 @@
  * QuickCheckIn Component
  *
  * Fast daily check-in widget for energy, soreness, and sleep.
- * Handles both initial prompt and editing states.
+ * Tactical styling — no card wrappers, section rules, underline tabs.
  */
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
@@ -40,7 +40,7 @@ const SleepSelector = ({ value, onChange, disabled = false }: SleepSelectorProps
   };
 
   return (
-    <div role="radiogroup" aria-label="Sleep hours" className="flex gap-1.5">
+    <div role="radiogroup" aria-label="Sleep hours" className="flex gap-1.5 flex-wrap">
       {SLEEP_OPTIONS.map((hours) => {
         const isSelected = value === hours;
 
@@ -57,16 +57,13 @@ const SleepSelector = ({ value, onChange, disabled = false }: SleepSelectorProps
             onKeyDown={(e) => handleKeyDown(e, hours)}
             className={`
               flex items-center justify-center
-              px-3 py-2.5 rounded-sm font-display text-sm tracking-wider
-              transition-all duration-150 ease-out
+              px-3 py-2.5 rounded-none font-display text-sm tracking-wider
+              transition-all duration-150 ease-out border
               ${isSelected
-                ? 'bg-[var(--color-primary)] text-white'
-                : 'bg-[var(--color-surface)] border border-[var(--color-border-strong)] text-[var(--color-text)]'
+                ? 'bg-[var(--color-primary)] text-[#0B130B] border-[var(--color-primary)]'
+                : 'bg-transparent border-[var(--color-border-strong)] text-[var(--color-text)] hover:border-[var(--color-primary)]'
               }
-              ${disabled
-                ? 'opacity-50 cursor-not-allowed'
-                : 'hover:border-[var(--color-primary)] hover:bg-[var(--color-surface-elevated)] active:scale-95'
-              }
+              ${disabled ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}
               focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2 focus:ring-offset-[var(--color-bg)]
             `}
           >
@@ -100,13 +97,13 @@ export const QuickCheckIn = () => {
   const today = useMemo(() => getTodayDate(), []);
   const isToday = selectedDate === today;
   const isOtherDate = !isToday;
-  
-  // Tab active states (Pick Date is active when calendar is open OR a past date is selected)
+
+  // Tab active states
   const isTodayActive = isToday && !showCalendar;
   const isPickDateActive = showCalendar || isOtherDate;
   const minDate = useMemo(() => {
     const date = new Date();
-    date.setDate(date.getDate() - 30); // 30 days back
+    date.setDate(date.getDate() - 30);
     return date;
   }, []);
   const maxDate = useMemo(() => new Date(), []);
@@ -117,15 +114,9 @@ export const QuickCheckIn = () => {
     if (selectedCheckIn) return 'summary';
     return 'prompt';
   });
-  const [energy, setEnergy] = useState<MetricValue | undefined>(
-    selectedCheckIn?.energy
-  );
-  const [soreness, setSoreness] = useState<MetricValue | undefined>(
-    selectedCheckIn?.soreness
-  );
-  const [sleepHours, setSleepHours] = useState<SleepHours | undefined>(
-    selectedCheckIn?.sleepHours
-  );
+  const [energy, setEnergy] = useState<MetricValue | undefined>(selectedCheckIn?.energy);
+  const [soreness, setSoreness] = useState<MetricValue | undefined>(selectedCheckIn?.soreness);
+  const [sleepHours, setSleepHours] = useState<SleepHours | undefined>(selectedCheckIn?.sleepHours);
 
   // Sync mode and form state when selectedCheckIn changes
   useEffect(() => {
@@ -157,19 +148,16 @@ export const QuickCheckIn = () => {
     setShowCalendar((prev) => !prev);
   }, []);
 
-  // Edit handler - go to prompt to choose Training or Rest
   const handleEdit = useCallback(() => {
     setMode('prompt');
   }, []);
 
   const handleTrainingClick = useCallback(() => {
-    // Pre-fill form with existing values if editing a training day
     if (selectedCheckIn?.type === 'training') {
       setEnergy(selectedCheckIn.energy);
       setSoreness(selectedCheckIn.soreness);
       setSleepHours(selectedCheckIn.sleepHours);
     } else {
-      // Reset form for new training entry
       setEnergy(undefined);
       setSoreness(undefined);
       setSleepHours(undefined);
@@ -184,24 +172,21 @@ export const QuickCheckIn = () => {
 
   const handleSave = useCallback(async () => {
     if (!energy || !soreness || !sleepHours) return;
-
     await saveTrainingCheckIn({ energy, soreness, sleepHours });
     setMode('summary');
   }, [energy, soreness, sleepHours, saveTrainingCheckIn]);
 
   const isFormValid = energy !== undefined && soreness !== undefined && sleepHours !== undefined;
 
-  // Format the "other" date for display
   const formatOtherDate = (dateStr: string) => {
     const date = new Date(dateStr + 'T00:00:00');
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  // Date selector component (shared across all states)
+  // Date selector (shared across all states)
   const dateSelector = (
     <div className="mb-4">
-      {/* Quick date tabs */}
-      <div className="flex gap-1 p-1 bg-[var(--color-bg)]" role="tablist" aria-label="Select date">
+      <div className="flex border-b border-[var(--color-border)]" role="tablist" aria-label="Select date">
         <button
           type="button"
           role="tab"
@@ -209,10 +194,10 @@ export const QuickCheckIn = () => {
           onClick={handleTodayClick}
           disabled={isLoading}
           className={`
-            flex-1 py-2 px-4 rounded-sm font-display text-sm tracking-widest transition-all duration-150
+            flex-1 py-2 px-4 font-display text-sm tracking-widest transition-all duration-150 border-b-2 -mb-px
             ${isTodayActive
-              ? 'bg-[var(--color-primary)] text-white'
-              : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-elevated)]'
+              ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
+              : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
             }
             disabled:opacity-50
           `}
@@ -226,10 +211,10 @@ export const QuickCheckIn = () => {
           onClick={handleOtherClick}
           disabled={isLoading}
           className={`
-            flex-1 py-2 px-4 rounded-sm font-display text-sm tracking-widest transition-all duration-150 flex items-center justify-center gap-1.5
+            flex-1 py-2 px-4 font-display text-sm tracking-widest transition-all duration-150 border-b-2 -mb-px flex items-center justify-center gap-1.5
             ${isPickDateActive
-              ? 'bg-[var(--color-primary)] text-white'
-              : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-elevated)]'
+              ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
+              : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
             }
             disabled:opacity-50
           `}
@@ -239,7 +224,6 @@ export const QuickCheckIn = () => {
         </button>
       </div>
 
-      {/* Calendar picker (shown when "Pick Date" is clicked) */}
       {showCalendar && (
         <div className="mt-3">
           <DatePicker
@@ -257,16 +241,12 @@ export const QuickCheckIn = () => {
   if (isLoading) {
     return (
       <section aria-label="Quick check-in">
-        <div className="flex items-center gap-2 mb-3">
-          <h2 className="font-display text-sm tracking-widest text-[var(--color-text-muted)]">
-            QUICK CHECK-IN
-          </h2>
+        <div className="flex items-center gap-2 mb-2 pb-1 border-b border-[var(--color-border)]">
+          <span className="font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)]">QUICK CHECK-IN</span>
         </div>
-        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-4">
-          {dateSelector}
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-[var(--color-text-muted)]" />
-          </div>
+        {dateSelector}
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="w-6 h-6 animate-spin text-[var(--color-text-muted)]" />
         </div>
       </section>
     );
@@ -280,16 +260,16 @@ export const QuickCheckIn = () => {
 
     return (
       <section aria-label="Check-in summary">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-2 pb-1 border-b border-[var(--color-border)]">
           <div className="flex items-center gap-2">
-            <Check className="w-4 h-4 text-green-500" />
-            <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
-              {isToday ? "Today's" : 'Daily'} Check-in
-            </h2>
+            <Check className="w-3.5 h-3.5 text-[var(--color-success)]" />
+            <span className="font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)]">
+              {isToday ? "TODAY'S" : 'DAILY'} CHECK-IN
+            </span>
           </div>
           <button
             onClick={handleEdit}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm font-display text-xs tracking-widest text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 transition-colors"
+            className="flex items-center gap-1.5 font-display text-xs tracking-[0.1em] text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 px-2 py-1 transition-colors"
             aria-label="Edit check-in"
           >
             <Edit2 className="w-3 h-3" />
@@ -297,39 +277,38 @@ export const QuickCheckIn = () => {
           </button>
         </div>
 
-        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4">
-          {dateSelector}
-          {isRestDay ? (
-            <div className="flex items-center gap-2 text-[var(--color-text)]">
-              <Moon className="w-5 h-5 text-[var(--color-primary)]" />
-              <span className="font-medium">Rest Day</span>
-            </div>
-          ) : (
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div>
-                <div className="text-2xl mb-1">{ENERGY_EMOJIS[selectedCheckIn.energy!]}</div>
-                <div className="font-display text-[10px] tracking-widest text-[var(--color-text-muted)]">ENERGY</div>
-                <div className="font-display text-sm text-[var(--color-text)]">
-                  {ENERGY_LABELS[selectedCheckIn.energy!].toUpperCase()}
-                </div>
-              </div>
-              <div>
-                <div className="text-2xl mb-1">{SORENESS_EMOJIS[selectedCheckIn.soreness!]}</div>
-                <div className="font-display text-[10px] tracking-widest text-[var(--color-text-muted)]">SORENESS</div>
-                <div className="font-display text-sm text-[var(--color-text)]">
-                  {SORENESS_LABELS[selectedCheckIn.soreness!].toUpperCase()}
-                </div>
-              </div>
-              <div>
-                <div className="text-2xl mb-1">😴</div>
-                <div className="font-display text-[10px] tracking-widest text-[var(--color-text-muted)]">SLEEP</div>
-                <div className="font-display text-sm text-[var(--color-text)]">
-                  {SLEEP_LABELS[selectedCheckIn.sleepHours!]}
-                </div>
+        {dateSelector}
+
+        {isRestDay ? (
+          <div className="flex items-center gap-2 text-[var(--color-text)]">
+            <Moon className="w-5 h-5 text-[var(--color-primary)]" />
+            <span className="font-display text-sm tracking-wider">REST DAY</span>
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <div className="text-2xl mb-1">{ENERGY_EMOJIS[selectedCheckIn.energy!]}</div>
+              <div className="font-display text-[10px] tracking-widest text-[var(--color-text-muted)]">ENERGY</div>
+              <div className="font-display text-sm text-[var(--color-primary)]">
+                {ENERGY_LABELS[selectedCheckIn.energy!].toUpperCase()}
               </div>
             </div>
-          )}
-        </div>
+            <div>
+              <div className="text-2xl mb-1">{SORENESS_EMOJIS[selectedCheckIn.soreness!]}</div>
+              <div className="font-display text-[10px] tracking-widest text-[var(--color-text-muted)]">SORENESS</div>
+              <div className="font-display text-sm text-[var(--color-primary)]">
+                {SORENESS_LABELS[selectedCheckIn.soreness!].toUpperCase()}
+              </div>
+            </div>
+            <div>
+              <div className="text-2xl mb-1">😴</div>
+              <div className="font-display text-[10px] tracking-widest text-[var(--color-text-muted)]">SLEEP</div>
+              <div className="font-display text-sm text-[var(--color-primary)]">
+                {SLEEP_LABELS[selectedCheckIn.sleepHours!]}
+              </div>
+            </div>
+          </div>
+        )}
       </section>
     );
   }
@@ -347,7 +326,6 @@ export const QuickCheckIn = () => {
           ? 'How are you feeling today?'
           : 'Did you train on this day?';
 
-    // Highlight current selection when editing
     const isTrainingSelected = isEditing && selectedCheckIn?.type === 'training';
     const isRestSelected = isEditing && selectedCheckIn?.type === 'rest';
 
@@ -355,59 +333,54 @@ export const QuickCheckIn = () => {
 
     return (
       <section aria-label="Quick check-in">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-display text-sm tracking-widest text-[var(--color-text-muted)]">
-            QUICK CHECK-IN
-          </h2>
+        <div className="flex items-center justify-between mb-2 pb-1 border-b border-[var(--color-border)]">
+          <span className="font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)]">QUICK CHECK-IN</span>
           {isEditing && (
             <button
               onClick={handleCancel}
-              className="px-3 py-1.5 rounded-sm font-display text-xs tracking-widest text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-elevated)] transition-colors"
+              className="font-display text-xs tracking-widest text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
             >
-              Cancel
+              CANCEL
             </button>
           )}
         </div>
 
-        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-4">
-          {dateSelector}
-          <p className="text-center text-sm text-[var(--color-text-muted)] mb-4">
-            {promptText}
-          </p>
+        {dateSelector}
 
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={handleTrainingClick}
-              className={`
-                w-full py-5 px-4 font-display text-sm tracking-widest rounded-sm transition-all active:scale-[0.97] flex items-center justify-center gap-2
-                ${isTrainingSelected
-                  ? 'bg-[var(--color-primary)] text-white ring-2 ring-[var(--color-primary)] ring-offset-2 ring-offset-[var(--color-surface)]'
-                  : 'bg-[var(--color-primary)] hover:opacity-90 text-white'
-                }
-              `}
-              aria-label="Log training day"
-            >
-              <span className="text-xl">🏋️</span> TRAINING
-            </button>
-            <button
-              onClick={handleRestDayClick}
-              disabled={isSaving}
-              className={`
-                w-full py-4 px-4 font-display text-sm tracking-widest rounded-sm transition-all active:scale-[0.97] disabled:opacity-50 flex items-center justify-center gap-2
-                ${isRestSelected
-                  ? 'bg-[var(--color-surface-elevated)] border-2 border-[var(--color-primary)] text-[var(--color-text)]'
-                  : 'bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border)] border border-[var(--color-border-strong)] text-[var(--color-text)]'
-                }
-              `}
-              aria-label="Log rest day"
-            >
-              {isSaving ? (
-                <Loader2 className="w-5 h-5 animate-spin mx-auto" />
-              ) : (
-                <><span className="text-xl">🌙</span> REST DAY</>
-              )}
-            </button>
-          </div>
+        <p className="font-display text-xs tracking-[0.1em] text-[var(--color-text-muted)] mb-4">{promptText.toUpperCase()}</p>
+
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={handleTrainingClick}
+            className={`
+              w-full py-5 px-4 font-display text-sm tracking-[0.15em] transition-all active:scale-[0.97] flex items-center justify-center gap-2
+              ${isTrainingSelected
+                ? 'bg-[var(--color-primary)] text-[#0B130B] ring-2 ring-[var(--color-primary)] ring-offset-2 ring-offset-[var(--color-bg)]'
+                : 'bg-[var(--color-primary)] text-[#0B130B] hover:opacity-90'
+              }
+            `}
+            aria-label="Log training day"
+          >
+            <span className="text-xl">🏋️</span> TRAINING DAY
+          </button>
+          <button
+            onClick={handleRestDayClick}
+            disabled={isSaving}
+            className={`
+              w-full py-4 px-4 font-display text-sm tracking-[0.15em] transition-all active:scale-[0.97] disabled:opacity-50 flex items-center justify-center gap-2 border
+              ${isRestSelected
+                ? 'bg-[var(--color-surface-elevated)] border-[var(--color-primary)] text-[var(--color-text)]'
+                : 'bg-transparent border-[var(--color-border-strong)] text-[var(--color-text)] hover:border-[var(--color-text-muted)]'
+              }
+            `}
+            aria-label="Log rest day"
+          >
+            {isSaving ? (
+              <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+            ) : (
+              <><span className="text-xl">🌙</span> REST DAY</>
+            )}
+          </button>
         </div>
       </section>
     );
@@ -420,26 +393,24 @@ export const QuickCheckIn = () => {
 
   return (
     <section aria-label="Quick check-in form">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
-          Quick Check-in
-        </h2>
+      <div className="flex items-center justify-between mb-2 pb-1 border-b border-[var(--color-border)]">
+        <span className="font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)]">QUICK CHECK-IN</span>
         <button
           onClick={handleBackToPrompt}
-          className="px-3 py-1.5 rounded-lg text-xs font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-elevated)] transition-colors"
+          className="font-display text-xs tracking-widest text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
         >
-          Back
+          BACK
         </button>
       </div>
 
-      <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-4 space-y-4">
+      <div className="space-y-4">
         {dateSelector}
 
         {/* Energy */}
         <div>
-          <label className="flex items-center border-l-2 border-[var(--color-primary)] pl-2 font-display text-xs tracking-widest text-[var(--color-text-muted)] mb-3 uppercase">
-            ENERGY LEVEL
-          </label>
+          <div className="flex items-center gap-2 mb-2 pb-1 border-b border-[var(--color-border)]">
+            <span className="font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)]">ENERGY LEVEL</span>
+          </div>
           <EmojiSelector
             value={energy}
             onChange={setEnergy}
@@ -450,13 +421,11 @@ export const QuickCheckIn = () => {
           />
         </div>
 
-        <div className="border-t border-[var(--color-border)]" />
-
         {/* Soreness */}
         <div>
-          <label className="flex items-center border-l-2 border-[var(--color-primary)] pl-2 font-display text-xs tracking-widest text-[var(--color-text-muted)] mb-3 uppercase">
-            MUSCLE SORENESS
-          </label>
+          <div className="flex items-center gap-2 mb-2 pb-1 border-b border-[var(--color-border)]">
+            <span className="font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)]">MUSCLE SORENESS</span>
+          </div>
           <EmojiSelector
             value={soreness}
             onChange={setSoreness}
@@ -467,13 +436,11 @@ export const QuickCheckIn = () => {
           />
         </div>
 
-        <div className="border-t border-[var(--color-border)]" />
-
         {/* Sleep */}
         <div>
-          <label className="flex items-center border-l-2 border-[var(--color-primary)] pl-2 font-display text-xs tracking-widest text-[var(--color-text-muted)] mb-3 uppercase">
-            SLEEP LAST NIGHT
-          </label>
+          <div className="flex items-center gap-2 mb-2 pb-1 border-b border-[var(--color-border)]">
+            <span className="font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)]">SLEEP LAST NIGHT</span>
+          </div>
           <SleepSelector
             value={sleepHours}
             onChange={setSleepHours}
@@ -485,7 +452,7 @@ export const QuickCheckIn = () => {
         <button
           onClick={handleSave}
           disabled={!isFormValid || isSaving}
-          className={`w-full py-4 bg-[var(--color-primary)] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed text-white font-display tracking-widest text-base rounded-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2 ${isFormValid ? 'shadow-[0_0_20px_rgba(232,50,28,0.25)]' : ''}`}
+          className={`w-full py-4 bg-[var(--color-primary)] text-[#0B130B] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed font-display tracking-[0.15em] text-base transition-all active:scale-[0.98] flex items-center justify-center gap-2 ${isFormValid ? 'shadow-[0_0_20px_rgba(212,255,0,0.25)]' : ''}`}
           aria-label="Save check-in"
         >
           {isSaving ? (

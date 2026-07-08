@@ -1,38 +1,38 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&display=swap');
 
-/* ─── Design Tokens ────────────────────────────────────────────────────── */
+/* ─── Design Tokens — Tactical Green/Yellow ─────────────────────────────── */
 :root {
   /* Backgrounds */
-  --color-bg: #090909;
-  --color-surface: #111111;
-  --color-surface-elevated: #1A1A1A;
+  --color-bg: #0B130B;
+  --color-surface: #111D11;
+  --color-surface-elevated: #172317;
 
   /* Borders */
-  --color-border: #202020;
-  --color-border-strong: #2E2E2E;
+  --color-border: #243524;
+  --color-border-strong: #2F462F;
 
-  /* Brand accent — CrossFit red-orange */
-  --color-primary: #E8321C;
-  --color-primary-dark: #C22818;
-  --color-primary-glow: rgba(232, 50, 28, 0.12);
+  /* Brand accent — Electric Yellow */
+  --color-primary: #D4FF00;
+  --color-primary-dark: #AACF00;
+  --color-primary-glow: rgba(212,255,0,0.1);
 
   /* Text */
-  --color-text: #F0F0F0;
-  --color-text-muted: #5A5A5A;
-  --color-text-dim: #333333;
+  --color-text: #EEF2E6;
+  --color-text-muted: #5C7A5C;
+  --color-text-dim: #2E4A2E;
 
   /* Semantic */
-  --color-success: #22C55E;
-  --color-warning: #F59E0B;
-  --color-danger: #EF4444;
+  --color-success: #4ADE80;
+  --color-warning: #FCD34D;
+  --color-danger: #F87171;
 
   /* Category accent colors */
-  --color-cat-benchmark: #F59E0B;
-  --color-cat-lift: #3B82F6;
-  --color-cat-mono: #22C55E;
-  --color-cat-skill: #A855F7;
-  --color-cat-custom: #EC4899;
+  --color-cat-benchmark: #D4FF00;
+  --color-cat-lift: #60A5FA;
+  --color-cat-mono: #4ADE80;
+  --color-cat-skill: #C084FC;
+  --color-cat-custom: #FB923C;
 
   /* Typography */
   --font-display: 'Barlow Condensed', system-ui, sans-serif;
@@ -91,11 +91,11 @@ body {
   width: 3px;
   border-radius: 0 2px 2px 0;
 }
-.cat-bar-Benchmark::before { background-color: var(--color-cat-benchmark); }
-.cat-bar-Lift::before       { background-color: var(--color-cat-lift); }
-.cat-bar-Monostructural::before { background-color: var(--color-cat-mono); }
-.cat-bar-Skill::before      { background-color: var(--color-cat-skill); }
-.cat-bar-Custom::before     { background-color: var(--color-cat-custom); }
+.cat-bar-Benchmark::before      { background-color: #D4FF00; }
+.cat-bar-Lift::before           { background-color: #60A5FA; }
+.cat-bar-Monostructural::before { background-color: #4ADE80; }
+.cat-bar-Skill::before          { background-color: #C084FC; }
+.cat-bar-Custom::before         { background-color: #FB923C; }
 
 /* ─── Nav active indicator ──────────────────────────────────────────────── */
 .nav-item-active {

@@ -1,16 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { Volume2, VolumeX, Maximize, Minimize, ListPlus } from 'lucide-react';
 import { useClockStore } from '../stores/clockStore';
-import { 
-  TimerDisplay, 
-  TimerControls, 
-  ModeSelector, 
+import {
+  TimerDisplay,
+  TimerControls,
+  ModeSelector,
   TimerConfig,
-  PresetManager 
+  PresetManager
 } from '../components/clock';
 
 /**
- * CrossFit Clock page with multiple timer modes
+ * CrossFit Clock page — tactical yellow/green theme
  */
 export const Clock = () => {
   const status = useClockStore((state) => state.status);
@@ -40,7 +40,6 @@ export const Clock = () => {
           console.warn('[Clock] Wake lock failed:', error);
         }
       } else {
-        // Release wake lock when timer stops
         if (wakeLockRef.current) {
           wakeLockRef.current.release();
           wakeLockRef.current = null;
@@ -50,7 +49,6 @@ export const Clock = () => {
 
     requestWakeLock();
 
-    // Cleanup on unmount
     return () => {
       if (wakeLockRef.current) {
         wakeLockRef.current.release();
@@ -91,19 +89,19 @@ export const Clock = () => {
   return (
     <div className="flex flex-col gap-5">
       {/* Header with controls */}
-      <div className="flex items-center justify-between">
-        <h2 className="font-display text-2xl text-[var(--color-text)]">TIMER</h2>
+      <div className="flex items-center justify-between pb-1 border-b border-[var(--color-border)]">
+        <span className="font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)]">TIMER</span>
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => setShowPresets(true)}
-            className="p-2 bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors rounded-sm"
+            className="p-2 bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
             title="Presets"
           >
             <ListPlus className="w-5 h-5" />
           </button>
           <button
             onClick={toggleSound}
-            className={`p-2 bg-[var(--color-surface)] border border-[var(--color-border)] transition-colors rounded-sm ${
+            className={`p-2 bg-[var(--color-surface)] border border-[var(--color-border)] transition-colors ${
               soundEnabled ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-muted)]'
             }`}
             title={soundEnabled ? 'Sound on' : 'Sound off'}
@@ -112,7 +110,7 @@ export const Clock = () => {
           </button>
           <button
             onClick={toggleFullscreen}
-            className="p-2 bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors rounded-sm"
+            className="p-2 bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
             title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
           >
             {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
@@ -132,17 +130,17 @@ export const Clock = () => {
       {/* Timer configuration */}
       {!isTimerActive && (
         <div className="space-y-3">
-          <div className="font-display text-xs tracking-widest text-[var(--color-text-muted)]">
-            CONFIGURATION
+          <div className="flex items-center gap-2 pb-1 border-b border-[var(--color-border)]">
+            <span className="font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)]">CONFIGURATION</span>
           </div>
           <TimerConfig />
         </div>
       )}
 
       {/* Preset manager modal */}
-      <PresetManager 
-        isOpen={showPresets} 
-        onClose={() => setShowPresets(false)} 
+      <PresetManager
+        isOpen={showPresets}
+        onClose={() => setShowPresets(false)}
       />
     </div>
   );

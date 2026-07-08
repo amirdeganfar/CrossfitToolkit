@@ -1,8 +1,7 @@
 /**
  * RecoveryAlert Component
  *
- * Displays recovery alerts with reasons when the user's score warrants attention.
- * Shows different severity levels: info, warning, critical.
+ * Tactical alert with left border accent — no rounded cards.
  */
 
 import { useState, useCallback } from 'react';
@@ -10,13 +9,8 @@ import { AlertTriangle, Info, AlertCircle, X, Moon } from 'lucide-react';
 import { useCheckInStore } from '../../stores/checkInStore';
 import { ALERT_TITLES, ALERT_DESCRIPTIONS, type AlertLevel } from '../../config/recoveryScoring.config';
 
-// ═══════════════════════════════════════════════════════════════════════════
-// ALERT STYLING CONFIG
-// ═══════════════════════════════════════════════════════════════════════════
-
 interface AlertStyle {
-  bg: string;
-  border: string;
+  leftBorder: string;
   icon: React.ReactNode;
   titleColor: string;
   textColor: string;
@@ -26,42 +20,34 @@ const getAlertStyle = (level: AlertLevel): AlertStyle => {
   switch (level) {
     case 'info':
       return {
-        bg: 'bg-yellow-500/10',
-        border: 'border-yellow-500/30',
-        icon: <Info className="w-5 h-5 text-yellow-500" />,
-        titleColor: 'text-yellow-600 dark:text-yellow-400',
-        textColor: 'text-yellow-700 dark:text-yellow-300',
+        leftBorder: 'border-l-4 border-[var(--color-primary)]',
+        icon: <Info className="w-4 h-4 text-[var(--color-primary)]" />,
+        titleColor: 'text-[var(--color-primary)]',
+        textColor: 'text-[var(--color-text-muted)]',
       };
     case 'warning':
       return {
-        bg: 'bg-orange-500/10',
-        border: 'border-orange-500/30',
-        icon: <AlertTriangle className="w-5 h-5 text-orange-500" />,
-        titleColor: 'text-orange-600 dark:text-orange-400',
-        textColor: 'text-orange-700 dark:text-orange-300',
+        leftBorder: 'border-l-4 border-[var(--color-warning)]',
+        icon: <AlertTriangle className="w-4 h-4 text-[var(--color-warning)]" />,
+        titleColor: 'text-[var(--color-warning)]',
+        textColor: 'text-[var(--color-text-muted)]',
       };
     case 'critical':
       return {
-        bg: 'bg-red-500/10',
-        border: 'border-red-500/30',
-        icon: <AlertCircle className="w-5 h-5 text-red-500" />,
-        titleColor: 'text-red-600 dark:text-red-400',
-        textColor: 'text-red-700 dark:text-red-300',
+        leftBorder: 'border-l-4 border-[var(--color-danger)]',
+        icon: <AlertCircle className="w-4 h-4 text-[var(--color-danger)]" />,
+        titleColor: 'text-[var(--color-danger)]',
+        textColor: 'text-[var(--color-text-muted)]',
       };
     default:
       return {
-        bg: '',
-        border: '',
+        leftBorder: '',
         icon: null,
         titleColor: '',
         textColor: '',
       };
   }
 };
-
-// ═══════════════════════════════════════════════════════════════════════════
-// MAIN COMPONENT
-// ═══════════════════════════════════════════════════════════════════════════
 
 export const RecoveryAlert = () => {
   const recoveryScore = useCheckInStore((s) => s.recoveryScore);
@@ -80,14 +66,11 @@ export const RecoveryAlert = () => {
     setIsDismissed(true);
   }, [saveRestDay]);
 
-  // Don't show if no score, no alert needed, or already dismissed
   if (!recoveryScore || recoveryScore.level === 'none' || isDismissed) {
     return null;
   }
 
-  // Don't show rest day button if already logged as rest day
   const showRestDayButton = !todayCheckIn || todayCheckIn.type !== 'rest';
-
   const style = getAlertStyle(recoveryScore.level);
   const title = ALERT_TITLES[recoveryScore.level];
   const description = ALERT_DESCRIPTIONS[recoveryScore.level];
@@ -96,30 +79,29 @@ export const RecoveryAlert = () => {
     <div
       role="alert"
       aria-live="polite"
-      className={`${style.bg} ${style.border} border rounded-lg p-4`}
-      style={{ borderLeft: '3px solid' }}
+      className={`${style.leftBorder} bg-[var(--color-surface)] p-3 pl-4`}
     >
       {/* Header */}
-      <div className="flex items-start justify-between gap-3 mb-2">
+      <div className="flex items-start justify-between gap-3 mb-1.5">
         <div className="flex items-center gap-2">
           {style.icon}
-          <h3 className={`font-display text-base tracking-wide ${style.titleColor}`}>{title.toUpperCase()}</h3>
+          <h3 className={`font-display text-sm tracking-[0.15em] ${style.titleColor}`}>{title.toUpperCase()}</h3>
         </div>
         <button
           onClick={handleDismiss}
-          className="p-1.5 hover:bg-black/10 transition-colors rounded-sm"
+          className="p-1 hover:bg-[var(--color-surface-elevated)] transition-colors"
           aria-label="Dismiss alert"
         >
-          <X className="w-4 h-4 text-[var(--color-text-muted)]" />
+          <X className="w-3.5 h-3.5 text-[var(--color-text-muted)]" />
         </button>
       </div>
 
       {/* Description */}
-      <p className={`text-sm ${style.textColor} mb-3 leading-relaxed`}>{description}</p>
+      <p className={`text-xs ${style.textColor} mb-2`}>{description}</p>
 
       {/* Reasons */}
       {recoveryScore.reasons.length > 0 && (
-        <ul className="space-y-1 mb-4">
+        <ul className="space-y-0.5 mb-3">
           {recoveryScore.reasons.map((reason, index) => (
             <li
               key={`${reason.metric}-${index}`}
@@ -136,7 +118,7 @@ export const RecoveryAlert = () => {
       <div className="flex gap-2">
         <button
           onClick={handleDismiss}
-          className="flex-1 py-2.5 px-4 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border-strong)] border border-[var(--color-border-strong)] text-[var(--color-text)] font-display text-xs tracking-widest rounded-sm transition-colors"
+          className="flex-1 py-2 px-3 bg-[var(--color-surface-elevated)] border border-[var(--color-border-strong)] text-[var(--color-text)] font-display text-xs tracking-[0.1em] transition-colors hover:bg-[var(--color-border-strong)]"
           aria-label="Acknowledge alert"
         >
           GOT IT
@@ -145,10 +127,10 @@ export const RecoveryAlert = () => {
           <button
             onClick={handleLogRestDay}
             disabled={isSaving}
-            className="flex-1 py-2.5 px-4 bg-[var(--color-primary)] hover:opacity-90 text-white font-display text-xs tracking-widest rounded-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            className="flex-1 py-2 px-3 bg-[var(--color-primary)] text-[#0B130B] font-display text-xs tracking-[0.1em] transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
             aria-label="Log rest day"
           >
-            <Moon className="w-4 h-4" />
+            <Moon className="w-3.5 h-3.5" />
             REST DAY
           </button>
         )}

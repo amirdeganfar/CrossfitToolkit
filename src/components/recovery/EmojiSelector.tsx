@@ -1,8 +1,7 @@
 /**
  * EmojiSelector Component
  *
- * A 5-point emoji-based input for metrics like energy and soreness.
- * Provides accessible, mobile-friendly selection with visual feedback.
+ * Military readiness scale — 5-point selector with tactical styling.
  */
 
 import type { MetricValue } from '../../types/training';
@@ -34,7 +33,7 @@ export const EmojiSelector = ({
   };
 
   return (
-    <div role="radiogroup" aria-label={ariaLabel} className="flex gap-1.5 w-full">
+    <div role="radiogroup" aria-label={ariaLabel} className="flex gap-1 w-full">
       {values.map((optionValue) => {
         const isSelected = value === optionValue;
         const emoji = emojis[optionValue] ?? '?';
@@ -51,22 +50,28 @@ export const EmojiSelector = ({
             disabled={disabled}
             onClick={() => onChange(optionValue)}
             onKeyDown={(e) => handleKeyDown(e, optionValue)}
-            style={isSelected ? { boxShadow: '0 0 0 1px var(--color-primary)' } : undefined}
             className={`
-              flex flex-col items-center justify-center gap-1
-              flex-1 h-20 rounded-sm
+              flex flex-col items-center justify-center gap-0.5
+              flex-1 py-4 rounded-none
               transition-all duration-150 ease-out
               ${isSelected
-                ? 'bg-[var(--color-primary)] text-white border border-[var(--color-primary)]'
-                : 'bg-[var(--color-surface-elevated)] border border-[var(--color-border)] text-[var(--color-text)] hover:border-[var(--color-border-strong)]'
+                ? 'bg-[var(--color-primary)] text-[#0B130B] border border-[var(--color-primary)]'
+                : 'bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] hover:border-[var(--color-border-strong)]'
               }
               ${disabled ? 'opacity-40 cursor-not-allowed' : 'active:scale-95'}
               focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-1 focus:ring-offset-[var(--color-bg)]
             `}
           >
-            <span className={`text-[10px] font-display leading-none ${isSelected ? 'text-white/60' : 'text-[var(--color-text-muted)]'}`} aria-hidden="true">{optionValue}</span>
+            <span
+              className={`text-[10px] font-display leading-none ${isSelected ? 'text-[#0B130B]/60' : 'text-[var(--color-text-muted)]'}`}
+              aria-hidden="true"
+            >
+              {optionValue}
+            </span>
             <span className="text-4xl leading-none" aria-hidden="true">{emoji}</span>
-            <span className={`text-[10px] font-display tracking-wider leading-tight text-center px-0.5 ${isSelected ? 'text-white/90' : 'text-[var(--color-text-muted)]'}`}>
+            <span
+              className={`text-[9px] font-display tracking-[0.1em] leading-tight text-center px-0.5 ${isSelected ? 'text-[#0B130B]/80' : 'text-[var(--color-text-muted)]'}`}
+            >
               {label.toUpperCase()}
             </span>
           </button>
