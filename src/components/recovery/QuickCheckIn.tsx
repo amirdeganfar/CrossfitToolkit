@@ -375,11 +375,11 @@ export const QuickCheckIn = () => {
             {promptText}
           </p>
 
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-3">
             <button
               onClick={handleTrainingClick}
               className={`
-                flex-1 py-3 px-4 font-display text-sm tracking-widest rounded-sm transition-all active:scale-[0.97]
+                w-full py-5 px-4 font-display text-sm tracking-widest rounded-sm transition-all active:scale-[0.97] flex items-center justify-center gap-2
                 ${isTrainingSelected
                   ? 'bg-[var(--color-primary)] text-white ring-2 ring-[var(--color-primary)] ring-offset-2 ring-offset-[var(--color-surface)]'
                   : 'bg-[var(--color-primary)] hover:opacity-90 text-white'
@@ -387,13 +387,13 @@ export const QuickCheckIn = () => {
               `}
               aria-label="Log training day"
             >
-              🏋️ TRAINING
+              <span className="text-xl">🏋️</span> TRAINING
             </button>
             <button
               onClick={handleRestDayClick}
               disabled={isSaving}
               className={`
-                flex-1 py-3 px-4 font-display text-sm tracking-widest rounded-sm transition-all active:scale-[0.97] disabled:opacity-50
+                w-full py-4 px-4 font-display text-sm tracking-widest rounded-sm transition-all active:scale-[0.97] disabled:opacity-50 flex items-center justify-center gap-2
                 ${isRestSelected
                   ? 'bg-[var(--color-surface-elevated)] border-2 border-[var(--color-primary)] text-[var(--color-text)]'
                   : 'bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border)] border border-[var(--color-border-strong)] text-[var(--color-text)]'
@@ -404,7 +404,7 @@ export const QuickCheckIn = () => {
               {isSaving ? (
                 <Loader2 className="w-5 h-5 animate-spin mx-auto" />
               ) : (
-                <>🌙 REST DAY</>
+                <><span className="text-xl">🌙</span> REST DAY</>
               )}
             </button>
           </div>
@@ -437,7 +437,7 @@ export const QuickCheckIn = () => {
 
         {/* Energy */}
         <div>
-          <label className="block font-display text-xs tracking-widest text-[var(--color-text-muted)] mb-2">
+          <label className="flex items-center border-l-2 border-[var(--color-primary)] pl-2 font-display text-xs tracking-widest text-[var(--color-text-muted)] mb-3 uppercase">
             ENERGY LEVEL
           </label>
           <EmojiSelector
@@ -450,9 +450,11 @@ export const QuickCheckIn = () => {
           />
         </div>
 
+        <div className="border-t border-[var(--color-border)]" />
+
         {/* Soreness */}
         <div>
-          <label className="block font-display text-xs tracking-widest text-[var(--color-text-muted)] mb-2">
+          <label className="flex items-center border-l-2 border-[var(--color-primary)] pl-2 font-display text-xs tracking-widest text-[var(--color-text-muted)] mb-3 uppercase">
             MUSCLE SORENESS
           </label>
           <EmojiSelector
@@ -465,9 +467,11 @@ export const QuickCheckIn = () => {
           />
         </div>
 
+        <div className="border-t border-[var(--color-border)]" />
+
         {/* Sleep */}
         <div>
-          <label className="block font-display text-xs tracking-widest text-[var(--color-text-muted)] mb-2">
+          <label className="flex items-center border-l-2 border-[var(--color-primary)] pl-2 font-display text-xs tracking-widest text-[var(--color-text-muted)] mb-3 uppercase">
             SLEEP LAST NIGHT
           </label>
           <SleepSelector
@@ -481,7 +485,7 @@ export const QuickCheckIn = () => {
         <button
           onClick={handleSave}
           disabled={!isFormValid || isSaving}
-          className="w-full py-4 bg-[var(--color-primary)] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed text-white font-display tracking-widest text-base rounded-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+          className={`w-full py-4 bg-[var(--color-primary)] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed text-white font-display tracking-widest text-base rounded-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2 ${isFormValid ? 'shadow-[0_0_20px_rgba(232,50,28,0.25)]' : ''}`}
           aria-label="Save check-in"
         >
           {isSaving ? (

@@ -51,9 +51,10 @@ export const EmojiSelector = ({
             disabled={disabled}
             onClick={() => onChange(optionValue)}
             onKeyDown={(e) => handleKeyDown(e, optionValue)}
+            style={isSelected ? { boxShadow: '0 0 0 1px var(--color-primary)' } : undefined}
             className={`
-              flex flex-col items-center justify-center
-              flex-1 h-16 rounded-sm
+              flex flex-col items-center justify-center gap-1
+              flex-1 h-20 rounded-sm
               transition-all duration-150 ease-out
               ${isSelected
                 ? 'bg-[var(--color-primary)] text-white border border-[var(--color-primary)]'
@@ -63,8 +64,9 @@ export const EmojiSelector = ({
               focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-1 focus:ring-offset-[var(--color-bg)]
             `}
           >
-            <span className="text-2xl leading-none" aria-hidden="true">{emoji}</span>
-            <span className={`text-[9px] mt-1 font-display tracking-wider ${isSelected ? 'text-white/90' : 'text-[var(--color-text-muted)]'}`}>
+            <span className={`text-[10px] font-display leading-none ${isSelected ? 'text-white/60' : 'text-[var(--color-text-muted)]'}`} aria-hidden="true">{optionValue}</span>
+            <span className="text-4xl leading-none" aria-hidden="true">{emoji}</span>
+            <span className={`text-[10px] font-display tracking-wider leading-tight text-center px-0.5 ${isSelected ? 'text-white/90' : 'text-[var(--color-text-muted)]'}`}>
               {label.toUpperCase()}
             </span>
           </button>

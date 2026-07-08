@@ -163,13 +163,13 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
       {/* Sheet */}
       <div className="relative w-full max-w-lg bg-[var(--color-surface)] border-t border-[var(--color-border-strong)] rounded-t-2xl sm:rounded-lg sm:border overflow-hidden animate-slide-up">
         {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-1 sm:hidden">
-          <div className="w-10 h-1 bg-[var(--color-border-strong)] rounded-full" />
+        <div className="flex justify-center pt-3 pb-1">
+          <div className="w-10 h-1 bg-[var(--color-border-strong)] rounded-full mx-auto mb-4" />
         </div>
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)]">
           <div>
-            <h2 className="font-display text-xl text-[var(--color-text)]">LOG RESULT</h2>
+            <h2 className="font-display text-lg tracking-widest text-[var(--color-text)]">LOG RESULT</h2>
             <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{item.name}</p>
           </div>
           <button
@@ -186,7 +186,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
           {/* Reps input for Load type */}
           {showReps && (
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-1">
+              <label className="block font-display text-xs tracking-widest text-[var(--color-text-muted)] uppercase mb-2">
                 Reps
               </label>
               <input
@@ -206,7 +206,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
           {/* Metric type toggle for dual-metric items */}
           {isDual && (
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-2">
+              <label className="block font-display text-xs tracking-widest text-[var(--color-text-muted)] uppercase mb-2">
                 Measure by
               </label>
               <div className="flex border border-[var(--color-border-strong)] overflow-hidden rounded-sm">
@@ -239,7 +239,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
           {/* Distance input for Monostructural Time items (Run, Row) */}
           {showDistance && (
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-1">
+              <label className="block font-display text-xs tracking-widest text-[var(--color-text-muted)] uppercase mb-2">
                 Distance
               </label>
               <div className="flex gap-2">
@@ -275,7 +275,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
           {/* Calories input for Monostructural Time items (Bike) */}
           {showCalories && (
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-1">
+              <label className="block font-display text-xs tracking-widest text-[var(--color-text-muted)] uppercase mb-2">
                 Calories
               </label>
               <div className="flex gap-2">
@@ -297,7 +297,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
 
           {/* Result input */}
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-1">
+            <label className="block font-display text-xs tracking-widest text-[var(--color-text-muted)] uppercase mb-2">
               {getResultLabel(item.scoreType)} {getUnitLabel() && item.scoreType === 'Load' && `(${getUnitLabel()})`}
             </label>
             {item.scoreType === 'Time' ? (
@@ -322,7 +322,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
           {/* Variant selector - only for Benchmark WODs */}
           {showVariant && (
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-2">
+              <label className="block font-display text-xs tracking-widest text-[var(--color-text-muted)] uppercase mb-2">
                 Variant
               </label>
               <div className="flex gap-1.5">
@@ -346,7 +346,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
 
           {/* Date picker */}
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-1">
+            <label className="block font-display text-xs tracking-widest text-[var(--color-text-muted)] uppercase mb-2">
               Date
             </label>
             <DatePicker
@@ -358,8 +358,8 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
 
           {/* Notes (optional) */}
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-1">
-              Notes <span className="text-[var(--color-text-muted)]">(optional)</span>
+            <label className="block font-display text-xs tracking-widest text-[var(--color-text-muted)] uppercase mb-2">
+              Notes <span className="normal-case opacity-60">(optional)</span>
             </label>
             <textarea
               value={notes}
@@ -381,7 +381,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
           <button
             type="submit"
             disabled={isSubmitting || !result.trim()}
-            className="w-full py-4 bg-[var(--color-primary)] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed rounded-sm text-white font-display tracking-widest text-base transition-all active:scale-[0.98]"
+            className="w-full py-4 bg-[var(--color-primary)] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed rounded-sm text-white font-display tracking-widest text-sm transition-all active:scale-[0.98] shadow-[0_0_20px_rgba(232,50,28,0.2)]"
           >
             {isSubmitting ? 'SAVING...' : 'SAVE RESULT'}
           </button>

@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ChevronRight, ChevronDown, Star, Clock, Plus, Loader2, Timer, Target } from 'lucide-react';
+import { Search, ChevronRight, ChevronDown, Star, Clock, Plus, Loader2, Target } from 'lucide-react';
 import { useCatalogStore } from '../stores/catalogStore';
 import { useGoalsStore, useSortedActiveGoals } from '../stores/goalsStore';
 import { useCheckInStore } from '../stores/checkInStore';
@@ -170,10 +170,6 @@ export const Home = () => {
     navigate('/search');
   };
 
-  const handleTimer = () => {
-    navigate('/clock');
-  };
-
   const handleGoals = () => {
     navigate('/goals');
   };
@@ -203,15 +199,39 @@ export const Home = () => {
     );
   }
 
+  const now = new Date();
+  const weekdays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+  const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+  const heroDate = `${weekdays[now.getDay()]} · ${months[now.getMonth()]} ${now.getDate()}`;
+
   return (
     <div className="space-y-6">
-      {/* Recovery Alert (shown when score >= 3) */}
+      {/* Hero strip */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-[var(--color-text-muted)] text-xs font-display tracking-widest uppercase">{heroDate}</p>
+          <h1 className="font-display text-3xl text-[var(--color-text)] leading-tight">READY TO<br/>LIFT?</h1>
+        </div>
+        <button
+          onClick={handleLogPR}
+          className="flex flex-col items-center justify-center w-16 h-16 rounded-sm bg-[var(--color-primary)] text-white active:scale-95 transition-all"
+          aria-label="Log a new PR"
+        >
+          <Plus className="w-6 h-6" />
+          <span className="font-display text-[9px] tracking-widest mt-0.5">LOG PR</span>
+        </button>
+      </div>
+
+      {/* Quick Check-in Widget */}
+      <QuickCheckIn />
+
+      {/* Recovery Alert */}
       <RecoveryAlert />
 
       {/* Search bar with autocomplete */}
       <div className="relative">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
           <input
             type="text"
             placeholder="Search PR item or benchmark..."
@@ -219,7 +239,7 @@ export const Home = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={handleSearchFocus}
             onBlur={handleSearchBlur}
-            className="w-full bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-sm pl-10 pr-4 py-3 text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+            className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-sm pl-9 pr-4 py-2.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
             aria-label="Search PR item or benchmark"
           />
         </div>
@@ -232,7 +252,7 @@ export const Home = () => {
                 <button
                   key={item.id}
                   onClick={() => handleItemClick(item.id)}
-                  className="cat-bar cat-bar-${item.category} w-full flex items-center justify-between pl-5 pr-4 py-3 hover:bg-[var(--color-surface-elevated)] transition-colors text-left border-b border-[var(--color-border)] last:border-0"
+                  className={`cat-bar cat-bar-${item.category} w-full flex items-center justify-between pl-5 pr-4 py-3 hover:bg-[var(--color-surface-elevated)] transition-colors text-left border-b border-[var(--color-border)] last:border-0`}
                   aria-label={`View ${item.name}`}
                 >
                   <span className="font-medium text-[var(--color-text)]">{item.name}</span>
@@ -252,9 +272,6 @@ export const Home = () => {
         )}
       </div>
 
-      {/* Quick Check-in Widget */}
-      <QuickCheckIn />
-
       {/* Favorites section */}
       <section>
         <div className="flex items-center gap-2 mb-3">
@@ -269,10 +286,10 @@ export const Home = () => {
               <button
                 key={item.id}
                 onClick={() => handleItemClick(item.id)}
-                className={`cat-bar cat-bar-${item.category} flex-shrink-0 pl-4 pr-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-left hover:border-[var(--color-border-strong)] active:scale-95 transition-all min-w-[120px]`}
+                className={`cat-bar cat-bar-${item.category} flex-shrink-0 pl-4 pr-4 py-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-left hover:border-[var(--color-border-strong)] active:scale-95 transition-all min-w-[120px]`}
                 aria-label={`View ${item.name}`}
               >
-                <div className="font-medium text-sm text-[var(--color-text)] truncate max-w-[110px]">{item.name}</div>
+                <div className="font-display text-sm text-[var(--color-text)] truncate max-w-[110px]">{item.name}</div>
                 <div className={`text-[10px] mt-0.5 ${getCategoryColor(item.category)}`}>{item.category}</div>
               </button>
             ))}
@@ -283,6 +300,45 @@ export const Home = () => {
           </p>
         )}
       </section>
+
+      {/* Active Goals Preview */}
+      {activeGoals.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Target className="w-4 h-4 text-[var(--color-primary)]" />
+              <h2 className="font-display text-sm tracking-widest text-[var(--color-text-muted)]">ACTIVE GOALS</h2>
+            </div>
+            <button
+              onClick={handleGoals}
+              className="flex items-center gap-1 text-xs text-[var(--color-primary)] font-display tracking-wider"
+            >
+              ALL <ChevronRight className="w-3 h-3" />
+            </button>
+          </div>
+          <div className="space-y-2">
+            {activeGoals.slice(0, 2).map((goal) => (
+              <button
+                key={goal.id}
+                onClick={() => handleItemClick(goal.itemId)}
+                className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-3.5 text-left hover:border-[var(--color-border-strong)] transition-colors"
+                style={{ borderLeft: '3px solid var(--color-primary)' }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-medium text-[var(--color-text)]">{goal.itemName}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-display text-lg text-[var(--color-primary)]">{Math.round(goal.progress)}%</span>
+                    <span className="text-[10px] text-[var(--color-text-muted)] tracking-wide">
+                      {goal.daysRemaining >= 0 ? `${goal.daysRemaining}D` : 'OVERDUE'}
+                    </span>
+                  </div>
+                </div>
+                <GoalProgress progress={goal.progress} size="sm" showLabel={false} />
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Recent logs section */}
       <section>
@@ -364,72 +420,6 @@ export const Home = () => {
         )}
       </section>
 
-      {/* Active Goals Preview */}
-      {activeGoals.length > 0 && (
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Target className="w-4 h-4 text-[var(--color-primary)]" />
-              <h2 className="font-display text-sm tracking-widest text-[var(--color-text-muted)]">ACTIVE GOALS</h2>
-            </div>
-            <button
-              onClick={handleGoals}
-              className="flex items-center gap-1 text-xs text-[var(--color-primary)] font-display tracking-wider"
-            >
-              ALL <ChevronRight className="w-3 h-3" />
-            </button>
-          </div>
-          <div className="space-y-2">
-            {activeGoals.slice(0, 2).map((goal) => (
-              <button
-                key={goal.id}
-                onClick={() => handleItemClick(goal.itemId)}
-                className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-3.5 text-left hover:border-[var(--color-border-strong)] transition-colors"
-                style={{ borderLeft: '3px solid var(--color-primary)' }}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium text-[var(--color-text)]">{goal.itemName}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="font-display text-lg text-[var(--color-primary)]">{Math.round(goal.progress)}%</span>
-                    <span className="text-[10px] text-[var(--color-text-muted)] tracking-wide">
-                      {goal.daysRemaining >= 0 ? `${goal.daysRemaining}D` : 'OVERDUE'}
-                    </span>
-                  </div>
-                </div>
-                <GoalProgress progress={goal.progress} size="sm" showLabel={false} />
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Action buttons */}
-      <div className="grid grid-cols-3 gap-2">
-        <button
-          onClick={handleTimer}
-          className="flex flex-col items-center justify-center gap-2 px-3 py-4 bg-[var(--color-surface)] hover:bg-[var(--color-surface-elevated)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] transition-colors"
-          aria-label="Open timer"
-        >
-          <Timer className="w-5 h-5 text-[var(--color-text-muted)]" />
-          <span className="font-display text-xs tracking-widest">TIMER</span>
-        </button>
-        <button
-          onClick={handleGoals}
-          className="flex flex-col items-center justify-center gap-2 px-3 py-4 bg-[var(--color-surface)] hover:bg-[var(--color-surface-elevated)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] transition-colors"
-          aria-label="View goals"
-        >
-          <Target className="w-5 h-5 text-[var(--color-text-muted)]" />
-          <span className="font-display text-xs tracking-widest">GOALS</span>
-        </button>
-        <button
-          onClick={handleLogPR}
-          className="flex flex-col items-center justify-center gap-2 px-3 py-4 bg-[var(--color-primary)] hover:opacity-90 rounded-lg text-white transition-colors"
-          aria-label="Log a new PR"
-        >
-          <Plus className="w-5 h-5" />
-          <span className="font-display text-xs tracking-widest">LOG PR</span>
-        </button>
-      </div>
     </div>
   );
 };

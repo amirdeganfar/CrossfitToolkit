@@ -134,13 +134,13 @@ export const Goals = () => {
           </div>
 
           {activeGoals.length === 0 ? (
-            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-8 text-center">
-              <Target size={36} className="mx-auto mb-3 text-[var(--color-border-strong)]" />
-              <p className="font-display text-lg text-[var(--color-text)] mb-1">NO GOALS SET</p>
-              <p className="text-sm text-[var(--color-text-muted)] mb-5">Track what you're chasing.</p>
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-10 text-center">
+              <Target size={56} className="mx-auto mb-4 text-[var(--color-primary)] opacity-30" />
+              <p className="font-display text-2xl text-[var(--color-text)] mb-2 leading-tight">SET YOUR<br/>FIRST GOAL</p>
+              <p className="text-sm text-[var(--color-text-muted)] mb-6">Track progress toward your PR targets.</p>
               <button
                 onClick={() => setShowModal(true)}
-                className="px-6 py-3 bg-[var(--color-primary)] hover:opacity-90 active:scale-95 text-white rounded-sm font-display tracking-widest text-sm transition-all"
+                className="px-6 py-3 bg-[var(--color-primary)] hover:opacity-90 active:scale-95 text-white rounded-sm font-display tracking-widest text-sm transition-all shadow-[0_0_20px_rgba(232,50,28,0.25)]"
               >
                 SET FIRST GOAL
               </button>
@@ -200,7 +200,7 @@ export const Goals = () => {
       {/* Floating Action Button — sharp square */}
       <button
         onClick={() => setShowModal(true)}
-        className="fixed bottom-20 right-4 sm:bottom-6 w-14 h-14 bg-[var(--color-primary)] hover:opacity-90 active:scale-90 text-white rounded-sm flex items-center justify-center transition-all"
+        className="fixed bottom-20 right-4 sm:bottom-6 w-14 h-14 bg-[var(--color-primary)] hover:opacity-90 active:scale-90 text-white rounded-sm flex items-center justify-center transition-all shadow-[0_0_24px_rgba(232,50,28,0.35)]"
         aria-label="Add new goal"
       >
         <Plus size={24} />

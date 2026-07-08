@@ -473,7 +473,7 @@ export const ItemDetail = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-28">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -690,7 +690,7 @@ export const ItemDetail = () => {
         ) : bestLog ? (
           <div>
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-[var(--color-primary)]">
+              <span className="font-display text-5xl text-[var(--color-primary)]">
                 {getResultWithUnit(bestLog.result)}
               </span>
               {bestLog.variant && (
@@ -699,7 +699,7 @@ export const ItemDetail = () => {
                 </span>
               )}
             </div>
-            <p className="text-sm text-[var(--color-text-muted)] mt-1">
+            <p className="text-xs text-[var(--color-text-muted)] font-display tracking-widest uppercase mt-1">
               {formatDate(bestLog.date)}
             </p>
             {/* Goal Progress */}
@@ -750,9 +750,8 @@ export const ItemDetail = () => {
       {/* History section */}
       <section>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
-            History ({logs.length})
-          </h2>
+          <h2 className="font-display text-xs tracking-widest text-[var(--color-text-muted)]">HISTORY</h2>
+          <span className="font-display text-xs text-[var(--color-text-muted)]">{logs.length} LOGS</span>
         </div>
 
         {isLoading ? (
@@ -936,15 +935,16 @@ export const ItemDetail = () => {
         )}
       </section>
 
-      {/* Log Result button */}
-      <button
-        onClick={() => setShowModal(true)}
-        className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] active:scale-[0.98] rounded-xl text-white font-semibold transition-all shadow-sm shadow-red-900/20"
-        aria-label="Log a result"
-      >
-        <Plus className="w-5 h-5" />
-        <span>Log Result</span>
-      </button>
+      {/* Sticky Log Result CTA */}
+      <div className="sticky bottom-0 bg-[var(--color-bg)] border-t border-[var(--color-border)] p-4 pb-safe -mx-4">
+        <button
+          onClick={() => setShowModal(true)}
+          className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-[var(--color-primary)] hover:opacity-90 active:scale-[0.98] rounded-sm text-white font-display tracking-widest text-sm transition-all shadow-[0_0_20px_rgba(232,50,28,0.25)]"
+          aria-label="Log a result"
+        >
+          <Plus className="w-5 h-5" /> LOG RESULT
+        </button>
+      </div>
 
       {/* Log Result Modal */}
       {showModal && (
