@@ -56,8 +56,9 @@ export const GoalCard = ({
   const formatProjectedDate = () => {
     if (!goal.projectedDate) return null;
 
-    const projected = new Date(goal.projectedDate);
-    const target = new Date(goal.targetDate);
+    // Parse as local midnight to avoid UTC offset shifting the date by one day
+    const projected = new Date(goal.projectedDate + 'T00:00:00');
+    const target = new Date(goal.targetDate + 'T00:00:00');
     const diffDays = Math.round(
       (target.getTime() - projected.getTime()) / (1000 * 60 * 60 * 24)
     );
@@ -102,8 +103,10 @@ export const GoalCard = ({
             <div className="relative">
               <button
                 onClick={handleMenuClick}
-                className="p-1 hover:bg-[var(--color-surface-elevated)] rounded-lg transition-colors"
+                className="p-2 -mr-1 hover:bg-[var(--color-surface-elevated)] rounded-lg transition-colors"
                 aria-label="Goal actions"
+                aria-haspopup="menu"
+                aria-expanded={showMenu}
               >
                 <MoreVertical size={18} className="text-[var(--color-text-muted)]" />
               </button>
@@ -114,11 +117,11 @@ export const GoalCard = ({
                     className="fixed inset-0 z-40"
                     onClick={() => setShowMenu(false)}
                   />
-                  <div className="absolute right-0 z-50 mt-1 w-36 bg-[var(--color-surface-elevated)] border border-[var(--color-border)] rounded-lg shadow-lg overflow-hidden">
+                  <div className="absolute right-0 z-50 mt-1 w-40 bg-[var(--color-surface-elevated)] border border-[var(--color-border)] rounded-xl shadow-xl overflow-hidden">
                     {onEdit && (
                       <button
                         onClick={() => handleAction(() => onEdit(goal))}
-                        className="w-full px-3 py-2 text-left text-sm text-[var(--color-text)] hover:bg-[var(--color-surface)]"
+                        className="w-full px-4 py-3 text-left text-sm text-[var(--color-text)] hover:bg-[var(--color-surface)] transition-colors"
                       >
                         Edit
                       </button>
@@ -126,7 +129,7 @@ export const GoalCard = ({
                     {onAchieve && !isAchieved && (
                       <button
                         onClick={() => handleAction(() => onAchieve(goal))}
-                        className="w-full px-3 py-2 text-left text-sm text-green-500 hover:bg-[var(--color-surface)]"
+                        className="w-full px-4 py-3 text-left text-sm text-green-500 hover:bg-[var(--color-surface)] transition-colors"
                       >
                         Mark Achieved
                       </button>
@@ -134,7 +137,7 @@ export const GoalCard = ({
                     {onCancel && !isAchieved && (
                       <button
                         onClick={() => handleAction(() => onCancel(goal))}
-                        className="w-full px-3 py-2 text-left text-sm text-yellow-500 hover:bg-[var(--color-surface)]"
+                        className="w-full px-4 py-3 text-left text-sm text-yellow-500 hover:bg-[var(--color-surface)] transition-colors"
                       >
                         Cancel
                       </button>
@@ -142,7 +145,7 @@ export const GoalCard = ({
                     {onDelete && (
                       <button
                         onClick={() => handleAction(() => onDelete(goal))}
-                        className="w-full px-3 py-2 text-left text-sm text-red-500 hover:bg-[var(--color-surface)]"
+                        className="w-full px-4 py-3 text-left text-sm text-red-500 hover:bg-[var(--color-surface)] transition-colors"
                       >
                         Delete
                       </button>
@@ -182,7 +185,7 @@ export const GoalCard = ({
                   e.stopPropagation();
                   handleToggleExpand();
                 }}
-                className="p-1 hover:bg-[var(--color-surface-elevated)] rounded transition-colors"
+                className="p-2 -mr-1 hover:bg-[var(--color-surface-elevated)] rounded-lg transition-colors"
                 aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
               >
                 {isExpanded ? (
@@ -271,7 +274,7 @@ export const GoalCard = ({
                 {onAchieve && goal.progress >= 100 && (
                   <button
                     onClick={() => onAchieve(goal)}
-                    className="flex-1 py-2 px-3 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors"
+                    className="flex-1 py-2.5 px-3 bg-green-600 hover:bg-green-700 active:scale-[0.98] text-white rounded-xl text-sm font-medium transition-all"
                   >
                     Mark Achieved
                   </button>
@@ -279,7 +282,7 @@ export const GoalCard = ({
                 {onEdit && (
                   <button
                     onClick={() => onEdit(goal)}
-                    className="flex-1 py-2 px-3 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border)] text-[var(--color-text)] rounded-lg text-sm font-medium transition-colors"
+                    className="flex-1 py-2.5 px-3 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border)] active:scale-[0.98] text-[var(--color-text)] rounded-xl text-sm font-medium transition-all"
                   >
                     Edit Goal
                   </button>

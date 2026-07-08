@@ -134,7 +134,7 @@ export const Settings = () => {
       <div className="flex items-center gap-3">
         <button
           onClick={handleBack}
-          className="p-2 -ml-2 rounded-lg hover:bg-[var(--color-surface)] transition-colors"
+          className="p-2.5 -ml-1 rounded-xl hover:bg-[var(--color-surface-elevated)] transition-colors"
           aria-label="Go back"
         >
           <ArrowLeft className="w-5 h-5 text-[var(--color-text-muted)]" />
@@ -156,7 +156,7 @@ export const Settings = () => {
           <div className="flex rounded-lg border border-[var(--color-border)] overflow-hidden">
             <button
               onClick={() => handleWeightUnitChange('kg')}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
+              className={`px-4 py-2.5 text-sm font-medium transition-colors ${
                 settings.weightUnit === 'kg'
                   ? 'bg-[var(--color-primary)] text-white'
                   : 'bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-elevated)]'
@@ -166,7 +166,7 @@ export const Settings = () => {
             </button>
             <button
               onClick={() => handleWeightUnitChange('lb')}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
+              className={`px-4 py-2.5 text-sm font-medium transition-colors ${
                 settings.weightUnit === 'lb'
                   ? 'bg-[var(--color-primary)] text-white'
                   : 'bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-elevated)]'
@@ -183,7 +183,7 @@ export const Settings = () => {
           <div className="flex rounded-lg border border-[var(--color-border)] overflow-hidden">
             <button
               onClick={() => handleDistanceUnitChange('m')}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
+              className={`px-4 py-2.5 text-sm font-medium transition-colors ${
                 settings.distanceUnit === 'm'
                   ? 'bg-[var(--color-primary)] text-white'
                   : 'bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-elevated)]'
@@ -193,7 +193,7 @@ export const Settings = () => {
             </button>
             <button
               onClick={() => handleDistanceUnitChange('ft')}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
+              className={`px-4 py-2.5 text-sm font-medium transition-colors ${
                 settings.distanceUnit === 'ft'
                   ? 'bg-[var(--color-primary)] text-white'
                   : 'bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-elevated)]'
@@ -224,7 +224,7 @@ export const Settings = () => {
             <button
               onClick={() => handleCountdownChange(-1)}
               disabled={countdownSeconds <= 3}
-              className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface-elevated)] rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-11 h-11 flex items-center justify-center bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border)] rounded-xl text-[var(--color-text-muted)] hover:text-[var(--color-text)] disabled:opacity-50 disabled:cursor-not-allowed active:scale-90 transition-all"
             >
               <Minus className="w-4 h-4" />
             </button>
@@ -234,7 +234,7 @@ export const Settings = () => {
             <button
               onClick={() => handleCountdownChange(1)}
               disabled={countdownSeconds >= 30}
-              className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface-elevated)] rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-11 h-11 flex items-center justify-center bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border)] rounded-xl text-[var(--color-text-muted)] hover:text-[var(--color-text)] disabled:opacity-50 disabled:cursor-not-allowed active:scale-90 transition-all"
             >
               <Plus className="w-4 h-4" />
             </button>
@@ -281,7 +281,7 @@ export const Settings = () => {
             <button
               onClick={() => handleMinSleepChange(-1)}
               disabled={(settings.minSleepHours ?? 7) <= 5}
-              className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface-elevated)] rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-11 h-11 flex items-center justify-center bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border)] rounded-xl text-[var(--color-text-muted)] hover:text-[var(--color-text)] disabled:opacity-50 disabled:cursor-not-allowed active:scale-90 transition-all"
             >
               <Minus className="w-4 h-4" />
             </button>
@@ -291,7 +291,7 @@ export const Settings = () => {
             <button
               onClick={() => handleMinSleepChange(1)}
               disabled={(settings.minSleepHours ?? 7) >= 9}
-              className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface-elevated)] rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-11 h-11 flex items-center justify-center bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border)] rounded-xl text-[var(--color-text-muted)] hover:text-[var(--color-text)] disabled:opacity-50 disabled:cursor-not-allowed active:scale-90 transition-all"
             >
               <Plus className="w-4 h-4" />
             </button>

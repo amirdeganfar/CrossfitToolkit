@@ -167,7 +167,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
           <h2 className="text-lg font-semibold text-[var(--color-text)]">Log Result</h2>
           <button
             onClick={onClose}
-            className="p-2 -m-2 rounded-lg hover:bg-[var(--color-surface-elevated)] transition-colors"
+            className="p-2.5 -mr-1 rounded-xl hover:bg-[var(--color-surface-elevated)] active:scale-95 transition-all"
             aria-label="Close modal"
           >
             <X className="w-5 h-5 text-[var(--color-text-muted)]" />
@@ -181,7 +181,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
             <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-1">
               Item
             </label>
-            <div className="px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)]">
+            <div className="px-3 py-3 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)]">
               {item.name}
             </div>
           </div>
@@ -198,7 +198,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
                 value={reps}
                 onChange={(e) => setReps(e.target.value)}
                 placeholder="1"
-                className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+                className="w-full px-3 py-3 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
               />
               <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                 Use 1 for 1RM (one-rep max)
@@ -212,11 +212,11 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
               <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-2">
                 Measure by
               </label>
-              <div className="flex rounded-lg border border-[var(--color-border)] overflow-hidden">
+              <div className="flex rounded-xl border border-[var(--color-border)] overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setMetricType('distance')}
-                  className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
+                  className={`flex-1 px-4 py-2.5 text-sm font-medium transition-colors ${
                     metricType === 'distance'
                       ? 'bg-[var(--color-primary)] text-white'
                       : 'bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-elevated)]'
@@ -227,7 +227,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
                 <button
                   type="button"
                   onClick={() => setMetricType('calories')}
-                  className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
+                  className={`flex-1 px-4 py-2.5 text-sm font-medium transition-colors ${
                     metricType === 'calories'
                       ? 'bg-[var(--color-primary)] text-white'
                       : 'bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-elevated)]'
@@ -253,15 +253,15 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
                   value={distance}
                   onChange={(e) => setDistance(e.target.value)}
                   placeholder="e.g., 400"
-                  className="flex-1 px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+                  className="flex-1 px-3 py-3 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
                 />
-                <div className="flex rounded-lg border border-[var(--color-border)] overflow-hidden">
+                <div className="flex rounded-xl border border-[var(--color-border)] overflow-hidden">
                   {(['m', 'km', 'mi'] as const).map((unit) => (
                     <button
                       key={unit}
                       type="button"
                       onClick={() => setDistanceUnit(unit)}
-                      className={`px-3 py-2 text-sm font-medium transition-colors ${
+                      className={`px-3 py-2.5 text-sm font-medium transition-colors ${
                         distanceUnit === unit
                           ? 'bg-[var(--color-primary)] text-white'
                           : 'bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-elevated)]'
@@ -289,9 +289,9 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
                   value={calories}
                   onChange={(e) => setCalories(e.target.value)}
                   placeholder="e.g., 50"
-                  className="flex-1 px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+                  className="flex-1 px-3 py-3 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
                 />
-                <div className="flex items-center px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-muted)] text-sm font-medium">
+                <div className="flex items-center px-3 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-muted)] text-sm font-medium">
                   cal
                 </div>
               </div>
@@ -315,7 +315,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
                 value={result}
                 onChange={(e) => setResult(e.target.value)}
                 placeholder={getResultPlaceholder(item.scoreType)}
-                className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+                className="w-full px-3 py-3 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
                 autoFocus
                 required
               />
@@ -334,7 +334,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
                     key={v.value}
                     type="button"
                     onClick={() => setVariant(v.value)}
-                    className={`flex-1 px-4 py-2 rounded-lg border font-medium transition-colors ${
+                    className={`flex-1 px-4 py-2.5 rounded-xl border font-medium transition-colors active:scale-95 ${
                       variant === v.value
                         ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white'
                         : 'bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-text-muted)]'
@@ -369,7 +369,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
               onChange={(e) => setNotes(e.target.value)}
               placeholder="How did it feel? Any observations..."
               rows={2}
-              className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors resize-none"
+              className="w-full px-3 py-3 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors resize-none"
             />
           </div>
 

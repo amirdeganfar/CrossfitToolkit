@@ -57,10 +57,10 @@ const SleepSelector = ({ value, onChange, disabled = false }: SleepSelectorProps
             onKeyDown={(e) => handleKeyDown(e, hours)}
             className={`
               flex items-center justify-center
-              px-3 py-2 rounded-lg text-sm font-medium
+              px-3 py-2.5 rounded-lg text-sm font-medium
               transition-all duration-150 ease-out
               ${isSelected
-                ? 'bg-[var(--color-primary)] text-white'
+                ? 'bg-[var(--color-primary)] text-white shadow-sm'
                 : 'bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)]'
               }
               ${disabled
@@ -289,7 +289,7 @@ export const QuickCheckIn = () => {
           </div>
           <button
             onClick={handleEdit}
-            className="flex items-center gap-1 text-xs text-[var(--color-primary)] hover:underline"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 transition-colors"
             aria-label="Edit check-in"
           >
             <Edit2 className="w-3 h-3" />
@@ -362,7 +362,7 @@ export const QuickCheckIn = () => {
           {isEditing && (
             <button
               onClick={handleCancel}
-              className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+              className="px-3 py-1.5 rounded-lg text-xs font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-elevated)] transition-colors"
             >
               Cancel
             </button>
@@ -426,7 +426,7 @@ export const QuickCheckIn = () => {
         </h2>
         <button
           onClick={handleBackToPrompt}
-          className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+          className="px-3 py-1.5 rounded-lg text-xs font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-elevated)] transition-colors"
         >
           Back
         </button>

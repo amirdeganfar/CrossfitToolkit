@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search as SearchIcon, Star, ChevronRight, Loader2 } from 'lucide-react';
+import { Search as SearchIcon, Star, ChevronRight, Loader2, Dumbbell } from 'lucide-react';
 import { useCatalogStore } from '../stores/catalogStore';
 import { useInitialize } from '../hooks/useInitialize';
 import type { CatalogItem, Category } from '../types/catalog';
@@ -120,7 +120,7 @@ export const Search = () => {
           <button
             key={category}
             onClick={() => setSelectedCategory(category)}
-            className={`px-4 py-2 rounded-full text-sm font-medium border whitespace-nowrap transition-colors ${getCategoryBgColor(
+            className={`px-4 py-2.5 rounded-full text-sm font-medium border whitespace-nowrap transition-colors active:scale-95 ${getCategoryBgColor(
               category,
               selectedCategory === category
             )} ${selectedCategory === category ? 'border-current' : 'border-[var(--color-border)]'}`}
@@ -143,19 +143,17 @@ export const Search = () => {
       {filteredItems.length > 0 ? (
         <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden">
           {filteredItems.map((item, index) => (
-            <button
+            <div
               key={item.id}
-              onClick={() => handleItemClick(item.id)}
-              className={`w-full flex items-center justify-between px-4 py-3 hover:bg-[var(--color-surface-elevated)] transition-colors text-left group ${
+              className={`w-full flex items-center justify-between px-4 py-3.5 hover:bg-[var(--color-surface-elevated)] transition-colors group ${
                 index !== filteredItems.length - 1 ? 'border-b border-[var(--color-border)]' : ''
               }`}
-              aria-label={`View ${item.name}`}
             >
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 {/* Favorite star */}
                 <button
                   onClick={(e) => handleFavoriteClick(e, item.id)}
-                  className={`p-1 -m-1 rounded-lg transition-colors ${
+                  className={`p-2 -m-2 rounded-lg transition-colors ${
                     item.isFavorite
                       ? 'text-amber-400'
                       : 'text-[var(--color-border)] hover:text-amber-400'
@@ -165,8 +163,12 @@ export const Search = () => {
                   <Star className={`w-4 h-4 ${item.isFavorite ? 'fill-current' : ''}`} />
                 </button>
 
-                {/* Item info */}
-                <div className="flex-1 min-w-0">
+                {/* Item info - clickable area */}
+                <button
+                  onClick={() => handleItemClick(item.id)}
+                  className="flex-1 min-w-0 text-left"
+                  aria-label={`View ${item.name}`}
+                >
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-[var(--color-text)] truncate">
                       {item.name}
@@ -177,19 +179,24 @@ export const Search = () => {
                     <span className="text-[var(--color-text-muted)]">·</span>
                     <span className="text-[var(--color-text-muted)]">{item.scoreType}</span>
                   </div>
-                </div>
+                </button>
               </div>
 
-              {/* Chevron */}
-              <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)] flex-shrink-0 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </button>
+              {/* Chevron — always visible on mobile (no hover), fades in on desktop */}
+              <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)] flex-shrink-0 ml-2 opacity-40 group-hover:opacity-100 transition-opacity" />
+            </div>
           ))}
         </div>
       ) : (
-        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-8 text-center">
-          <p className="text-[var(--color-text-muted)]">
-            No items found{searchQuery && ` for "${searchQuery}"`}
-            {selectedCategory !== 'All' && ` in ${selectedCategory}`}
+        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-10 text-center">
+          <Dumbbell className="w-10 h-10 mx-auto mb-3 text-[var(--color-border)]" />
+          <p className="font-medium text-[var(--color-text)] mb-1">No items found</p>
+          <p className="text-sm text-[var(--color-text-muted)]">
+            {searchQuery
+              ? `No results for "${searchQuery}"${selectedCategory !== 'All' ? ` in ${selectedCategory}` : ''}`
+              : selectedCategory !== 'All'
+                ? `No ${selectedCategory} items in the catalog`
+                : 'The catalog is empty'}
           </p>
         </div>
       )}

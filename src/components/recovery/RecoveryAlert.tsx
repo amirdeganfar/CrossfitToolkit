@@ -106,7 +106,7 @@ export const RecoveryAlert = () => {
         </div>
         <button
           onClick={handleDismiss}
-          className="p-1 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+          className="p-2 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
           aria-label="Dismiss alert"
         >
           <X className="w-4 h-4 text-[var(--color-text-muted)]" />
@@ -135,7 +135,7 @@ export const RecoveryAlert = () => {
       <div className="flex gap-2">
         <button
           onClick={handleDismiss}
-          className="flex-1 py-2 px-4 bg-[var(--color-surface)] hover:bg-[var(--color-surface-elevated)] border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium rounded-lg transition-colors"
+          className="flex-1 py-2.5 px-4 bg-[var(--color-surface)] hover:bg-[var(--color-surface-elevated)] border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium rounded-xl transition-colors"
           aria-label="Acknowledge alert"
         >
           Got it
@@ -144,7 +144,7 @@ export const RecoveryAlert = () => {
           <button
             onClick={handleLogRestDay}
             disabled={isSaving}
-            className="flex-1 py-2 px-4 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            className="flex-1 py-2.5 px-4 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
             aria-label="Log rest day"
           >
             <Moon className="w-4 h-4" />

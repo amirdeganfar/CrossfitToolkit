@@ -70,7 +70,7 @@ export const GoalModal = ({
         }
       }
 
-      setTargetDate(new Date(editGoal.targetDate));
+      setTargetDate(new Date(editGoal.targetDate + 'T00:00:00'));
       setVariant(editGoal.variant || null);
       setReps(editGoal.reps || 1);
       setShowAdvanced(!!(editGoal.variant || editGoal.reps));

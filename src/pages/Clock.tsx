@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Volume2, VolumeX, Maximize, Minimize, ListPlus } from 'lucide-react';
 import { useClockStore } from '../stores/clockStore';
 import { 
@@ -20,7 +20,7 @@ export const Clock = () => {
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showPresets, setShowPresets] = useState(false);
-  const [wakeLock, setWakeLock] = useState<WakeLockSentinel | null>(null);
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null);
 
   // Load presets on mount
   useEffect(() => {
@@ -34,16 +34,16 @@ export const Clock = () => {
         try {
           if ('wakeLock' in navigator) {
             const lock = await navigator.wakeLock.request('screen');
-            setWakeLock(lock);
+            wakeLockRef.current = lock;
           }
         } catch (error) {
           console.warn('[Clock] Wake lock failed:', error);
         }
       } else {
         // Release wake lock when timer stops
-        if (wakeLock) {
-          wakeLock.release();
-          setWakeLock(null);
+        if (wakeLockRef.current) {
+          wakeLockRef.current.release();
+          wakeLockRef.current = null;
         }
       }
     };
@@ -52,8 +52,9 @@ export const Clock = () => {
 
     // Cleanup on unmount
     return () => {
-      if (wakeLock) {
-        wakeLock.release();
+      if (wakeLockRef.current) {
+        wakeLockRef.current.release();
+        wakeLockRef.current = null;
       }
     };
   }, [status]);

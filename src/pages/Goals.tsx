@@ -111,7 +111,7 @@ export const Goals = () => {
         <div className="flex items-center gap-3 px-4 py-3">
           <Link
             to="/"
-            className="p-2 -ml-2 rounded-lg hover:bg-[var(--color-surface)] transition-colors"
+            className="p-2.5 -ml-1 rounded-xl hover:bg-[var(--color-surface-elevated)] transition-colors"
             aria-label="Go back"
           >
             <ArrowLeft className="w-5 h-5 text-[var(--color-text)]" />
@@ -141,7 +141,7 @@ export const Goals = () => {
               </p>
               <button
                 onClick={() => setShowModal(true)}
-                className="px-4 py-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white rounded-lg font-medium transition-colors"
+                className="px-5 py-3 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] active:scale-95 text-white rounded-xl font-medium transition-all"
               >
                 Set Your First Goal
               </button>
@@ -203,7 +203,7 @@ export const Goals = () => {
       {/* Floating Action Button */}
       <button
         onClick={() => setShowModal(true)}
-        className="fixed bottom-20 right-4 sm:bottom-6 w-14 h-14 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white rounded-full shadow-lg flex items-center justify-center transition-colors"
+        className="fixed bottom-20 right-4 sm:bottom-6 w-14 h-14 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] active:scale-90 text-white rounded-full shadow-lg shadow-red-900/30 flex items-center justify-center transition-all"
         aria-label="Add new goal"
       >
         <Plus size={24} />

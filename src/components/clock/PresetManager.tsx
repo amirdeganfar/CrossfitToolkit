@@ -92,7 +92,7 @@ export const PresetManager = ({ isOpen, onClose }: PresetManagerProps) => {
           <h2 className="text-lg font-semibold text-[var(--color-text)]">Timer Presets</h2>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-[var(--color-surface-elevated)] transition-colors"
+            className="p-2.5 rounded-xl hover:bg-[var(--color-surface-elevated)] transition-colors"
           >
             <X className="w-5 h-5 text-[var(--color-text-muted)]" />
           </button>
@@ -124,7 +124,7 @@ export const PresetManager = ({ isOpen, onClose }: PresetManagerProps) => {
                     onChange={(e) => setPresetName(e.target.value)}
                     placeholder="Preset name..."
                     className="
-                      flex-1 px-3 py-2 rounded-lg
+                      flex-1 px-3 py-2.5 rounded-xl
                       bg-[var(--color-bg)] border border-[var(--color-border)]
                       text-[var(--color-text)] placeholder-[var(--color-text-muted)]
                       focus:outline-none focus:border-[var(--color-primary)]
@@ -136,9 +136,9 @@ export const PresetManager = ({ isOpen, onClose }: PresetManagerProps) => {
                     onClick={handleSave}
                     disabled={!presetName.trim()}
                     className="
-                      px-4 py-2 bg-green-600 hover:bg-green-500
+                      px-4 py-2.5 bg-green-600 hover:bg-green-500
                       disabled:opacity-50 disabled:cursor-not-allowed
-                      text-white font-semibold rounded-lg
+                      text-white font-semibold rounded-xl
                       transition-colors
                     "
                   >
@@ -150,8 +150,8 @@ export const PresetManager = ({ isOpen, onClose }: PresetManagerProps) => {
                       setPresetName('');
                     }}
                     className="
-                      px-4 py-2 bg-[var(--color-surface-elevated)]
-                      text-[var(--color-text-muted)] font-semibold rounded-lg
+                      px-4 py-2.5 bg-[var(--color-surface-elevated)]
+                      text-[var(--color-text-muted)] font-semibold rounded-xl
                       hover:text-[var(--color-text)] transition-colors
                     "
                   >

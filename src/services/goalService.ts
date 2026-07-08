@@ -56,7 +56,8 @@ export const isGoalAchieved = (
  * Calculate days remaining until target date
  */
 export const calculateDaysRemaining = (targetDate: string): number => {
-  const target = new Date(targetDate);
+  // Parse as local midnight to avoid UTC offset shifting the date
+  const target = new Date(targetDate + 'T00:00:00');
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   target.setHours(0, 0, 0, 0);
@@ -164,11 +165,12 @@ export const formatValueAsResult = (
       return `${value}${unit || 'm'}`;
     case 'Calories':
       return `${value}`;
-    case 'Rounds+Reps':
+    case 'Rounds+Reps': {
       // Decode from normalized format (rounds * 100 + reps)
       const rounds = Math.floor(value / 100);
       const reps = value % 100;
       return `${rounds}+${reps}`;
+    }
     default:
       return `${value}`;
   }

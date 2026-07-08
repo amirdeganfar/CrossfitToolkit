@@ -265,11 +265,11 @@ export const getAllPRLogs = async (): Promise<PRLog[]> => {
 export const getPRLogsForItem = async (
   catalogItemId: string
 ): Promise<PRLog[]> => {
-  return db.prLogs
+  const logs = await db.prLogs
     .where('catalogItemId')
     .equals(catalogItemId)
-    .reverse()
-    .sortBy('date');
+    .toArray();
+  return logs.sort((a, b) => b.date - a.date);
 };
 
 /**

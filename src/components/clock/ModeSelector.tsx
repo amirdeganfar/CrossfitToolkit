@@ -34,12 +34,12 @@ export const ModeSelector = ({ onModeChange }: ModeSelectorProps) => {
           onClick={() => handleModeSelect(mode.id)}
           disabled={status !== 'idle'}
           className={`
-            px-4 py-2 rounded-lg font-semibold text-sm
-            transition-all duration-200
+            px-4 py-2.5 rounded-xl font-semibold text-sm
+            transition-all duration-200 active:scale-95
             ${status !== 'idle' ? 'opacity-50 cursor-not-allowed' : ''}
             ${currentMode === mode.id
-              ? 'bg-[var(--color-primary)] text-white'
-              : 'bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-elevated)] border border-[var(--color-border)]'
+              ? 'bg-[var(--color-primary)] text-white shadow-sm'
+              : 'bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-elevated)] hover:text-[var(--color-text)] border border-[var(--color-border)]'
             }
           `}
           title={mode.description}

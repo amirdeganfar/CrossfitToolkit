@@ -272,7 +272,7 @@ export const Home = () => {
               <button
                 key={item.id}
                 onClick={() => handleItemClick(item.id)}
-                className="px-4 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-full text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-surface-elevated)] hover:border-[var(--color-primary)] transition-colors"
+                className="px-4 py-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-full text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-surface-elevated)] hover:border-[var(--color-primary)] active:scale-95 transition-all"
                 aria-label={`View ${item.name}`}
               >
                 {item.name}

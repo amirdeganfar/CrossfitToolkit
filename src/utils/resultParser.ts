@@ -161,7 +161,7 @@ export const getResultLabel = (scoreType: ScoreType): string => {
     case 'Reps':
       return 'Reps';
     case 'Distance':
-      return 'Time';
+      return 'Distance';
     case 'Calories':
       return 'Calories';
     case 'Rounds+Reps':

@@ -38,13 +38,13 @@ export const ConfirmDialog = ({
         <div className="flex gap-3 p-4 pt-0">
           <button
             onClick={onCancel}
-            className="flex-1 py-2.5 px-4 bg-[var(--color-bg)] hover:bg-[var(--color-surface-elevated)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] font-medium transition-colors"
+            className="flex-1 py-3 px-4 bg-[var(--color-bg)] hover:bg-[var(--color-surface-elevated)] active:scale-[0.98] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] font-medium transition-all"
           >
             {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
-            className={`flex-1 py-2.5 px-4 rounded-lg font-medium transition-colors ${
+            className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all active:scale-[0.98] ${
               isDestructive
                 ? 'bg-red-600 hover:bg-red-700 text-white'
                 : 'bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white'

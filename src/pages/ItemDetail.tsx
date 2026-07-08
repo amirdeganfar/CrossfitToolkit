@@ -458,7 +458,7 @@ export const ItemDetail = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={handleBack}
-            className="p-2 -ml-2 rounded-lg hover:bg-[var(--color-surface)] transition-colors"
+            className="p-2.5 -ml-1 rounded-xl hover:bg-[var(--color-surface-elevated)] transition-colors"
             aria-label="Go back"
           >
             <ArrowLeft className="w-5 h-5 text-[var(--color-text-muted)]" />
@@ -479,7 +479,7 @@ export const ItemDetail = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={handleBack}
-            className="p-2 -ml-2 rounded-lg hover:bg-[var(--color-surface)] transition-colors"
+            className="p-2.5 -ml-1 rounded-xl hover:bg-[var(--color-surface-elevated)] transition-colors"
             aria-label="Go back"
           >
             <ArrowLeft className="w-5 h-5 text-[var(--color-text-muted)]" />
@@ -928,7 +928,7 @@ export const ItemDetail = () => {
       {/* Log Result button */}
       <button
         onClick={() => setShowModal(true)}
-        className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] rounded-xl text-white font-semibold transition-colors"
+        className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] active:scale-[0.98] rounded-xl text-white font-semibold transition-all shadow-sm shadow-red-900/20"
         aria-label="Log a result"
       >
         <Plus className="w-5 h-5" />

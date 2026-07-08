@@ -33,7 +33,7 @@ export const useCatalogStore = create<CatalogState>((set, get) => ({
   catalogItems: [],
   favorites: [],
   recentLogs: [],
-  settings: { weightUnit: 'kg', distanceUnit: 'm', hasSeenOnboarding: false },
+  settings: { weightUnit: 'kg', distanceUnit: 'm', hasSeenOnboarding: false, minSleepHours: 7 },
   isLoading: false,
   isInitialized: false,
   searchQuery: '',

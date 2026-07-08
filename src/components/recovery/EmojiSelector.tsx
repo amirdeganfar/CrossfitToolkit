@@ -43,7 +43,7 @@ export const EmojiSelector = ({
     <div
       role="radiogroup"
       aria-label={ariaLabel}
-      className="flex gap-1.5"
+      className="flex gap-1.5 w-full"
     >
       {values.map((optionValue) => {
         const isSelected = value === optionValue;
@@ -63,7 +63,7 @@ export const EmojiSelector = ({
             onKeyDown={(e) => handleKeyDown(e, optionValue)}
             className={`
               flex flex-col items-center justify-center
-              w-12 h-14 rounded-lg
+              flex-1 h-14 rounded-lg
               transition-all duration-150 ease-out
               ${isSelected
                 ? 'bg-[var(--color-primary)] text-white scale-105 shadow-md'
