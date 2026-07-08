@@ -5,7 +5,7 @@ interface ModeSelectorProps {
 }
 
 /**
- * Timer mode selection tabs
+ * Timer mode selection — sharp segmented control
  */
 export const ModeSelector = ({ onModeChange }: ModeSelectorProps) => {
   const currentMode = useClockStore((state) => state.config.mode);
@@ -13,11 +13,11 @@ export const ModeSelector = ({ onModeChange }: ModeSelectorProps) => {
   const setMode = useClockStore((state) => state.setMode);
 
   const modes: { id: TimerMode; label: string; description: string }[] = [
-    { id: 'amrap', label: 'AMRAP', description: 'As Many Rounds As Possible' },
-    { id: 'emom', label: 'EMOM', description: 'Every Minute On the Minute' },
-    { id: 'forTime', label: 'For Time', description: 'Stopwatch with optional cap' },
-    { id: 'tabata', label: 'Tabata', description: '20s work / 10s rest' },
-    { id: 'custom', label: 'Custom', description: 'Custom intervals' },
+    { id: 'amrap',   label: 'AMRAP',    description: 'As Many Rounds As Possible' },
+    { id: 'emom',    label: 'EMOM',     description: 'Every Minute On the Minute' },
+    { id: 'forTime', label: 'FOR TIME', description: 'Stopwatch with optional cap' },
+    { id: 'tabata',  label: 'TABATA',   description: '20s work / 10s rest' },
+    { id: 'custom',  label: 'CUSTOM',   description: 'Custom intervals' },
   ];
 
   const handleModeSelect = (mode: TimerMode) => {
@@ -27,22 +27,22 @@ export const ModeSelector = ({ onModeChange }: ModeSelectorProps) => {
   };
 
   return (
-    <div className="flex flex-wrap gap-2 justify-center">
+    <div className="flex overflow-x-auto gap-1 scrollbar-hide">
       {modes.map((mode) => (
         <button
           key={mode.id}
           onClick={() => handleModeSelect(mode.id)}
           disabled={status !== 'idle'}
+          title={mode.description}
           className={`
-            px-4 py-2.5 rounded-xl font-semibold text-sm
-            transition-all duration-200 active:scale-95
-            ${status !== 'idle' ? 'opacity-50 cursor-not-allowed' : ''}
+            flex-shrink-0 px-4 py-2 font-display text-sm tracking-widest
+            transition-colors duration-150
+            ${status !== 'idle' ? 'opacity-40 cursor-not-allowed' : 'active:scale-95'}
             ${currentMode === mode.id
-              ? 'bg-[var(--color-primary)] text-white shadow-sm'
-              : 'bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-elevated)] hover:text-[var(--color-text)] border border-[var(--color-border)]'
+              ? 'bg-[var(--color-primary)] text-white'
+              : 'bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)] hover:border-[var(--color-border-strong)]'
             }
           `}
-          title={mode.description}
         >
           {mode.label}
         </button>

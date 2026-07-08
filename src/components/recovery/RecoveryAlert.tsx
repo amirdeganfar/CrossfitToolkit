@@ -96,17 +96,18 @@ export const RecoveryAlert = () => {
     <div
       role="alert"
       aria-live="polite"
-      className={`${style.bg} ${style.border} border rounded-xl p-4 mb-4`}
+      className={`${style.bg} ${style.border} border rounded-lg p-4`}
+      style={{ borderLeft: '3px solid' }}
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-2">
         <div className="flex items-center gap-2">
           {style.icon}
-          <h3 className={`font-semibold ${style.titleColor}`}>{title}</h3>
+          <h3 className={`font-display text-base tracking-wide ${style.titleColor}`}>{title.toUpperCase()}</h3>
         </div>
         <button
           onClick={handleDismiss}
-          className="p-2 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+          className="p-1.5 hover:bg-black/10 transition-colors rounded-sm"
           aria-label="Dismiss alert"
         >
           <X className="w-4 h-4 text-[var(--color-text-muted)]" />
@@ -114,7 +115,7 @@ export const RecoveryAlert = () => {
       </div>
 
       {/* Description */}
-      <p className={`text-sm ${style.textColor} mb-3`}>{description}</p>
+      <p className={`text-sm ${style.textColor} mb-3 leading-relaxed`}>{description}</p>
 
       {/* Reasons */}
       {recoveryScore.reasons.length > 0 && (
@@ -122,9 +123,9 @@ export const RecoveryAlert = () => {
           {recoveryScore.reasons.map((reason, index) => (
             <li
               key={`${reason.metric}-${index}`}
-              className={`flex items-center gap-2 text-sm ${style.textColor}`}
+              className={`flex items-center gap-2 text-xs ${style.textColor} tracking-wide`}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-current opacity-60" aria-hidden="true" />
+              <span className="w-1 h-1 bg-current opacity-60" aria-hidden="true" />
               {reason.message}
             </li>
           ))}
@@ -135,20 +136,20 @@ export const RecoveryAlert = () => {
       <div className="flex gap-2">
         <button
           onClick={handleDismiss}
-          className="flex-1 py-2.5 px-4 bg-[var(--color-surface)] hover:bg-[var(--color-surface-elevated)] border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium rounded-xl transition-colors"
+          className="flex-1 py-2.5 px-4 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border-strong)] border border-[var(--color-border-strong)] text-[var(--color-text)] font-display text-xs tracking-widest rounded-sm transition-colors"
           aria-label="Acknowledge alert"
         >
-          Got it
+          GOT IT
         </button>
         {showRestDayButton && (
           <button
             onClick={handleLogRestDay}
             disabled={isSaving}
-            className="flex-1 py-2.5 px-4 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            className="flex-1 py-2.5 px-4 bg-[var(--color-primary)] hover:opacity-90 text-white font-display text-xs tracking-widest rounded-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
             aria-label="Log rest day"
           >
             <Moon className="w-4 h-4" />
-            Log Rest Day
+            REST DAY
           </button>
         )}
       </div>

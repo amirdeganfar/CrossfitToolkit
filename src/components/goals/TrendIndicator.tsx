@@ -58,12 +58,12 @@ export const TrendIndicator = ({
 
   return (
     <div
-      className={`inline-flex items-center gap-1 ${paddingClass} rounded-full ${config.bgClass} ${config.colorClass} ${className}`}
+      className={`inline-flex items-center gap-1 ${paddingClass} rounded-sm ${config.bgClass} ${config.colorClass} ${className}`}
       aria-label={`Trend: ${config.label}`}
     >
       <Icon size={iconSize} aria-hidden="true" />
       {showLabel && (
-        <span className={`${textClass} font-medium`}>{config.label}</span>
+        <span className={`${textClass} font-display tracking-wider`}>{config.label.toUpperCase()}</span>
       )}
     </div>
   );

@@ -119,7 +119,7 @@ export const PercentageCalculator = ({ logs, weightUnit }: PercentageCalculatorP
   // No logs - show prompt
   if (logs.length === 0) {
     return (
-      <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden">
+      <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
         <button
           onClick={() => setIsExpanded(!isExpanded)}
           className="w-full flex items-center justify-between px-4 py-3 hover:bg-[var(--color-surface-elevated)] transition-colors"
@@ -154,7 +154,7 @@ export const PercentageCalculator = ({ logs, weightUnit }: PercentageCalculatorP
   }
 
   return (
-    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden">
+    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
       {/* Header - always visible */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
@@ -164,8 +164,8 @@ export const PercentageCalculator = ({ logs, weightUnit }: PercentageCalculatorP
       >
         <div className="flex items-center gap-2">
           <Calculator className="w-4 h-4 text-[var(--color-text-muted)]" />
-          <span className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
-            % Calculator
+          <span className="font-display text-sm tracking-widest text-[var(--color-text-muted)]">
+            % CALCULATOR
           </span>
         </div>
         {isExpanded ? (
@@ -192,7 +192,7 @@ export const PercentageCalculator = ({ logs, weightUnit }: PercentageCalculatorP
               <div className="relative">
                 <button
                   onClick={() => setShowDropdown(!showDropdown)}
-                  className="w-full flex items-center justify-between px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] hover:border-[var(--color-text-muted)] transition-colors"
+                  className="w-full flex items-center justify-between px-3 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border-strong)] rounded-sm text-[var(--color-text)] hover:border-[var(--color-text-muted)] transition-colors"
                   aria-haspopup="listbox"
                   aria-expanded={showDropdown}
                 >
@@ -211,7 +211,7 @@ export const PercentageCalculator = ({ logs, weightUnit }: PercentageCalculatorP
 
                 {/* Dropdown menu */}
                 {showDropdown && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-[var(--color-surface-elevated)] border border-[var(--color-border)] rounded-lg shadow-lg z-10 max-h-56 overflow-y-auto">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-[var(--color-surface-elevated)] border border-[var(--color-border-strong)] rounded-lg shadow-xl z-10 max-h-56 overflow-y-auto">
                     {calculatorOptions.map((option) => (
                       <button
                         key={option.id}
@@ -243,7 +243,7 @@ export const PercentageCalculator = ({ logs, weightUnit }: PercentageCalculatorP
               </div>
             ) : (
               // Single option - just show it without dropdown
-              <div className="px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg">
+              <div className="px-3 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border-strong)] rounded-sm">
                 <span className="font-medium text-[var(--color-text)]">
                   {selectedOption?.label ?? 'No entry'}
                 </span>
@@ -266,10 +266,10 @@ export const PercentageCalculator = ({ logs, weightUnit }: PercentageCalculatorP
                 <button
                   key={pct}
                   onClick={() => handlePresetClick(pct)}
-                  className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                  className={`px-3 py-1.5 rounded-sm font-display text-sm tracking-wider border transition-colors active:scale-95 ${
                     !customPercentage && selectedPercentage === pct
                       ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white'
-                      : 'bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-text-muted)]'
+                      : 'bg-[var(--color-bg)] border-[var(--color-border-strong)] text-[var(--color-text-muted)] hover:border-[var(--color-text-muted)]'
                   }`}
                 >
                   {pct}%
@@ -291,7 +291,7 @@ export const PercentageCalculator = ({ logs, weightUnit }: PercentageCalculatorP
                 value={customPercentage}
                 onChange={(e) => handleCustomChange(e.target.value)}
                 placeholder="—"
-                className="w-full px-3 py-1.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors text-center"
+                className="w-full px-3 py-1.5 bg-[var(--color-bg)] border border-[var(--color-border-strong)] rounded-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors text-center font-display"
               />
             </div>
             <span className="text-sm text-[var(--color-text-muted)]">%</span>
@@ -304,7 +304,7 @@ export const PercentageCalculator = ({ logs, weightUnit }: PercentageCalculatorP
           <div className="text-center py-2">
             {calculatedWeight !== null && selectedOption ? (
               <>
-                <div className="text-3xl font-bold text-[var(--color-primary)]">
+                <div className="font-display text-4xl text-[var(--color-primary)]">
                   {calculatedWeight} {weightUnit}
                 </div>
                 <div className="text-sm text-[var(--color-text-muted)] mt-1">

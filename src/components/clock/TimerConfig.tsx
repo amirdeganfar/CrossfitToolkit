@@ -102,7 +102,7 @@ export const TimerConfig = () => {
 
     if (isEditing) {
       return (
-        <div className="flex items-center justify-between bg-[var(--color-surface)] rounded-lg p-3 border border-[var(--color-primary)]">
+        <div className="flex items-center justify-between bg-[var(--color-surface)] rounded-sm p-3 border border-[var(--color-primary)]">
           <span className="text-sm text-[var(--color-text-muted)]">{label}</span>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
@@ -115,8 +115,8 @@ export const TimerConfig = () => {
                 onKeyDown={handleKeyDown}
                 placeholder="0"
                 className="
-                  w-12 px-2 py-1 text-center font-mono text-lg
-                  bg-[var(--color-bg)] border border-[var(--color-border)] rounded
+                  w-12 px-2 py-1 text-center font-display text-lg
+                  bg-[var(--color-bg)] border border-[var(--color-border)] rounded-sm
                   text-[var(--color-text)] focus:outline-none focus:border-[var(--color-primary)]
                 "
                 aria-label="Minutes"
@@ -132,8 +132,8 @@ export const TimerConfig = () => {
                 onKeyDown={handleKeyDown}
                 placeholder="00"
                 className="
-                  w-12 px-2 py-1 text-center font-mono text-lg
-                  bg-[var(--color-bg)] border border-[var(--color-border)] rounded
+                  w-12 px-2 py-1 text-center font-display text-lg
+                  bg-[var(--color-bg)] border border-[var(--color-border)] rounded-sm
                   text-[var(--color-text)] focus:outline-none focus:border-[var(--color-primary)]
                 "
                 aria-label="Seconds"
@@ -141,14 +141,14 @@ export const TimerConfig = () => {
             </div>
             <button
               onClick={handleSave}
-              className="p-1.5 rounded bg-green-600 hover:bg-green-500 text-white"
+              className="p-1.5 rounded-sm bg-[var(--color-success)] hover:opacity-90 text-white"
               aria-label="Save"
             >
               <Check className="w-4 h-4" />
             </button>
             <button
               onClick={handleCancel}
-              className="p-1.5 rounded bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border)] text-[var(--color-text-muted)]"
+              className="p-1.5 rounded-sm bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border)] text-[var(--color-text-muted)]"
               aria-label="Cancel"
             >
               <X className="w-4 h-4" />
@@ -159,14 +159,14 @@ export const TimerConfig = () => {
     }
 
     return (
-      <div className="flex items-center justify-between bg-[var(--color-surface)] rounded-lg p-3 border border-[var(--color-border)]">
+      <div className="flex items-center justify-between bg-[var(--color-surface)] rounded-sm p-3 border border-[var(--color-border)]">
         <span className="text-sm text-[var(--color-text-muted)]">{label}</span>
         <button
           onClick={startEditing}
           disabled={isDisabled}
           className="
-            font-mono text-lg font-semibold text-[var(--color-text)]
-            px-3 py-1 rounded-lg
+            font-display text-lg text-[var(--color-text)]
+            px-3 py-1 rounded-sm
             hover:bg-[var(--color-surface-elevated)]
             disabled:opacity-50 disabled:cursor-not-allowed
             transition-colors cursor-pointer
@@ -181,14 +181,14 @@ export const TimerConfig = () => {
   };
 
   // Render a number adjuster component
-  const NumberAdjuster = ({ 
-    label, 
-    field 
-  }: { 
-    label: string; 
+  const NumberAdjuster = ({
+    label,
+    field
+  }: {
+    label: string;
     field: 'rounds' | 'sets';
   }) => (
-    <div className="flex items-center justify-between bg-[var(--color-surface)] rounded-lg p-3 border border-[var(--color-border)]">
+    <div className="flex items-center justify-between bg-[var(--color-surface)] rounded-sm p-3 border border-[var(--color-border)]">
       <span className="text-sm text-[var(--color-text-muted)]">{label}</span>
       <div className="flex items-center gap-3">
         <button
@@ -196,7 +196,7 @@ export const TimerConfig = () => {
           disabled={isDisabled || config[field] <= 1}
           className="
             w-8 h-8 flex items-center justify-center
-            bg-[var(--color-surface-elevated)] rounded-lg
+            bg-[var(--color-surface-elevated)] border border-[var(--color-border-strong)] rounded-sm
             text-[var(--color-text-muted)] hover:text-[var(--color-text)]
             disabled:opacity-50 disabled:cursor-not-allowed
             transition-colors
@@ -204,7 +204,7 @@ export const TimerConfig = () => {
         >
           <Minus className="w-4 h-4" />
         </button>
-        <span className="font-mono text-lg font-semibold text-[var(--color-text)] min-w-[40px] text-center">
+        <span className="font-display text-xl text-[var(--color-text)] min-w-[40px] text-center">
           {config[field]}
         </span>
         <button
@@ -212,7 +212,7 @@ export const TimerConfig = () => {
           disabled={isDisabled}
           className="
             w-8 h-8 flex items-center justify-center
-            bg-[var(--color-surface-elevated)] rounded-lg
+            bg-[var(--color-surface-elevated)] border border-[var(--color-border-strong)] rounded-sm
             text-[var(--color-text-muted)] hover:text-[var(--color-text)]
             disabled:opacity-50 disabled:cursor-not-allowed
             transition-colors
@@ -274,7 +274,7 @@ export const TimerConfig = () => {
 
     if (isEditing) {
       return (
-        <div className="flex items-center justify-between bg-[var(--color-surface)] rounded-lg p-3 border border-[var(--color-primary)]">
+        <div className="flex items-center justify-between bg-[var(--color-surface)] rounded-sm p-3 border border-[var(--color-primary)]">
           <span className="text-sm text-[var(--color-text-muted)]">Time Cap</span>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
@@ -287,8 +287,8 @@ export const TimerConfig = () => {
                 onKeyDown={handleKeyDown}
                 placeholder="0"
                 className="
-                  w-12 px-2 py-1 text-center font-mono text-lg
-                  bg-[var(--color-bg)] border border-[var(--color-border)] rounded
+                  w-12 px-2 py-1 text-center font-display text-lg
+                  bg-[var(--color-bg)] border border-[var(--color-border)] rounded-sm
                   text-[var(--color-text)] focus:outline-none focus:border-[var(--color-primary)]
                 "
               />
@@ -304,27 +304,27 @@ export const TimerConfig = () => {
                 onKeyDown={handleKeyDown}
                 placeholder="00"
                 className="
-                  w-12 px-2 py-1 text-center font-mono text-lg
-                  bg-[var(--color-bg)] border border-[var(--color-border)] rounded
+                  w-12 px-2 py-1 text-center font-display text-lg
+                  bg-[var(--color-bg)] border border-[var(--color-border)] rounded-sm
                   text-[var(--color-text)] focus:outline-none focus:border-[var(--color-primary)]
                 "
               />
             </div>
             <button
               onClick={handleSave}
-              className="p-1.5 rounded bg-green-600 hover:bg-green-500 text-white"
+              className="p-1.5 rounded-sm bg-[var(--color-success)] hover:opacity-90 text-white"
             >
               <Check className="w-4 h-4" />
             </button>
             <button
               onClick={handleClear}
-              className="px-2 py-1 rounded bg-[var(--color-surface-elevated)] text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+              className="px-2 py-1 rounded-sm bg-[var(--color-surface-elevated)] font-display text-xs tracking-wider text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
             >
-              None
+              NONE
             </button>
             <button
               onClick={handleCancel}
-              className="p-1.5 rounded bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border)] text-[var(--color-text-muted)]"
+              className="p-1.5 rounded-sm bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border)] text-[var(--color-text-muted)]"
             >
               <X className="w-4 h-4" />
             </button>
@@ -334,23 +334,23 @@ export const TimerConfig = () => {
     }
 
     return (
-      <div className="flex items-center justify-between bg-[var(--color-surface)] rounded-lg p-3 border border-[var(--color-border)]">
+      <div className="flex items-center justify-between bg-[var(--color-surface)] rounded-sm p-3 border border-[var(--color-border)]">
         <span className="text-sm text-[var(--color-text-muted)]">Time Cap</span>
         <button
           onClick={startEditing}
           disabled={isDisabled}
-          className="
-            font-mono text-lg font-semibold
-            px-3 py-1 rounded-lg
+          className={`
+            font-display text-lg
+            px-3 py-1 rounded-sm
             hover:bg-[var(--color-surface-elevated)]
             disabled:opacity-50 disabled:cursor-not-allowed
             transition-colors cursor-pointer
             border border-transparent hover:border-[var(--color-border)]
             ${hasTimeCap ? 'text-[var(--color-text)]' : 'text-[var(--color-text-muted)]'}
-          "
+          `}
           title="Tap to edit"
         >
-          {hasTimeCap ? formatTime(currentValue) : 'None'}
+          {hasTimeCap ? formatTime(currentValue) : 'NONE'}
         </button>
       </div>
     );

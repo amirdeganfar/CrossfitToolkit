@@ -1,108 +1,174 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&display=swap');
 
-/* Custom CSS variables for theming */
+/* ─── Design Tokens ────────────────────────────────────────────────────── */
 :root {
-  --color-primary: #dc2626;
-  --color-primary-dark: #b91c1c;
-  --color-bg: #0f0f0f;
-  --color-surface: #1a1a1a;
-  --color-surface-elevated: #262626;
-  --color-text: #fafafa;
-  --color-text-muted: #a3a3a3;
-  --color-border: #333333;
+  /* Backgrounds */
+  --color-bg: #090909;
+  --color-surface: #111111;
+  --color-surface-elevated: #1A1A1A;
+
+  /* Borders */
+  --color-border: #202020;
+  --color-border-strong: #2E2E2E;
+
+  /* Brand accent — CrossFit red-orange */
+  --color-primary: #E8321C;
+  --color-primary-dark: #C22818;
+  --color-primary-glow: rgba(232, 50, 28, 0.12);
+
+  /* Text */
+  --color-text: #F0F0F0;
+  --color-text-muted: #5A5A5A;
+  --color-text-dim: #333333;
+
+  /* Semantic */
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+
+  /* Category accent colors */
+  --color-cat-benchmark: #F59E0B;
+  --color-cat-lift: #3B82F6;
+  --color-cat-mono: #22C55E;
+  --color-cat-skill: #A855F7;
+  --color-cat-custom: #EC4899;
+
+  /* Typography */
+  --font-display: 'Barlow Condensed', system-ui, sans-serif;
 }
 
-/* Base styles */
+/* ─── Base ──────────────────────────────────────────────────────────────── */
 body {
   margin: 0;
   background-color: var(--color-bg);
   color: var(--color-text);
-  font-family: 'Geist', system-ui, -apple-system, sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Focus styles for accessibility */
 :focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
-/* Modal slide-up animation */
+/* ─── Display typography ────────────────────────────────────────────────── */
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+
+.font-display-black {
+  font-family: var(--font-display);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+/* ─── Timer numerals ────────────────────────────────────────────────────── */
+.timer-digits {
+  font-family: 'Barlow Condensed', monospace;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+/* ─── Category accent bar (left-edge stripe) ────────────────────────────── */
+.cat-bar {
+  position: relative;
+}
+.cat-bar::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+}
+.cat-bar-Benchmark::before { background-color: var(--color-cat-benchmark); }
+.cat-bar-Lift::before       { background-color: var(--color-cat-lift); }
+.cat-bar-Monostructural::before { background-color: var(--color-cat-mono); }
+.cat-bar-Skill::before      { background-color: var(--color-cat-skill); }
+.cat-bar-Custom::before     { background-color: var(--color-cat-custom); }
+
+/* ─── Nav active indicator ──────────────────────────────────────────────── */
+.nav-item-active {
+  position: relative;
+}
+.nav-item-active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 2px;
+  background-color: var(--color-primary);
+  border-radius: 0 0 2px 2px;
+}
+
+/* ─── Animations ────────────────────────────────────────────────────────── */
 @keyframes slide-up {
-  from {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
 }
 
-.animate-slide-up {
-  animation: slide-up 0.3s ease-out;
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Hide scrollbar but keep functionality */
+@keyframes timer-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+@keyframes card-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-up    { animation: slide-up   0.28s cubic-bezier(0.32, 0.72, 0, 1); }
+.animate-fade-in     { animation: fade-in    0.15s ease-out; }
+.animate-card-enter  { animation: card-enter 0.2s ease-out both; }
+.animate-timer-pulse { animation: timer-pulse 1s ease-in-out infinite; }
+
+/* ─── Scrollbar hide ────────────────────────────────────────────────────── */
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
 
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-/* Calculator expand/collapse animation */
+/* ─── Accordion / Calculator collapse ───────────────────────────────────── */
 .calculator-content {
   display: grid;
   grid-template-rows: 0fr;
   opacity: 0;
   transition: grid-template-rows 0.3s ease-out, opacity 0.2s ease-out;
 }
-
 .calculator-content.expanded {
   grid-template-rows: 1fr;
   opacity: 1;
 }
+.calculator-content > div { overflow: hidden; }
 
-.calculator-content > div {
-  overflow: hidden;
-}
-
-/* Accordion expand/collapse animation */
 .accordion-content {
   display: grid;
   grid-template-rows: 0fr;
   transition: grid-template-rows 0.2s ease-out;
 }
+.accordion-content.expanded { grid-template-rows: 1fr; }
+.accordion-content > div    { overflow: hidden; }
 
-.accordion-content.expanded {
-  grid-template-rows: 1fr;
-}
+/* ─── Safe area ─────────────────────────────────────────────────────────── */
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
 
-.accordion-content > div {
-  overflow: hidden;
-}
-
-/* Calendar fade-in animation */
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-in {
-  animation: fade-in 0.15s ease-out;
-}
-
-/* iOS safe-area bottom padding */
-.pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-/* Minimum touch target utility — invisible tap-expansion */
-.touch-target {
-  min-height: 44px;
-  min-width: 44px;
-}
+/* ─── Touch target ──────────────────────────────────────────────────────── */
+.touch-target { min-height: 44px; min-width: 44px; }

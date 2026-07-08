@@ -463,9 +463,9 @@ export const ItemDetail = () => {
           >
             <ArrowLeft className="w-5 h-5 text-[var(--color-text-muted)]" />
           </button>
-          <h1 className="text-xl font-bold text-[var(--color-text)]">Not Found</h1>
+          <h1 className="font-display text-2xl text-[var(--color-text)]">NOT FOUND</h1>
         </div>
-        <div className="flex items-center justify-center h-48 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl">
+        <div className="flex items-center justify-center h-48 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg">
           <p className="text-[var(--color-text-muted)]">Item not found</p>
         </div>
       </div>
@@ -479,24 +479,37 @@ export const ItemDetail = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={handleBack}
-            className="p-2.5 -ml-1 rounded-xl hover:bg-[var(--color-surface-elevated)] transition-colors"
+            className="p-2 -ml-1 rounded-sm hover:bg-[var(--color-surface-elevated)] transition-colors"
             aria-label="Go back"
           >
             <ArrowLeft className="w-5 h-5 text-[var(--color-text-muted)]" />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-[var(--color-text)]">{item.name}</h1>
-            <p className="text-sm text-[var(--color-text-muted)]">
-              {item.category} · {item.scoreType}
-            </p>
+            <h1 className="font-display text-2xl text-[var(--color-text)]">{item.name}</h1>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span
+                className="text-[10px] font-display tracking-widest px-2 py-0.5 rounded-sm"
+                style={{
+                  background: item.category === 'Benchmark' ? 'rgba(245,158,11,0.15)' :
+                              item.category === 'Lift' ? 'rgba(59,130,246,0.15)' :
+                              item.category === 'Monostructural' ? 'rgba(34,197,94,0.15)' :
+                              item.category === 'Skill' ? 'rgba(168,85,247,0.15)' : 'rgba(236,72,153,0.15)',
+                  color: item.category === 'Benchmark' ? '#F59E0B' :
+                         item.category === 'Lift' ? '#3B82F6' :
+                         item.category === 'Monostructural' ? '#22C55E' :
+                         item.category === 'Skill' ? '#A855F7' : '#EC4899',
+                }}
+              >
+                {item.category.toUpperCase()}
+              </span>
+              <span className="text-xs text-[var(--color-text-muted)]">{item.scoreType}</span>
+            </div>
           </div>
         </div>
         <button
           onClick={handleFavoriteClick}
-          className={`p-2 rounded-lg transition-colors ${
-            item.isFavorite
-              ? 'text-amber-400'
-              : 'text-[var(--color-text-muted)] hover:text-amber-400'
+          className={`p-2 transition-colors ${
+            item.isFavorite ? 'text-[var(--color-warning)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-warning)]'
           }`}
           aria-label={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
         >
@@ -509,7 +522,7 @@ export const ItemDetail = () => {
         // If structured movements array exists, use it directly
         if (item.movements && item.movements.length > 0) {
           return (
-            <div className="px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl">
+            <div className="px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg">
               {item.description && (
                 <div className="flex items-center gap-2 mb-2">
                   <Dumbbell className="w-4 h-4 text-[var(--color-text-muted)] shrink-0" />
@@ -539,7 +552,7 @@ export const ItemDetail = () => {
             const movements = movementsPart.split(/,\s*(?![^()]*\))/).map(m => m.trim()).filter(Boolean);
             
             return (
-              <div className="px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl">
+              <div className="px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <Dumbbell className="w-4 h-4 text-[var(--color-text-muted)] shrink-0" />
                   <span className="text-sm font-semibold text-[var(--color-text)]">{format}</span>
@@ -558,7 +571,7 @@ export const ItemDetail = () => {
           
           // Simple description without format prefix
           return (
-            <div className="flex items-start gap-3 px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl">
+            <div className="flex items-start gap-3 px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg">
               <Dumbbell className="w-4 h-4 text-[var(--color-text-muted)] mt-0.5 shrink-0" />
               <p className="text-sm text-[var(--color-text-muted)]">{item.description}</p>
             </div>
@@ -569,7 +582,7 @@ export const ItemDetail = () => {
       })()}
 
       {/* Best PR Card */}
-      <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4">
+      <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-4">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             {isLowerBetter ? (
@@ -577,9 +590,7 @@ export const ItemDetail = () => {
             ) : (
               <TrendingUp className="w-4 h-4 text-green-400" />
             )}
-            <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
-              Best
-            </h2>
+            <h2 className="font-display text-sm tracking-widest text-[var(--color-text-muted)]">BEST</h2>
           </div>
           {!activeGoal && bestLog && (
             <button
@@ -611,7 +622,7 @@ export const ItemDetail = () => {
                         {formatDistance(distanceMeters)}
                       </span>
                       <div className="text-right">
-                        <span className="text-xl font-bold text-[var(--color-primary)]">
+                        <span className="font-display text-2xl text-[var(--color-primary)]">
                           {pr.result.includes(' in ') ? pr.result.split(' in ')[1] : pr.result}
                         </span>
                         <p className="text-xs text-[var(--color-text-muted)]">
@@ -640,7 +651,7 @@ export const ItemDetail = () => {
                         {timeStr}
                       </span>
                       <div className="text-right">
-                        <span className="text-xl font-bold text-[var(--color-primary)]">
+                        <span className="font-display text-2xl text-[var(--color-primary)]">
                           {pr.calories} cal
                         </span>
                         <p className="text-xs text-[var(--color-text-muted)]">
@@ -665,7 +676,7 @@ export const ItemDetail = () => {
                     {formatDistance(distanceMeters)}
                   </span>
                   <div className="text-right">
-                    <span className="text-xl font-bold text-[var(--color-primary)]">
+                    <span className="font-display text-2xl text-[var(--color-primary)]">
                       {pr.result.includes(' in ') ? pr.result.split(' in ')[1] : pr.result}
                     </span>
                     <p className="text-xs text-[var(--color-text-muted)]">
@@ -745,12 +756,12 @@ export const ItemDetail = () => {
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center h-32 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl">
+          <div className="flex items-center justify-center h-32 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg">
             <Loader2 className="w-5 h-5 text-[var(--color-text-muted)] animate-spin" />
           </div>
         ) : useGroupedHistory ? (
           /* Grouped accordion view for all items */
-          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden">
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
             {groupedLogs.map((group, groupIndex) => {
               const groupKey = `${group.type}-${group.key}`;
               const isExpanded = expandedGroups.has(groupKey);
@@ -871,7 +882,7 @@ export const ItemDetail = () => {
           </div>
         ) : logs.length > 0 ? (
           /* Flat list view for non-monostructural items */
-          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden">
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
             {logs.map((log, index) => {
               const isPR = log.id === bestLog?.id;
               
@@ -917,7 +928,7 @@ export const ItemDetail = () => {
             })}
           </div>
         ) : (
-          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-6 text-center">
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-6 text-center">
             <p className="text-[var(--color-text-muted)]">
               No results logged yet. Add your first one!
             </p>

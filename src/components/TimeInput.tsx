@@ -134,8 +134,8 @@ export const TimeInput = ({
   };
 
   const inputBaseClass = `
-    w-14 px-2 py-2 text-center text-lg font-mono
-    bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg
+    w-14 px-2 py-2 text-center text-lg font-display
+    bg-[var(--color-bg)] border border-[var(--color-border-strong)] rounded-sm
     text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]
     focus:outline-none focus:border-[var(--color-primary)]
     transition-colors
@@ -198,10 +198,10 @@ export const TimeInput = ({
           type="button"
           onClick={toggleHours}
           className={`
-            ml-2 px-3 py-2 text-sm font-medium rounded-lg border transition-colors
-            ${showHours 
-              ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white' 
-              : 'bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-text-muted)]'
+            ml-2 px-3 py-2 font-display text-sm tracking-wider rounded-sm border transition-colors
+            ${showHours
+              ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white'
+              : 'bg-[var(--color-bg)] border-[var(--color-border-strong)] text-[var(--color-text-muted)] hover:border-[var(--color-text-muted)]'
             }
           `}
           title={showHours ? 'Hide hours' : 'Add hours (for long workouts)'}

@@ -57,11 +57,11 @@ const SleepSelector = ({ value, onChange, disabled = false }: SleepSelectorProps
             onKeyDown={(e) => handleKeyDown(e, hours)}
             className={`
               flex items-center justify-center
-              px-3 py-2.5 rounded-lg text-sm font-medium
+              px-3 py-2.5 rounded-sm font-display text-sm tracking-wider
               transition-all duration-150 ease-out
               ${isSelected
-                ? 'bg-[var(--color-primary)] text-white shadow-sm'
-                : 'bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)]'
+                ? 'bg-[var(--color-primary)] text-white'
+                : 'bg-[var(--color-surface)] border border-[var(--color-border-strong)] text-[var(--color-text)]'
               }
               ${disabled
                 ? 'opacity-50 cursor-not-allowed'
@@ -201,7 +201,7 @@ export const QuickCheckIn = () => {
   const dateSelector = (
     <div className="mb-4">
       {/* Quick date tabs */}
-      <div className="flex gap-2 p-1 bg-[var(--color-bg)] rounded-xl" role="tablist" aria-label="Select date">
+      <div className="flex gap-1 p-1 bg-[var(--color-bg)]" role="tablist" aria-label="Select date">
         <button
           type="button"
           role="tab"
@@ -209,15 +209,15 @@ export const QuickCheckIn = () => {
           onClick={handleTodayClick}
           disabled={isLoading}
           className={`
-            flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-150
+            flex-1 py-2 px-4 rounded-sm font-display text-sm tracking-widest transition-all duration-150
             ${isTodayActive
-              ? 'bg-[var(--color-primary)] text-white shadow-sm'
-              : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)]'
+              ? 'bg-[var(--color-primary)] text-white'
+              : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-elevated)]'
             }
             disabled:opacity-50
           `}
         >
-          Today
+          TODAY
         </button>
         <button
           type="button"
@@ -226,16 +226,16 @@ export const QuickCheckIn = () => {
           onClick={handleOtherClick}
           disabled={isLoading}
           className={`
-            flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-150 flex items-center justify-center gap-1.5
+            flex-1 py-2 px-4 rounded-sm font-display text-sm tracking-widest transition-all duration-150 flex items-center justify-center gap-1.5
             ${isPickDateActive
-              ? 'bg-[var(--color-primary)] text-white shadow-sm'
-              : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)]'
+              ? 'bg-[var(--color-primary)] text-white'
+              : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-elevated)]'
             }
             disabled:opacity-50
           `}
         >
           <Calendar className="w-3.5 h-3.5" />
-          {isOtherDate ? formatOtherDate(selectedDate) : 'Pick Date'}
+          {isOtherDate ? formatOtherDate(selectedDate) : 'PICK DATE'}
         </button>
       </div>
 
@@ -258,11 +258,11 @@ export const QuickCheckIn = () => {
     return (
       <section aria-label="Quick check-in">
         <div className="flex items-center gap-2 mb-3">
-          <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
-            Quick Check-in
+          <h2 className="font-display text-sm tracking-widest text-[var(--color-text-muted)]">
+            QUICK CHECK-IN
           </h2>
         </div>
-        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4">
+        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-4">
           {dateSelector}
           <div className="flex items-center justify-center py-8">
             <Loader2 className="w-6 h-6 animate-spin text-[var(--color-text-muted)]" />
@@ -289,11 +289,11 @@ export const QuickCheckIn = () => {
           </div>
           <button
             onClick={handleEdit}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm font-display text-xs tracking-widest text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 transition-colors"
             aria-label="Edit check-in"
           >
             <Edit2 className="w-3 h-3" />
-            Edit
+            EDIT
           </button>
         </div>
 
@@ -308,22 +308,22 @@ export const QuickCheckIn = () => {
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
                 <div className="text-2xl mb-1">{ENERGY_EMOJIS[selectedCheckIn.energy!]}</div>
-                <div className="text-xs text-[var(--color-text-muted)]">Energy</div>
-                <div className="text-sm font-medium text-[var(--color-text)]">
-                  {ENERGY_LABELS[selectedCheckIn.energy!]}
+                <div className="font-display text-[10px] tracking-widest text-[var(--color-text-muted)]">ENERGY</div>
+                <div className="font-display text-sm text-[var(--color-text)]">
+                  {ENERGY_LABELS[selectedCheckIn.energy!].toUpperCase()}
                 </div>
               </div>
               <div>
                 <div className="text-2xl mb-1">{SORENESS_EMOJIS[selectedCheckIn.soreness!]}</div>
-                <div className="text-xs text-[var(--color-text-muted)]">Soreness</div>
-                <div className="text-sm font-medium text-[var(--color-text)]">
-                  {SORENESS_LABELS[selectedCheckIn.soreness!]}
+                <div className="font-display text-[10px] tracking-widest text-[var(--color-text-muted)]">SORENESS</div>
+                <div className="font-display text-sm text-[var(--color-text)]">
+                  {SORENESS_LABELS[selectedCheckIn.soreness!].toUpperCase()}
                 </div>
               </div>
               <div>
                 <div className="text-2xl mb-1">😴</div>
-                <div className="text-xs text-[var(--color-text-muted)]">Sleep</div>
-                <div className="text-sm font-medium text-[var(--color-text)]">
+                <div className="font-display text-[10px] tracking-widest text-[var(--color-text-muted)]">SLEEP</div>
+                <div className="font-display text-sm text-[var(--color-text)]">
                   {SLEEP_LABELS[selectedCheckIn.sleepHours!]}
                 </div>
               </div>
@@ -356,47 +356,47 @@ export const QuickCheckIn = () => {
     return (
       <section aria-label="Quick check-in">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
-            Quick Check-in
+          <h2 className="font-display text-sm tracking-widest text-[var(--color-text-muted)]">
+            QUICK CHECK-IN
           </h2>
           {isEditing && (
             <button
               onClick={handleCancel}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-elevated)] transition-colors"
+              className="px-3 py-1.5 rounded-sm font-display text-xs tracking-widest text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-elevated)] transition-colors"
             >
               Cancel
             </button>
           )}
         </div>
 
-        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4">
+        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-4">
           {dateSelector}
-          <p className="text-center text-[var(--color-text)] mb-4">
+          <p className="text-center text-sm text-[var(--color-text-muted)] mb-4">
             {promptText}
           </p>
 
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             <button
               onClick={handleTrainingClick}
               className={`
-                flex-1 py-3 px-4 font-medium rounded-lg transition-colors
+                flex-1 py-3 px-4 font-display text-sm tracking-widest rounded-sm transition-all active:scale-[0.97]
                 ${isTrainingSelected
                   ? 'bg-[var(--color-primary)] text-white ring-2 ring-[var(--color-primary)] ring-offset-2 ring-offset-[var(--color-surface)]'
-                  : 'bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white'
+                  : 'bg-[var(--color-primary)] hover:opacity-90 text-white'
                 }
               `}
               aria-label="Log training day"
             >
-              🏋️ Training
+              🏋️ TRAINING
             </button>
             <button
               onClick={handleRestDayClick}
               disabled={isSaving}
               className={`
-                flex-1 py-3 px-4 font-medium rounded-lg transition-colors disabled:opacity-50
+                flex-1 py-3 px-4 font-display text-sm tracking-widest rounded-sm transition-all active:scale-[0.97] disabled:opacity-50
                 ${isRestSelected
                   ? 'bg-[var(--color-surface-elevated)] border-2 border-[var(--color-primary)] text-[var(--color-text)]'
-                  : 'bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border)] border border-[var(--color-border)] text-[var(--color-text)]'
+                  : 'bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border)] border border-[var(--color-border-strong)] text-[var(--color-text)]'
                 }
               `}
               aria-label="Log rest day"
@@ -404,7 +404,7 @@ export const QuickCheckIn = () => {
               {isSaving ? (
                 <Loader2 className="w-5 h-5 animate-spin mx-auto" />
               ) : (
-                <>🌙 Rest Day</>
+                <>🌙 REST DAY</>
               )}
             </button>
           </div>
@@ -432,13 +432,13 @@ export const QuickCheckIn = () => {
         </button>
       </div>
 
-      <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4 space-y-4">
+      <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-4 space-y-4">
         {dateSelector}
-        
+
         {/* Energy */}
         <div>
-          <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
-            Energy Level
+          <label className="block font-display text-xs tracking-widest text-[var(--color-text-muted)] mb-2">
+            ENERGY LEVEL
           </label>
           <EmojiSelector
             value={energy}
@@ -452,8 +452,8 @@ export const QuickCheckIn = () => {
 
         {/* Soreness */}
         <div>
-          <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
-            Muscle Soreness
+          <label className="block font-display text-xs tracking-widest text-[var(--color-text-muted)] mb-2">
+            MUSCLE SORENESS
           </label>
           <EmojiSelector
             value={soreness}
@@ -467,8 +467,8 @@ export const QuickCheckIn = () => {
 
         {/* Sleep */}
         <div>
-          <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
-            Sleep Last Night
+          <label className="block font-display text-xs tracking-widest text-[var(--color-text-muted)] mb-2">
+            SLEEP LAST NIGHT
           </label>
           <SleepSelector
             value={sleepHours}
@@ -481,18 +481,18 @@ export const QuickCheckIn = () => {
         <button
           onClick={handleSave}
           disabled={!isFormValid || isSaving}
-          className="w-full py-3 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] disabled:bg-[var(--color-surface-elevated)] disabled:text-[var(--color-text-muted)] text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+          className="w-full py-4 bg-[var(--color-primary)] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed text-white font-display tracking-widest text-base rounded-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2"
           aria-label="Save check-in"
         >
           {isSaving ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              Saving...
+              SAVING...
             </>
           ) : (
             <>
               <Check className="w-5 h-5" />
-              Save Check-in
+              SAVE CHECK-IN
             </>
           )}
         </button>

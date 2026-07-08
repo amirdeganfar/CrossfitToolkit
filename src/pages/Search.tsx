@@ -73,20 +73,13 @@ export const Search = () => {
 
   const getCategoryBgColor = (category: Category | 'All', isSelected: boolean) => {
     if (!isSelected) return 'bg-[var(--color-surface)] text-[var(--color-text-muted)]';
-    
     switch (category) {
-      case 'All':
-        return 'bg-[var(--color-primary)] text-white';
-      case 'Benchmark':
-        return 'bg-amber-500/20 text-amber-400 border-amber-500/50';
-      case 'Lift':
-        return 'bg-blue-500/20 text-blue-400 border-blue-500/50';
-      case 'Monostructural':
-        return 'bg-green-500/20 text-green-400 border-green-500/50';
-      case 'Skill':
-        return 'bg-purple-500/20 text-purple-400 border-purple-500/50';
-      default:
-        return 'bg-[var(--color-primary)] text-white';
+      case 'All':         return 'bg-[var(--color-primary)] text-white';
+      case 'Benchmark':  return 'bg-amber-500/15 text-amber-400';
+      case 'Lift':       return 'bg-blue-500/15 text-blue-400';
+      case 'Monostructural': return 'bg-green-500/15 text-green-400';
+      case 'Skill':      return 'bg-purple-500/15 text-purple-400';
+      default:           return 'bg-[var(--color-primary)] text-white';
     }
   };
 
@@ -108,44 +101,44 @@ export const Search = () => {
           placeholder="Search benchmarks, lifts, skills..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl pl-10 pr-4 py-3 text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+          className="w-full bg-[var(--color-surface)] border border-[var(--color-border-strong)] pl-10 pr-4 py-3 text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors rounded-sm"
           aria-label="Search catalog"
           autoFocus
         />
       </div>
 
-      {/* Category filters */}
-      <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+      {/* Category filters — sharp chips */}
+      <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide">
         {CATEGORIES.map((category) => (
           <button
             key={category}
             onClick={() => setSelectedCategory(category)}
-            className={`px-4 py-2.5 rounded-full text-sm font-medium border whitespace-nowrap transition-colors active:scale-95 ${getCategoryBgColor(
+            className={`px-3 py-1.5 font-display text-xs tracking-widest whitespace-nowrap transition-colors active:scale-95 border ${getCategoryBgColor(
               category,
               selectedCategory === category
-            )} ${selectedCategory === category ? 'border-current' : 'border-[var(--color-border)]'}`}
+            )} ${selectedCategory === category ? 'border-current' : 'border-[var(--color-border-strong)]'}`}
             aria-label={`Filter by ${category}`}
             aria-pressed={selectedCategory === category}
           >
-            {category}
+            {category.toUpperCase()}
           </button>
         ))}
       </div>
 
       {/* Results count */}
-      <div className="text-sm text-[var(--color-text-muted)]">
+      <div className="text-xs text-[var(--color-text-muted)] tracking-widest uppercase">
         {filteredItems.length} {filteredItems.length === 1 ? 'item' : 'items'}
-        {selectedCategory !== 'All' && ` in ${selectedCategory}`}
-        {searchQuery && ` matching "${searchQuery}"`}
+        {selectedCategory !== 'All' && ` · ${selectedCategory}`}
+        {searchQuery && ` · "${searchQuery}"`}
       </div>
 
       {/* Catalog list */}
       {filteredItems.length > 0 ? (
-        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden">
+        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
           {filteredItems.map((item, index) => (
             <div
               key={item.id}
-              className={`w-full flex items-center justify-between px-4 py-3.5 hover:bg-[var(--color-surface-elevated)] transition-colors group ${
+              className={`cat-bar cat-bar-${item.category} w-full flex items-center justify-between pl-5 pr-4 py-3.5 hover:bg-[var(--color-surface-elevated)] transition-colors group ${
                 index !== filteredItems.length - 1 ? 'border-b border-[var(--color-border)]' : ''
               }`}
             >
@@ -153,44 +146,38 @@ export const Search = () => {
                 {/* Favorite star */}
                 <button
                   onClick={(e) => handleFavoriteClick(e, item.id)}
-                  className={`p-2 -m-2 rounded-lg transition-colors ${
+                  className={`p-1.5 -m-1.5 transition-colors ${
                     item.isFavorite
-                      ? 'text-amber-400'
-                      : 'text-[var(--color-border)] hover:text-amber-400'
+                      ? 'text-[var(--color-warning)]'
+                      : 'text-[var(--color-border-strong)] hover:text-[var(--color-warning)]'
                   }`}
                   aria-label={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
                 >
                   <Star className={`w-4 h-4 ${item.isFavorite ? 'fill-current' : ''}`} />
                 </button>
 
-                {/* Item info - clickable area */}
+                {/* Item info */}
                 <button
                   onClick={() => handleItemClick(item.id)}
                   className="flex-1 min-w-0 text-left"
                   aria-label={`View ${item.name}`}
                 >
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-[var(--color-text)] truncate">
-                      {item.name}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
+                  <div className="font-medium text-[var(--color-text)] truncate">{item.name}</div>
+                  <div className="flex items-center gap-1.5 text-xs mt-0.5">
                     <span className={getCategoryColor(item.category)}>{item.category}</span>
-                    <span className="text-[var(--color-text-muted)]">·</span>
+                    <span className="text-[var(--color-text-dim)]">·</span>
                     <span className="text-[var(--color-text-muted)]">{item.scoreType}</span>
                   </div>
                 </button>
               </div>
-
-              {/* Chevron — always visible on mobile (no hover), fades in on desktop */}
-              <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)] flex-shrink-0 ml-2 opacity-40 group-hover:opacity-100 transition-opacity" />
+              <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)] flex-shrink-0 ml-2 opacity-30 group-hover:opacity-80 transition-opacity" />
             </div>
           ))}
         </div>
       ) : (
-        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-10 text-center">
-          <Dumbbell className="w-10 h-10 mx-auto mb-3 text-[var(--color-border)]" />
-          <p className="font-medium text-[var(--color-text)] mb-1">No items found</p>
+        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-10 text-center">
+          <Dumbbell className="w-10 h-10 mx-auto mb-3 text-[var(--color-border-strong)]" />
+          <p className="font-display text-lg text-[var(--color-text)] mb-1">NO RESULTS</p>
           <p className="text-sm text-[var(--color-text-muted)]">
             {searchQuery
               ? `No results for "${searchQuery}"${selectedCategory !== 'All' ? ` in ${selectedCategory}` : ''}`

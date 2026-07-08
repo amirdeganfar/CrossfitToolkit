@@ -74,9 +74,10 @@ export const GoalCard = ({
 
   return (
     <div
-      className={`bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden transition-colors ${
-        onClick ? 'cursor-pointer hover:border-[var(--color-text-muted)]' : ''
-      } ${isAchieved ? 'opacity-80' : ''}`}
+      className={`cat-bar bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden transition-colors pl-0 ${
+        onClick ? 'cursor-pointer hover:border-[var(--color-border-strong)]' : ''
+      } ${isAchieved ? 'opacity-70' : ''}`}
+      style={{ borderLeft: isAchieved ? '3px solid var(--color-success)' : '3px solid var(--color-primary)' }}
     >
       {/* Main content - always visible */}
       <div
@@ -86,14 +87,14 @@ export const GoalCard = ({
         tabIndex={onClick ? 0 : undefined}
       >
         {/* Header row */}
-        <div className="flex items-start justify-between gap-2 mb-2">
+        <div className="flex items-start justify-between gap-2 mb-3">
           <div className="flex items-center gap-2 min-w-0">
             {isAchieved ? (
-              <Trophy size={18} className="text-yellow-500 flex-shrink-0" />
+              <Trophy size={16} className="text-[var(--color-warning)] flex-shrink-0" />
             ) : (
-              <Target size={18} className="text-[var(--color-primary)] flex-shrink-0" />
+              <Target size={16} className="text-[var(--color-primary)] flex-shrink-0" />
             )}
-            <h3 className="font-semibold text-[var(--color-text)] truncate">
+            <h3 className="font-display text-lg text-[var(--color-text)] truncate">
               {goal.itemName}
             </h3>
           </div>
@@ -117,7 +118,7 @@ export const GoalCard = ({
                     className="fixed inset-0 z-40"
                     onClick={() => setShowMenu(false)}
                   />
-                  <div className="absolute right-0 z-50 mt-1 w-40 bg-[var(--color-surface-elevated)] border border-[var(--color-border)] rounded-xl shadow-xl overflow-hidden">
+                  <div className="absolute right-0 z-50 mt-1 w-40 bg-[var(--color-surface-elevated)] border border-[var(--color-border-strong)] rounded-lg shadow-xl overflow-hidden">
                     {onEdit && (
                       <button
                         onClick={() => handleAction(() => onEdit(goal))}
@@ -159,22 +160,23 @@ export const GoalCard = ({
 
         {/* Progress display */}
         <div className="mb-3">
-          <div className="flex items-baseline gap-2 mb-1.5">
-            <span className="text-[var(--color-text-muted)]">
-              {goal.currentResult || '—'}
-            </span>
-            <span className="text-[var(--color-text-muted)]">→</span>
-            <span className="text-[var(--color-text)] font-medium">
-              {goal.targetResult}
+          <div className="flex items-baseline justify-between mb-2">
+            <div className="flex items-baseline gap-2">
+              <span className="text-sm text-[var(--color-text-muted)]">{goal.currentResult || '—'}</span>
+              <span className="text-[var(--color-text-dim)]">→</span>
+              <span className="font-display text-base text-[var(--color-text)]">{goal.targetResult}</span>
+            </div>
+            <span className={`font-display text-2xl ${goal.progress >= 100 ? 'text-[var(--color-success)]' : goal.progress >= 75 ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-muted)]'}`}>
+              {Math.round(goal.progress)}%
             </span>
           </div>
-          <GoalProgress progress={goal.progress} size="md" />
+          <GoalProgress progress={goal.progress} size="md" showLabel={false} />
         </div>
 
         {/* Bottom row: days remaining + trend */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-sm text-[var(--color-text-muted)]">
-            <Calendar size={14} />
+          <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] uppercase tracking-wide">
+            <Calendar size={12} />
             <span>{isAchieved && goal.achievedAt ? `Achieved ${goal.achievedAt}` : formatDaysRemaining()}</span>
           </div>
           {!isAchieved && (
@@ -202,7 +204,7 @@ export const GoalCard = ({
       {/* Expanded details */}
       <div className={`accordion-content ${isExpanded ? 'expanded' : ''}`}>
         <div>
-          <div className="px-4 pb-4 pt-0 border-t border-[var(--color-border)]">
+          <div className="px-4 pb-4 pt-0 border-t border-[var(--color-border)] bg-[var(--color-bg)]">
             {/* Projected date */}
             {goal.projectedDate && (
               <div className="pt-3 mb-3">
@@ -274,17 +276,17 @@ export const GoalCard = ({
                 {onAchieve && goal.progress >= 100 && (
                   <button
                     onClick={() => onAchieve(goal)}
-                    className="flex-1 py-2.5 px-3 bg-green-600 hover:bg-green-700 active:scale-[0.98] text-white rounded-xl text-sm font-medium transition-all"
+                    className="flex-1 py-2.5 px-3 bg-[var(--color-success)] hover:opacity-90 active:scale-[0.98] text-white rounded-sm font-display text-sm tracking-widest transition-all"
                   >
-                    Mark Achieved
+                    ACHIEVED
                   </button>
                 )}
                 {onEdit && (
                   <button
                     onClick={() => onEdit(goal)}
-                    className="flex-1 py-2.5 px-3 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border)] active:scale-[0.98] text-[var(--color-text)] rounded-xl text-sm font-medium transition-all"
+                    className="flex-1 py-2.5 px-3 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border-strong)] active:scale-[0.98] text-[var(--color-text)] rounded-sm font-display text-sm tracking-widest transition-all border border-[var(--color-border-strong)]"
                   >
-                    Edit Goal
+                    EDIT
                   </button>
                 )}
               </div>

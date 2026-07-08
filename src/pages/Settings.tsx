@@ -134,45 +134,43 @@ export const Settings = () => {
       <div className="flex items-center gap-3">
         <button
           onClick={handleBack}
-          className="p-2.5 -ml-1 rounded-xl hover:bg-[var(--color-surface-elevated)] transition-colors"
+          className="p-2 -ml-1 hover:bg-[var(--color-surface-elevated)] transition-colors rounded-sm"
           aria-label="Go back"
         >
           <ArrowLeft className="w-5 h-5 text-[var(--color-text-muted)]" />
         </button>
-        <h1 className="text-xl font-bold text-[var(--color-text)]">Settings</h1>
+        <h1 className="font-display text-2xl text-[var(--color-text)]">SETTINGS</h1>
       </div>
 
       {/* Units section */}
-      <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden">
+      <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
         <div className="px-4 py-3 border-b border-[var(--color-border)]">
-          <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
-            Units
-          </h2>
+          <h2 className="font-display text-xs tracking-widest text-[var(--color-text-muted)]">UNITS</h2>
         </div>
 
         {/* Weight unit */}
         <div className="px-4 py-3 flex items-center justify-between border-b border-[var(--color-border)]">
           <span className="text-[var(--color-text)]">Weight</span>
-          <div className="flex rounded-lg border border-[var(--color-border)] overflow-hidden">
+          <div className="flex border border-[var(--color-border-strong)] overflow-hidden rounded-sm">
             <button
               onClick={() => handleWeightUnitChange('kg')}
-              className={`px-4 py-2.5 text-sm font-medium transition-colors ${
+              className={`px-4 py-2 font-display text-sm tracking-wider transition-colors ${
                 settings.weightUnit === 'kg'
                   ? 'bg-[var(--color-primary)] text-white'
                   : 'bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-elevated)]'
               }`}
             >
-              kg
+              KG
             </button>
             <button
               onClick={() => handleWeightUnitChange('lb')}
-              className={`px-4 py-2.5 text-sm font-medium transition-colors ${
+              className={`px-4 py-2 font-display text-sm tracking-wider transition-colors ${
                 settings.weightUnit === 'lb'
                   ? 'bg-[var(--color-primary)] text-white'
                   : 'bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-elevated)]'
               }`}
             >
-              lb
+              LB
             </button>
           </div>
         </div>
@@ -180,38 +178,36 @@ export const Settings = () => {
         {/* Distance unit */}
         <div className="px-4 py-3 flex items-center justify-between">
           <span className="text-[var(--color-text)]">Distance</span>
-          <div className="flex rounded-lg border border-[var(--color-border)] overflow-hidden">
+          <div className="flex border border-[var(--color-border-strong)] overflow-hidden rounded-sm">
             <button
               onClick={() => handleDistanceUnitChange('m')}
-              className={`px-4 py-2.5 text-sm font-medium transition-colors ${
+              className={`px-4 py-2 font-display text-sm tracking-wider transition-colors ${
                 settings.distanceUnit === 'm'
                   ? 'bg-[var(--color-primary)] text-white'
                   : 'bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-elevated)]'
               }`}
             >
-              m
+              M
             </button>
             <button
               onClick={() => handleDistanceUnitChange('ft')}
-              className={`px-4 py-2.5 text-sm font-medium transition-colors ${
+              className={`px-4 py-2 font-display text-sm tracking-wider transition-colors ${
                 settings.distanceUnit === 'ft'
                   ? 'bg-[var(--color-primary)] text-white'
                   : 'bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-elevated)]'
               }`}
             >
-              ft
+              FT
             </button>
           </div>
         </div>
       </section>
 
       {/* Timer section */}
-      <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden">
+      <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
         <div className="px-4 py-3 border-b border-[var(--color-border)] flex items-center gap-2">
           <Timer className="w-4 h-4 text-[var(--color-text-muted)]" />
-          <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
-            Timer
-          </h2>
+          <h2 className="font-display text-xs tracking-widest text-[var(--color-text-muted)]">TIMER</h2>
         </div>
 
         {/* Countdown duration */}
@@ -224,17 +220,17 @@ export const Settings = () => {
             <button
               onClick={() => handleCountdownChange(-1)}
               disabled={countdownSeconds <= 3}
-              className="w-11 h-11 flex items-center justify-center bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border)] rounded-xl text-[var(--color-text-muted)] hover:text-[var(--color-text)] disabled:opacity-50 disabled:cursor-not-allowed active:scale-90 transition-all"
+              className="w-10 h-10 flex items-center justify-center bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border-strong)] rounded-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] disabled:opacity-40 disabled:cursor-not-allowed active:scale-90 transition-all border border-[var(--color-border-strong)]"
             >
               <Minus className="w-4 h-4" />
             </button>
-            <span className="font-mono text-lg font-semibold text-[var(--color-text)] min-w-[40px] text-center">
+            <span className="font-display text-xl text-[var(--color-text)] min-w-[48px] text-center">
               {countdownSeconds}s
             </span>
             <button
               onClick={() => handleCountdownChange(1)}
               disabled={countdownSeconds >= 30}
-              className="w-11 h-11 flex items-center justify-center bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border)] rounded-xl text-[var(--color-text-muted)] hover:text-[var(--color-text)] disabled:opacity-50 disabled:cursor-not-allowed active:scale-90 transition-all"
+              className="w-10 h-10 flex items-center justify-center bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border-strong)] rounded-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] disabled:opacity-40 disabled:cursor-not-allowed active:scale-90 transition-all border border-[var(--color-border-strong)]"
             >
               <Plus className="w-4 h-4" />
             </button>
@@ -263,12 +259,10 @@ export const Settings = () => {
       </section>
 
       {/* Recovery section */}
-      <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden">
+      <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
         <div className="px-4 py-3 border-b border-[var(--color-border)] flex items-center gap-2">
           <Moon className="w-4 h-4 text-[var(--color-text-muted)]" />
-          <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
-            Recovery
-          </h2>
+          <h2 className="font-display text-xs tracking-widest text-[var(--color-text-muted)]">RECOVERY</h2>
         </div>
 
         {/* Minimum sleep hours */}
@@ -281,17 +275,17 @@ export const Settings = () => {
             <button
               onClick={() => handleMinSleepChange(-1)}
               disabled={(settings.minSleepHours ?? 7) <= 5}
-              className="w-11 h-11 flex items-center justify-center bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border)] rounded-xl text-[var(--color-text-muted)] hover:text-[var(--color-text)] disabled:opacity-50 disabled:cursor-not-allowed active:scale-90 transition-all"
+              className="w-10 h-10 flex items-center justify-center bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border-strong)] rounded-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] disabled:opacity-40 disabled:cursor-not-allowed active:scale-90 transition-all border border-[var(--color-border-strong)]"
             >
               <Minus className="w-4 h-4" />
             </button>
-            <span className="font-mono text-lg font-semibold text-[var(--color-text)] min-w-[40px] text-center">
+            <span className="font-display text-xl text-[var(--color-text)] min-w-[48px] text-center">
               {settings.minSleepHours ?? 7}h
             </span>
             <button
               onClick={() => handleMinSleepChange(1)}
               disabled={(settings.minSleepHours ?? 7) >= 9}
-              className="w-11 h-11 flex items-center justify-center bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border)] rounded-xl text-[var(--color-text-muted)] hover:text-[var(--color-text)] disabled:opacity-50 disabled:cursor-not-allowed active:scale-90 transition-all"
+              className="w-10 h-10 flex items-center justify-center bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border-strong)] rounded-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] disabled:opacity-40 disabled:cursor-not-allowed active:scale-90 transition-all border border-[var(--color-border-strong)]"
             >
               <Plus className="w-4 h-4" />
             </button>
@@ -300,11 +294,9 @@ export const Settings = () => {
       </section>
 
       {/* Data section */}
-      <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden">
+      <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
         <div className="px-4 py-3 border-b border-[var(--color-border)]">
-          <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
-            Data
-          </h2>
+          <h2 className="font-display text-xs tracking-widest text-[var(--color-text-muted)]">DATA</h2>
         </div>
 
         {/* Export */}
@@ -371,20 +363,18 @@ export const Settings = () => {
       </section>
 
       {/* Danger zone */}
-      <section className="bg-[var(--color-surface)] border border-red-500/30 rounded-xl overflow-hidden">
-        <div className="px-4 py-3 border-b border-red-500/30 bg-red-500/10">
-          <h2 className="text-sm font-semibold text-red-400 uppercase tracking-wide">
-            Danger Zone
-          </h2>
+      <section className="bg-[var(--color-surface)] border border-[var(--color-danger)]/30 rounded-lg overflow-hidden">
+        <div className="px-4 py-3 border-b border-[var(--color-danger)]/30 bg-[var(--color-danger)]/8">
+          <h2 className="font-display text-xs tracking-widest text-[var(--color-danger)]">DANGER ZONE</h2>
         </div>
 
         <button
           onClick={handleClearData}
           className="w-full px-4 py-3 flex items-center gap-3 hover:bg-red-500/10 transition-colors text-left"
         >
-          <AlertCircle className="w-5 h-5 text-red-400" />
+          <AlertCircle className="w-5 h-5 text-[var(--color-danger)]" />
           <div>
-            <span className="text-red-400 font-medium">Clear All Data</span>
+            <span className="text-[var(--color-danger)] font-display tracking-wider text-sm">CLEAR ALL DATA</span>
             <p className="text-xs text-[var(--color-text-muted)]">
               Permanently delete all PRs, favorites, and settings
             </p>
@@ -393,11 +383,9 @@ export const Settings = () => {
       </section>
 
       {/* Help section */}
-      <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden">
+      <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
         <div className="px-4 py-3 border-b border-[var(--color-border)]">
-          <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
-            Help
-          </h2>
+          <h2 className="font-display text-xs tracking-widest text-[var(--color-text-muted)]">HELP</h2>
         </div>
 
         <button
@@ -418,11 +406,9 @@ export const Settings = () => {
       </section>
 
       {/* About section */}
-      <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden">
+      <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
         <div className="px-4 py-3 border-b border-[var(--color-border)]">
-          <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
-            About
-          </h2>
+          <h2 className="font-display text-xs tracking-widest text-[var(--color-text-muted)]">ABOUT</h2>
         </div>
 
         <div className="px-4 py-3 space-y-2">

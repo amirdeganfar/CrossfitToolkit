@@ -160,14 +160,21 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
         aria-hidden="true"
       />
 
-      {/* Modal */}
-      <div className="relative w-full max-w-lg bg-[var(--color-surface)] border-t sm:border border-[var(--color-border)] sm:rounded-xl overflow-hidden animate-slide-up">
+      {/* Sheet */}
+      <div className="relative w-full max-w-lg bg-[var(--color-surface)] border-t border-[var(--color-border-strong)] rounded-t-2xl sm:rounded-lg sm:border overflow-hidden animate-slide-up">
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-1 sm:hidden">
+          <div className="w-10 h-1 bg-[var(--color-border-strong)] rounded-full" />
+        </div>
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)]">
-          <h2 className="text-lg font-semibold text-[var(--color-text)]">Log Result</h2>
+          <div>
+            <h2 className="font-display text-xl text-[var(--color-text)]">LOG RESULT</h2>
+            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{item.name}</p>
+          </div>
           <button
             onClick={onClose}
-            className="p-2.5 -mr-1 rounded-xl hover:bg-[var(--color-surface-elevated)] active:scale-95 transition-all"
+            className="p-2 rounded-sm hover:bg-[var(--color-surface-elevated)] active:scale-95 transition-all"
             aria-label="Close modal"
           >
             <X className="w-5 h-5 text-[var(--color-text-muted)]" />
@@ -176,16 +183,6 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          {/* Item name (read-only) */}
-          <div>
-            <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-1">
-              Item
-            </label>
-            <div className="px-3 py-3 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)]">
-              {item.name}
-            </div>
-          </div>
-
           {/* Reps input for Load type */}
           {showReps && (
             <div>
@@ -198,7 +195,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
                 value={reps}
                 onChange={(e) => setReps(e.target.value)}
                 placeholder="1"
-                className="w-full px-3 py-3 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+                className="w-full px-3 py-3 bg-[var(--color-bg)] border border-[var(--color-border-strong)] rounded-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
               />
               <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                 Use 1 for 1RM (one-rep max)
@@ -212,28 +209,28 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
               <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-2">
                 Measure by
               </label>
-              <div className="flex rounded-xl border border-[var(--color-border)] overflow-hidden">
+              <div className="flex border border-[var(--color-border-strong)] overflow-hidden rounded-sm">
                 <button
                   type="button"
                   onClick={() => setMetricType('distance')}
-                  className={`flex-1 px-4 py-2.5 text-sm font-medium transition-colors ${
+                  className={`flex-1 px-4 py-2.5 font-display text-sm tracking-wider transition-colors ${
                     metricType === 'distance'
                       ? 'bg-[var(--color-primary)] text-white'
                       : 'bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-elevated)]'
                   }`}
                 >
-                  Distance
+                  DISTANCE
                 </button>
                 <button
                   type="button"
                   onClick={() => setMetricType('calories')}
-                  className={`flex-1 px-4 py-2.5 text-sm font-medium transition-colors ${
+                  className={`flex-1 px-4 py-2.5 font-display text-sm tracking-wider transition-colors ${
                     metricType === 'calories'
                       ? 'bg-[var(--color-primary)] text-white'
                       : 'bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-elevated)]'
                   }`}
                 >
-                  Calories
+                  CALORIES
                 </button>
               </div>
             </div>
@@ -253,21 +250,21 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
                   value={distance}
                   onChange={(e) => setDistance(e.target.value)}
                   placeholder="e.g., 400"
-                  className="flex-1 px-3 py-3 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+                  className="flex-1 px-3 py-3 bg-[var(--color-bg)] border border-[var(--color-border-strong)] rounded-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
                 />
-                <div className="flex rounded-xl border border-[var(--color-border)] overflow-hidden">
+                <div className="flex border border-[var(--color-border-strong)] overflow-hidden rounded-sm">
                   {(['m', 'km', 'mi'] as const).map((unit) => (
                     <button
                       key={unit}
                       type="button"
                       onClick={() => setDistanceUnit(unit)}
-                      className={`px-3 py-2.5 text-sm font-medium transition-colors ${
+                      className={`px-3 py-2.5 font-display text-sm tracking-wider transition-colors ${
                         distanceUnit === unit
                           ? 'bg-[var(--color-primary)] text-white'
                           : 'bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-elevated)]'
                       }`}
                     >
-                      {unit}
+                      {unit.toUpperCase()}
                     </button>
                   ))}
                 </div>
@@ -289,7 +286,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
                   value={calories}
                   onChange={(e) => setCalories(e.target.value)}
                   placeholder="e.g., 50"
-                  className="flex-1 px-3 py-3 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+                  className="flex-1 px-3 py-3 bg-[var(--color-bg)] border border-[var(--color-border-strong)] rounded-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
                 />
                 <div className="flex items-center px-3 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-muted)] text-sm font-medium">
                   cal
@@ -315,7 +312,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
                 value={result}
                 onChange={(e) => setResult(e.target.value)}
                 placeholder={getResultPlaceholder(item.scoreType)}
-                className="w-full px-3 py-3 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+                className="w-full px-3 py-3 bg-[var(--color-bg)] border border-[var(--color-border-strong)] rounded-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
                 autoFocus
                 required
               />
@@ -328,19 +325,19 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
               <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-2">
                 Variant
               </label>
-              <div className="flex gap-2">
+              <div className="flex gap-1.5">
                 {VARIANTS.map((v) => (
                   <button
                     key={v.value}
                     type="button"
                     onClick={() => setVariant(v.value)}
-                    className={`flex-1 px-4 py-2.5 rounded-xl border font-medium transition-colors active:scale-95 ${
+                    className={`flex-1 px-4 py-2.5 rounded-sm border font-display text-sm tracking-widest transition-colors active:scale-95 ${
                       variant === v.value
                         ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white'
-                        : 'bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-text-muted)]'
+                        : 'bg-[var(--color-bg)] border-[var(--color-border-strong)] text-[var(--color-text-muted)] hover:border-[var(--color-text-muted)]'
                     }`}
                   >
-                    {v.label}
+                    {v.label.toUpperCase()}
                   </button>
                 ))}
               </div>
@@ -369,7 +366,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
               onChange={(e) => setNotes(e.target.value)}
               placeholder="How did it feel? Any observations..."
               rows={2}
-              className="w-full px-3 py-3 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors resize-none"
+              className="w-full px-3 py-3 bg-[var(--color-bg)] border border-[var(--color-border-strong)] rounded-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors resize-none"
             />
           </div>
 
@@ -384,9 +381,9 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
           <button
             type="submit"
             disabled={isSubmitting || !result.trim()}
-            className="w-full py-3 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-white font-semibold transition-colors"
+            className="w-full py-4 bg-[var(--color-primary)] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed rounded-sm text-white font-display tracking-widest text-base transition-all active:scale-[0.98]"
           >
-            {isSubmitting ? 'Saving...' : 'Save'}
+            {isSubmitting ? 'SAVING...' : 'SAVE RESULT'}
           </button>
         </form>
       </div>

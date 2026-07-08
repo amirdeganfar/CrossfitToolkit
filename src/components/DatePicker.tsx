@@ -122,7 +122,7 @@ export const DatePicker = ({ value, onChange, minDate, maxDate }: DatePickerProp
         ref={triggerRef}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] hover:border-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+        className="w-full flex items-center justify-between px-3 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border-strong)] rounded-sm text-[var(--color-text)] hover:border-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
       >
         <span>{formatDisplayDate(value)}</span>
         <Calendar className="w-5 h-5 text-[var(--color-text-muted)]" />
@@ -139,7 +139,7 @@ export const DatePicker = ({ value, onChange, minDate, maxDate }: DatePickerProp
           
           {/* Calendar */}
           <div 
-            className="fixed z-[60] w-[280px] bg-[var(--color-surface-elevated)] border border-[var(--color-border)] rounded-xl shadow-xl overflow-hidden animate-fade-in"
+            className="fixed z-[60] w-[280px] bg-[var(--color-surface-elevated)] border border-[var(--color-border-strong)] rounded-lg shadow-xl overflow-hidden animate-fade-in"
             style={{ top: position.top, left: position.left }}
           >
             {/* Header */}
@@ -147,17 +147,17 @@ export const DatePicker = ({ value, onChange, minDate, maxDate }: DatePickerProp
               <button
                 type="button"
                 onClick={() => navigateMonth(-1)}
-                className="p-2 rounded-lg hover:bg-[var(--color-surface)] transition-colors"
+                className="p-2 rounded-sm hover:bg-[var(--color-surface)] transition-colors"
               >
                 <ChevronLeft className="w-5 h-5 text-[var(--color-text-muted)]" />
               </button>
-              <span className="font-semibold text-[var(--color-text)]">
-                {MONTHS[viewDate.getMonth()]} {viewDate.getFullYear()}
+              <span className="font-display text-sm tracking-wider text-[var(--color-text)]">
+                {MONTHS[viewDate.getMonth()].toUpperCase()} {viewDate.getFullYear()}
               </span>
               <button
                 type="button"
                 onClick={() => navigateMonth(1)}
-                className="p-2 rounded-lg hover:bg-[var(--color-surface)] transition-colors"
+                className="p-2 rounded-sm hover:bg-[var(--color-surface)] transition-colors"
               >
                 <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)]" />
               </button>
@@ -168,7 +168,7 @@ export const DatePicker = ({ value, onChange, minDate, maxDate }: DatePickerProp
               {WEEKDAYS.map((day) => (
                 <div
                   key={day}
-                  className="text-center text-xs font-medium text-[var(--color-text-muted)] py-1"
+                  className="text-center font-display text-[10px] tracking-widest text-[var(--color-text-muted)] py-1"
                 >
                   {day}
                 </div>
@@ -195,7 +195,7 @@ export const DatePicker = ({ value, onChange, minDate, maxDate }: DatePickerProp
                     onClick={() => handleDayClick(day)}
                     disabled={disabled}
                     className={`
-                      aspect-square rounded-lg text-sm font-medium transition-colors
+                      aspect-square rounded-sm text-sm font-display transition-colors
                       ${disabled
                         ? 'text-[var(--color-text-muted)]/40 cursor-not-allowed'
                         : selected

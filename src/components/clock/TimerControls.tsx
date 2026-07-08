@@ -12,112 +12,73 @@ export const TimerControls = () => {
   const resume = useClockStore((state) => state.resume);
   const reset = useClockStore((state) => state.reset);
 
-  const handleStart = () => {
-    // Initialize audio on user interaction
-    initializeAudio();
-    start();
-  };
+  const handleStart = () => { initializeAudio(); start(); };
+  const handleResume = () => { initializeAudio(); resume(); };
 
-  const handleResume = () => {
-    initializeAudio();
-    resume();
-  };
+  const baseBtn = 'flex items-center justify-center gap-2 font-display text-lg tracking-widest rounded-sm transition-all active:scale-[0.97]';
 
   return (
-    <div className="flex items-center justify-center gap-4">
-      {/* Start button (when idle) */}
+    <div className="flex gap-3">
+      {/* Idle → START */}
       {status === 'idle' && (
         <button
           onClick={handleStart}
-          className="
-            flex items-center gap-2 px-8 py-4 
-            bg-green-600 hover:bg-green-500 
-            text-white font-semibold text-lg
-            rounded-xl transition-colors
-            shadow-lg shadow-green-600/20
-          "
+          className={`${baseBtn} flex-1 py-4 bg-[var(--color-success)] hover:opacity-90 text-white`}
         >
-          <Play className="w-6 h-6" fill="currentColor" />
+          <Play className="w-5 h-5" fill="currentColor" />
           START
         </button>
       )}
 
-      {/* Running controls */}
+      {/* Running → PAUSE + STOP */}
       {(status === 'running' || status === 'rest' || status === 'countdown') && (
         <>
           <button
             onClick={pause}
             disabled={status === 'countdown'}
-            className="
-              flex items-center gap-2 px-6 py-4
-              bg-yellow-600 hover:bg-yellow-500 
-              disabled:opacity-50 disabled:cursor-not-allowed
-              text-white font-semibold text-lg
-              rounded-xl transition-colors
-            "
+            className={`${baseBtn} flex-1 py-4 bg-[var(--color-warning)] hover:opacity-90 text-black disabled:opacity-40 disabled:cursor-not-allowed`}
           >
-            <Pause className="w-6 h-6" />
+            <Pause className="w-5 h-5" />
             PAUSE
           </button>
           <button
             onClick={reset}
-            className="
-              flex items-center gap-2 px-6 py-4
-              bg-red-600 hover:bg-red-500 
-              text-white font-semibold text-lg
-              rounded-xl transition-colors
-            "
+            className={`${baseBtn} px-6 py-4 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border-strong)] text-[var(--color-text)] border border-[var(--color-border-strong)]`}
           >
-            <Square className="w-6 h-6" fill="currentColor" />
+            <Square className="w-5 h-5" fill="currentColor" />
             STOP
           </button>
         </>
       )}
 
-      {/* Paused controls */}
+      {/* Paused → RESUME + RESET */}
       {status === 'paused' && (
         <>
           <button
             onClick={handleResume}
-            className="
-              flex items-center gap-2 px-6 py-4
-              bg-green-600 hover:bg-green-500 
-              text-white font-semibold text-lg
-              rounded-xl transition-colors
-            "
+            className={`${baseBtn} flex-1 py-4 bg-[var(--color-success)] hover:opacity-90 text-white`}
           >
-            <Play className="w-6 h-6" fill="currentColor" />
+            <Play className="w-5 h-5" fill="currentColor" />
             RESUME
           </button>
           <button
             onClick={reset}
-            className="
-              flex items-center gap-2 px-6 py-4
-              bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border)]
-              text-[var(--color-text)] font-semibold text-lg
-              rounded-xl transition-colors
-              border border-[var(--color-border)]
-            "
+            className={`${baseBtn} px-6 py-4 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border-strong)] text-[var(--color-text)] border border-[var(--color-border-strong)]`}
           >
-            <RotateCcw className="w-6 h-6" />
+            <RotateCcw className="w-5 h-5" />
             RESET
           </button>
         </>
       )}
 
-      {/* Complete controls */}
+      {/* Complete → RESET */}
       {status === 'complete' && (
         <button
           onClick={reset}
-          className="
-            flex items-center gap-2 px-8 py-4
-            bg-[var(--color-primary)] hover:opacity-90
-            text-white font-semibold text-lg
-            rounded-xl transition-colors
-          "
+          className={`${baseBtn} flex-1 py-4 bg-[var(--color-primary)] hover:opacity-90 text-white`}
         >
-          <RotateCcw className="w-6 h-6" />
-          RESET
+          <RotateCcw className="w-5 h-5" />
+          NEW ROUND
         </button>
       )}
     </div>

@@ -58,7 +58,7 @@ export const Onboarding = () => {
 
   // iOS installation instructions
   const iOSInstructions = (
-    <div className="bg-[var(--color-surface-elevated)] rounded-xl p-4">
+    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-4">
       <div className="flex items-center gap-2 mb-3">
         <div className="w-6 h-6 rounded bg-gradient-to-b from-gray-400 to-gray-600 flex items-center justify-center">
           <span className="text-white text-xs font-bold">iOS</span>
@@ -84,7 +84,7 @@ export const Onboarding = () => {
 
   // Android installation instructions
   const androidInstructions = (
-    <div className="bg-[var(--color-surface-elevated)] rounded-xl p-4">
+    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-4">
       <div className="flex items-center gap-2 mb-3">
         <div className="w-6 h-6 rounded bg-gradient-to-b from-green-400 to-green-600 flex items-center justify-center">
           <span className="text-white text-xs font-bold">A</span>
@@ -239,7 +239,7 @@ export const Onboarding = () => {
       description: 'All your data stays on your device. No account needed.',
       content: (
         <div className="space-y-4">
-          <div className="bg-[var(--color-surface-elevated)] rounded-xl p-4">
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-4">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 rounded-full bg-green-400/20 flex items-center justify-center flex-shrink-0">
                 <Database className="w-5 h-5 text-green-400" />
@@ -280,7 +280,7 @@ export const Onboarding = () => {
       description: 'Export your data anytime and restore it on any device.',
       content: (
         <div className="space-y-4">
-          <div className="bg-[var(--color-surface-elevated)] rounded-xl p-4">
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-4">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 rounded-full bg-blue-400/20 flex items-center justify-center flex-shrink-0">
                 <Download className="w-5 h-5 text-blue-400" />
@@ -294,7 +294,7 @@ export const Onboarding = () => {
             </div>
           </div>
 
-          <div className="bg-[var(--color-surface-elevated)] rounded-xl p-4">
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-4">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 rounded-full bg-purple-400/20 flex items-center justify-center flex-shrink-0">
                 <Upload className="w-5 h-5 text-purple-400" />
@@ -323,7 +323,7 @@ export const Onboarding = () => {
           <p className="text-[var(--color-text-muted)]">
             Search for workouts, log your PRs, and watch your progress grow over time.
           </p>
-          <div className="bg-[var(--color-surface-elevated)] rounded-xl p-4">
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-4">
             <p className="text-sm text-[var(--color-text-muted)]">
               <strong className="text-[var(--color-text)]">Pro tip:</strong> Star your favorite workouts for quick access from the home screen!
             </p>
@@ -378,16 +378,28 @@ export const Onboarding = () => {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] flex flex-col">
-      {/* Skip button */}
-      <div className="flex justify-end p-4">
+      {/* Top bar — step counter + skip */}
+      <div className="flex items-center justify-between px-5 pt-5 pb-2">
+        <span className="font-display text-xs tracking-widest text-[var(--color-text-muted)]">
+          {currentStep + 1} / {steps.length}
+        </span>
         <button
           onClick={handleSkip}
-          className="flex items-center gap-1 px-3 py-2 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
+          className="flex items-center gap-1 px-2 py-1 font-display text-xs tracking-widest text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
           aria-label="Skip onboarding"
         >
-          <span>Skip</span>
-          <X className="w-4 h-4" />
+          SKIP <X className="w-3 h-3" />
         </button>
+      </div>
+
+      {/* Step progress bar */}
+      <div className="px-5 mb-2">
+        <div className="h-0.5 bg-[var(--color-border)] rounded-none overflow-hidden">
+          <div
+            className="h-full bg-[var(--color-primary)] transition-all duration-300"
+            style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
+          />
+        </div>
       </div>
 
       {/* Swipeable content area */}
@@ -403,20 +415,17 @@ export const Onboarding = () => {
           style={{ transform: `translateX(-${currentStep * 100}%)` }}
         >
           {steps.map((step, index) => (
-            <div
-              key={index}
-              className="w-full flex-shrink-0 px-6 flex flex-col"
-            >
+            <div key={index} className="w-full flex-shrink-0 px-6 flex flex-col">
               {/* Icon */}
-              <div className="flex justify-center mb-6">{step.icon}</div>
+              <div className="flex justify-center mb-8 mt-4">{step.icon}</div>
 
               {/* Title */}
-              <h2 className="text-2xl font-bold text-[var(--color-text)] text-center mb-2">
-                {step.title}
+              <h2 className="font-display text-3xl text-[var(--color-text)] text-center mb-2">
+                {step.title.toUpperCase()}
               </h2>
 
               {/* Description */}
-              <p className="text-[var(--color-text-muted)] text-center mb-6">
+              <p className="text-sm text-[var(--color-text-muted)] text-center mb-6 leading-relaxed">
                 {step.description}
               </p>
 
@@ -428,30 +437,30 @@ export const Onboarding = () => {
       </div>
 
       {/* Bottom navigation */}
-      <div className="p-6 space-y-4">
-        {/* Progress dots */}
-        <div className="flex justify-center gap-2">
+      <div className="px-5 pb-8 pt-4 space-y-4">
+        {/* Dot indicators */}
+        <div className="flex justify-center gap-1.5">
           {steps.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentStep(index)}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              className={`h-1 rounded-none transition-all duration-300 ${
                 index === currentStep
-                  ? 'w-6 bg-[var(--color-primary)]'
-                  : 'bg-[var(--color-border)] hover:bg-[var(--color-text-muted)]'
+                  ? 'w-8 bg-[var(--color-primary)]'
+                  : 'w-2 bg-[var(--color-border-strong)] hover:bg-[var(--color-text-muted)]'
               }`}
               aria-label={`Go to step ${index + 1}`}
             />
           ))}
         </div>
 
-        {/* Next / Get Started button */}
+        {/* Next / Get Started */}
         <button
           onClick={handleNext}
-          className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] rounded-xl text-white font-semibold transition-colors"
+          className="w-full flex items-center justify-center gap-2 py-4 bg-[var(--color-primary)] hover:opacity-90 rounded-sm text-white font-display tracking-widest transition-all active:scale-[0.98]"
           aria-label={isLastStep ? 'Get started' : 'Next step'}
         >
-          <span>{isLastStep ? 'Get Started' : 'Next'}</span>
+          <span>{isLastStep ? 'START TRAINING' : 'NEXT'}</span>
           {!isLastStep && <ChevronRight className="w-5 h-5" />}
         </button>
       </div>

@@ -78,21 +78,24 @@ export const PresetManager = ({ isOpen, onClose }: PresetManagerProps) => {
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
       {/* Modal */}
-      <div 
+      <div
         className="
           relative w-full max-w-md max-h-[80vh] overflow-hidden
-          bg-[var(--color-surface)] rounded-t-2xl sm:rounded-2xl
-          border border-[var(--color-border)]
-          shadow-xl
+          bg-[var(--color-surface)] rounded-t-2xl sm:rounded-lg
+          border-t border-[var(--color-border-strong)] sm:border
         "
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-1 sm:hidden">
+          <div className="w-10 h-1 bg-[var(--color-border-strong)] rounded-full" />
+        </div>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)]">
-          <h2 className="text-lg font-semibold text-[var(--color-text)]">Timer Presets</h2>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)]">
+          <h2 className="font-display text-xl text-[var(--color-text)]">TIMER PRESETS</h2>
           <button
             onClick={onClose}
-            className="p-2.5 rounded-xl hover:bg-[var(--color-surface-elevated)] transition-colors"
+            className="p-2 rounded-sm hover:bg-[var(--color-surface-elevated)] active:scale-95 transition-all"
           >
             <X className="w-5 h-5 text-[var(--color-text-muted)]" />
           </button>
@@ -107,14 +110,14 @@ export const PresetManager = ({ isOpen, onClose }: PresetManagerProps) => {
                 <button
                   onClick={() => setShowSaveForm(true)}
                   className="
-                    w-full flex items-center justify-center gap-2 p-3
+                    w-full flex items-center justify-center gap-2 py-3 px-4
                     bg-[var(--color-primary)] hover:opacity-90
-                    text-white font-semibold rounded-lg
-                    transition-colors
+                    text-white font-display tracking-widest text-sm rounded-sm
+                    transition-all active:scale-[0.97]
                   "
                 >
-                  <Save className="w-5 h-5" />
-                  Save Current Setup
+                  <Save className="w-4 h-4" />
+                  SAVE CURRENT SETUP
                 </button>
               ) : (
                 <div className="flex gap-2">
@@ -124,8 +127,8 @@ export const PresetManager = ({ isOpen, onClose }: PresetManagerProps) => {
                     onChange={(e) => setPresetName(e.target.value)}
                     placeholder="Preset name..."
                     className="
-                      flex-1 px-3 py-2.5 rounded-xl
-                      bg-[var(--color-bg)] border border-[var(--color-border)]
+                      flex-1 px-3 py-2.5 rounded-sm
+                      bg-[var(--color-bg)] border border-[var(--color-border-strong)]
                       text-[var(--color-text)] placeholder-[var(--color-text-muted)]
                       focus:outline-none focus:border-[var(--color-primary)]
                     "
@@ -136,13 +139,13 @@ export const PresetManager = ({ isOpen, onClose }: PresetManagerProps) => {
                     onClick={handleSave}
                     disabled={!presetName.trim()}
                     className="
-                      px-4 py-2.5 bg-green-600 hover:bg-green-500
+                      px-4 py-2.5 bg-[var(--color-success)] hover:opacity-90
                       disabled:opacity-50 disabled:cursor-not-allowed
-                      text-white font-semibold rounded-xl
-                      transition-colors
+                      text-white font-display tracking-widest text-sm rounded-sm
+                      transition-all
                     "
                   >
-                    Save
+                    SAVE
                   </button>
                   <button
                     onClick={() => {
@@ -150,21 +153,21 @@ export const PresetManager = ({ isOpen, onClose }: PresetManagerProps) => {
                       setPresetName('');
                     }}
                     className="
-                      px-4 py-2.5 bg-[var(--color-surface-elevated)]
-                      text-[var(--color-text-muted)] font-semibold rounded-xl
+                      px-4 py-2.5 bg-[var(--color-surface-elevated)] border border-[var(--color-border-strong)]
+                      text-[var(--color-text-muted)] font-display tracking-widest text-sm rounded-sm
                       hover:text-[var(--color-text)] transition-colors
                     "
                   >
-                    Cancel
+                    CANCEL
                   </button>
                 </div>
               )}
 
               {/* Current config preview */}
-              <div className="p-3 bg-[var(--color-bg)] rounded-lg border border-[var(--color-border)]">
-                <div className="text-xs text-[var(--color-text-muted)] mb-1">Current Setup</div>
+              <div className="p-3 bg-[var(--color-bg)] rounded-sm border border-[var(--color-border)]">
+                <div className="font-display text-[10px] tracking-widest text-[var(--color-text-muted)] mb-1">CURRENT SETUP</div>
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 bg-[var(--color-primary)]/20 text-[var(--color-primary)] text-xs font-semibold rounded">
+                  <span className="px-2 py-0.5 bg-[var(--color-primary)]/20 text-[var(--color-primary)] font-display text-xs tracking-wider rounded-sm">
                     {getModeLabel(config.mode)}
                   </span>
                   <span className="text-sm text-[var(--color-text)]">
@@ -177,14 +180,14 @@ export const PresetManager = ({ isOpen, onClose }: PresetManagerProps) => {
 
           {/* Preset list */}
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
-              <FolderOpen className="w-4 h-4" />
-              <span>Saved Presets ({presets.length})</span>
+            <div className="flex items-center gap-2">
+              <FolderOpen className="w-4 h-4 text-[var(--color-text-muted)]" />
+              <span className="font-display text-xs tracking-widest text-[var(--color-text-muted)]">SAVED PRESETS ({presets.length})</span>
             </div>
 
             {presets.length === 0 ? (
-              <div className="p-4 text-center text-[var(--color-text-muted)] text-sm">
-                No saved presets yet
+              <div className="p-6 text-center">
+                <p className="font-display text-sm tracking-wider text-[var(--color-text-muted)]">NO PRESETS SAVED</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -193,7 +196,7 @@ export const PresetManager = ({ isOpen, onClose }: PresetManagerProps) => {
                     key={preset.id}
                     className="
                       flex items-center gap-3 p-3
-                      bg-[var(--color-bg)] rounded-lg
+                      bg-[var(--color-bg)] rounded-sm
                       border border-[var(--color-border)]
                       group
                     "
@@ -206,11 +209,11 @@ export const PresetManager = ({ isOpen, onClose }: PresetManagerProps) => {
                         disabled:opacity-50 disabled:cursor-not-allowed
                       "
                     >
-                      <div className="font-semibold text-[var(--color-text)]">
-                        {preset.name}
+                      <div className="font-display text-base text-[var(--color-text)]">
+                        {preset.name.toUpperCase()}
                       </div>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="px-2 py-0.5 bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)] text-xs font-medium rounded">
+                        <span className="px-2 py-0.5 bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)] font-display text-[10px] tracking-wider rounded-sm">
                           {getModeLabel(preset.config.mode)}
                         </span>
                         <span className="text-xs text-[var(--color-text-muted)]">
@@ -221,8 +224,8 @@ export const PresetManager = ({ isOpen, onClose }: PresetManagerProps) => {
                     <button
                       onClick={() => handleDelete(preset.id)}
                       className="
-                        p-2 rounded-lg
-                        text-[var(--color-text-muted)] hover:text-red-400
+                        p-2 rounded-sm
+                        text-[var(--color-text-muted)] hover:text-[var(--color-danger)]
                         hover:bg-red-500/10
                         opacity-0 group-hover:opacity-100
                         transition-all

@@ -89,62 +89,33 @@ export const Clock = () => {
   const isTimerActive = status !== 'idle' && status !== 'complete';
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       {/* Header with controls */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-[var(--color-text)]">Timer</h2>
-        <div className="flex items-center gap-2">
-          {/* Presets button */}
+        <h2 className="font-display text-2xl text-[var(--color-text)]">TIMER</h2>
+        <div className="flex items-center gap-1.5">
           <button
             onClick={() => setShowPresets(true)}
-            className="
-              p-2 rounded-lg
-              bg-[var(--color-surface)] border border-[var(--color-border)]
-              text-[var(--color-text-muted)] hover:text-[var(--color-text)]
-              transition-colors
-            "
+            className="p-2 bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors rounded-sm"
             title="Presets"
           >
             <ListPlus className="w-5 h-5" />
           </button>
-
-          {/* Sound toggle */}
           <button
             onClick={toggleSound}
-            className={`
-              p-2 rounded-lg
-              bg-[var(--color-surface)] border border-[var(--color-border)]
-              transition-colors
-              ${soundEnabled 
-                ? 'text-[var(--color-primary)]' 
-                : 'text-[var(--color-text-muted)]'
-              }
-            `}
+            className={`p-2 bg-[var(--color-surface)] border border-[var(--color-border)] transition-colors rounded-sm ${
+              soundEnabled ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-muted)]'
+            }`}
             title={soundEnabled ? 'Sound on' : 'Sound off'}
           >
-            {soundEnabled ? (
-              <Volume2 className="w-5 h-5" />
-            ) : (
-              <VolumeX className="w-5 h-5" />
-            )}
+            {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
           </button>
-
-          {/* Fullscreen toggle */}
           <button
             onClick={toggleFullscreen}
-            className="
-              p-2 rounded-lg
-              bg-[var(--color-surface)] border border-[var(--color-border)]
-              text-[var(--color-text-muted)] hover:text-[var(--color-text)]
-              transition-colors
-            "
+            className="p-2 bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors rounded-sm"
             title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
           >
-            {isFullscreen ? (
-              <Minimize className="w-5 h-5" />
-            ) : (
-              <Maximize className="w-5 h-5" />
-            )}
+            {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
           </button>
         </div>
       </div>
@@ -160,9 +131,9 @@ export const Clock = () => {
 
       {/* Timer configuration */}
       {!isTimerActive && (
-        <div className="space-y-4">
-          <div className="text-sm font-semibold text-[var(--color-text-muted)]">
-            Configuration
+        <div className="space-y-3">
+          <div className="font-display text-xs tracking-widest text-[var(--color-text-muted)]">
+            CONFIGURATION
           </div>
           <TimerConfig />
         </div>

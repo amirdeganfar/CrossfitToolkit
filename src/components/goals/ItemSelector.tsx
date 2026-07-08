@@ -90,7 +90,7 @@ export const ItemSelector = ({
     <div ref={containerRef} className={`relative ${className}`}>
       {/* Selected value or search input */}
       <div
-        className={`flex items-center gap-2 px-3 py-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg cursor-pointer transition-colors ${
+        className={`flex items-center gap-2 px-3 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border-strong)] rounded-sm cursor-pointer transition-colors ${
           isOpen ? 'border-[var(--color-primary)]' : ''
         } ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-[var(--color-text-muted)]'}`}
         onClick={() => !disabled && setIsOpen(!isOpen)}
@@ -144,7 +144,7 @@ export const ItemSelector = ({
       {/* Dropdown */}
       {isOpen && (
         <div
-          className="absolute z-50 w-full mt-1 max-h-64 overflow-y-auto bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg shadow-lg"
+          className="absolute z-50 w-full mt-1 max-h-64 overflow-y-auto bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-lg shadow-xl"
           role="listbox"
         >
           {filteredItems.length === 0 ? (
@@ -154,8 +154,8 @@ export const ItemSelector = ({
           ) : (
             Object.entries(groupedItems).map(([category, categoryItems]) => (
               <div key={category}>
-                <div className="px-3 py-1.5 text-xs font-semibold text-[var(--color-text-muted)] bg-[var(--color-bg)] sticky top-0">
-                  {category}
+                <div className="px-3 py-1.5 font-display text-[10px] tracking-widest text-[var(--color-text-muted)] bg-[var(--color-bg)] sticky top-0">
+                  {category.toUpperCase()}
                 </div>
                 {categoryItems.map((item) => (
                   <button

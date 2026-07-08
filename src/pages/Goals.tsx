@@ -107,16 +107,16 @@ export const Goals = () => {
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-[var(--color-bg)]/95 backdrop-blur-sm border-b border-[var(--color-border)]">
+      <header className="sticky top-0 z-10 bg-[var(--color-bg)] border-b border-[var(--color-border)]">
         <div className="flex items-center gap-3 px-4 py-3">
           <Link
             to="/"
-            className="p-2.5 -ml-1 rounded-xl hover:bg-[var(--color-surface-elevated)] transition-colors"
+            className="p-2 -ml-1 hover:bg-[var(--color-surface-elevated)] transition-colors rounded-sm"
             aria-label="Go back"
           >
             <ArrowLeft className="w-5 h-5 text-[var(--color-text)]" />
           </Link>
-          <h1 className="text-xl font-bold text-[var(--color-text)]">Goals</h1>
+          <h1 className="font-display text-2xl text-[var(--color-text)]">GOALS</h1>
         </div>
       </header>
 
@@ -124,30 +124,29 @@ export const Goals = () => {
         {/* Active Goals Section */}
         <section>
           <div className="flex items-center gap-2 mb-3">
-            <Target size={18} className="text-[var(--color-primary)]" />
-            <h2 className="text-lg font-semibold text-[var(--color-text)]">
-              Active Goals
+            <Target size={16} className="text-[var(--color-primary)]" />
+            <h2 className="font-display text-sm tracking-widest text-[var(--color-text-muted)]">
+              ACTIVE
             </h2>
-            <span className="text-sm text-[var(--color-text-muted)]">
+            <span className="font-display text-sm text-[var(--color-text-dim)]">
               ({activeGoals.length})
             </span>
           </div>
 
           {activeGoals.length === 0 ? (
-            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-6 text-center">
-              <Target size={32} className="mx-auto mb-2 text-[var(--color-text-muted)]" />
-              <p className="text-[var(--color-text-muted)] mb-4">
-                No active goals yet
-              </p>
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-8 text-center">
+              <Target size={36} className="mx-auto mb-3 text-[var(--color-border-strong)]" />
+              <p className="font-display text-lg text-[var(--color-text)] mb-1">NO GOALS SET</p>
+              <p className="text-sm text-[var(--color-text-muted)] mb-5">Track what you're chasing.</p>
               <button
                 onClick={() => setShowModal(true)}
-                className="px-5 py-3 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] active:scale-95 text-white rounded-xl font-medium transition-all"
+                className="px-6 py-3 bg-[var(--color-primary)] hover:opacity-90 active:scale-95 text-white rounded-sm font-display tracking-widest text-sm transition-all"
               >
-                Set Your First Goal
+                SET FIRST GOAL
               </button>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {activeGoals.map((goal) => (
                 <GoalCard
                   key={goal.id}
@@ -169,23 +168,21 @@ export const Goals = () => {
               onClick={() => setShowAchieved(!showAchieved)}
               className="flex items-center gap-2 mb-3 w-full text-left"
             >
-              <Trophy size={18} className="text-yellow-500" />
-              <h2 className="text-lg font-semibold text-[var(--color-text)]">
-                Achieved Goals
+              <Trophy size={16} className="text-[var(--color-warning)]" />
+              <h2 className="font-display text-sm tracking-widest text-[var(--color-text-muted)]">
+                ACHIEVED
               </h2>
-              <span className="text-sm text-[var(--color-text-muted)]">
+              <span className="font-display text-sm text-[var(--color-text-dim)]">
                 ({achievedGoals.length})
               </span>
               <ChevronDown
-                size={18}
-                className={`ml-auto text-[var(--color-text-muted)] transition-transform ${
-                  showAchieved ? 'rotate-180' : ''
-                }`}
+                size={16}
+                className={`ml-auto text-[var(--color-text-muted)] transition-transform ${showAchieved ? 'rotate-180' : ''}`}
               />
             </button>
 
             <div className={`accordion-content ${showAchieved ? 'expanded' : ''}`}>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {achievedGoals.map((goal) => (
                   <GoalCard
                     key={goal.id}
@@ -200,10 +197,10 @@ export const Goals = () => {
         )}
       </main>
 
-      {/* Floating Action Button */}
+      {/* Floating Action Button — sharp square */}
       <button
         onClick={() => setShowModal(true)}
-        className="fixed bottom-20 right-4 sm:bottom-6 w-14 h-14 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] active:scale-90 text-white rounded-full shadow-lg shadow-red-900/30 flex items-center justify-center transition-all"
+        className="fixed bottom-20 right-4 sm:bottom-6 w-14 h-14 bg-[var(--color-primary)] hover:opacity-90 active:scale-90 text-white rounded-sm flex items-center justify-center transition-all"
         aria-label="Add new goal"
       >
         <Plus size={24} />

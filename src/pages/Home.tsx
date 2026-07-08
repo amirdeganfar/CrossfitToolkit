@@ -219,36 +219,33 @@ export const Home = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={handleSearchFocus}
             onBlur={handleSearchBlur}
-            className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl pl-10 pr-4 py-3 text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+            className="w-full bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-sm pl-10 pr-4 py-3 text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
             aria-label="Search PR item or benchmark"
           />
         </div>
 
         {/* Autocomplete dropdown */}
         {showAutocomplete && filteredItems.length > 0 && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden shadow-lg z-10">
+          <div className="absolute top-full left-0 right-0 mt-1 bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-lg overflow-hidden z-10">
             <div className="max-h-64 overflow-y-auto">
               {filteredItems.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => handleItemClick(item.id)}
-                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-[var(--color-surface-elevated)] transition-colors text-left"
+                  className="cat-bar cat-bar-${item.category} w-full flex items-center justify-between pl-5 pr-4 py-3 hover:bg-[var(--color-surface-elevated)] transition-colors text-left border-b border-[var(--color-border)] last:border-0"
                   aria-label={`View ${item.name}`}
                 >
                   <span className="font-medium text-[var(--color-text)]">{item.name}</span>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className={getCategoryColor(item.category)}>{item.category}</span>
-                    <span className="text-[var(--color-text-muted)]">{item.scoreType}</span>
-                  </div>
+                  <span className={`text-xs ${getCategoryColor(item.category)}`}>{item.category}</span>
                 </button>
               ))}
             </div>
             <button
               onClick={handleSeeAllResults}
-              className="w-full flex items-center justify-between px-4 py-3 border-t border-[var(--color-border)] hover:bg-[var(--color-surface-elevated)] transition-colors text-[var(--color-primary)]"
+              className="w-full flex items-center justify-between px-4 py-3 border-t border-[var(--color-border-strong)] hover:bg-[var(--color-surface-elevated)] transition-colors text-[var(--color-primary)]"
               aria-label="See all search results"
             >
-              <span>See all results</span>
+              <span className="font-display text-sm tracking-widest">SEE ALL</span>
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -261,21 +258,22 @@ export const Home = () => {
       {/* Favorites section */}
       <section>
         <div className="flex items-center gap-2 mb-3">
-          <Star className="w-4 h-4 text-amber-400" />
-          <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
-            Favorites
+          <Star className="w-4 h-4 text-[var(--color-warning)] fill-current" />
+          <h2 className="font-display text-sm tracking-widest text-[var(--color-text-muted)]">
+            FAVORITES
           </h2>
         </div>
         {favorites.length > 0 ? (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide">
             {favorites.map((item) => (
               <button
                 key={item.id}
                 onClick={() => handleItemClick(item.id)}
-                className="px-4 py-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-full text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-surface-elevated)] hover:border-[var(--color-primary)] active:scale-95 transition-all"
+                className={`cat-bar cat-bar-${item.category} flex-shrink-0 pl-4 pr-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-left hover:border-[var(--color-border-strong)] active:scale-95 transition-all min-w-[120px]`}
                 aria-label={`View ${item.name}`}
               >
-                {item.name}
+                <div className="font-medium text-sm text-[var(--color-text)] truncate max-w-[110px]">{item.name}</div>
+                <div className={`text-[10px] mt-0.5 ${getCategoryColor(item.category)}`}>{item.category}</div>
               </button>
             ))}
           </div>
@@ -290,42 +288,38 @@ export const Home = () => {
       <section>
         <div className="flex items-center gap-2 mb-3">
           <Clock className="w-4 h-4 text-[var(--color-text-muted)]" />
-          <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
-            Recent Logs
+          <h2 className="font-display text-sm tracking-widest text-[var(--color-text-muted)]">
+            RECENT LOGS
           </h2>
         </div>
         {groupedLogs.length > 0 ? (
-          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden">
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
             {groupedLogs.map((group, groupIndex) => {
               const isExpanded = expandedGroups.has(group.itemId);
               const latestLog = group.logs[0];
-              
+
               return (
                 <div key={group.itemId} className={groupIndex !== groupedLogs.length - 1 ? 'border-b border-[var(--color-border)]' : ''}>
                   {/* Accordion Header */}
                   <button
                     onClick={() => toggleGroup(group.itemId)}
-                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-[var(--color-surface-elevated)] transition-colors"
+                    className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-[var(--color-surface-elevated)] transition-colors"
                     aria-label={`Toggle ${group.itemName} logs`}
                   >
                     <div className="flex items-center gap-3">
-                      <ChevronDown 
-                        className={`w-4 h-4 text-[var(--color-text-muted)] transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
+                      <ChevronDown
+                        className={`w-4 h-4 text-[var(--color-text-muted)] transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
                       />
-                      <span className="font-semibold text-[var(--color-text)]">
-                        {group.itemName}
-                      </span>
+                      <span className="font-medium text-[var(--color-text)]">{group.itemName}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-[var(--color-primary)]">
-                        {latestLog.result}
-                      </span>
+                      <span className="font-display text-base text-[var(--color-primary)]">{latestLog.result}</span>
                       {latestLog.variant && (
-                        <span className="px-1.5 py-0.5 text-xs rounded-full bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]">
+                        <span className="px-2 py-0.5 text-[10px] font-display tracking-wider bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]">
                           {latestLog.variant}
                         </span>
                       )}
-                      <span className="px-1.5 py-0.5 text-xs rounded bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]">
+                      <span className="w-5 h-5 flex items-center justify-center text-[10px] bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)] rounded-sm">
                         {group.logs.length}
                       </span>
                     </div>
@@ -338,23 +332,23 @@ export const Home = () => {
                         <button
                           key={log.id}
                           onClick={() => handleItemClick(log.itemId)}
-                          className={`w-full flex items-center justify-between px-4 py-2 pl-11 hover:bg-[var(--color-surface-elevated)] transition-colors text-left bg-[var(--color-bg)] ${
-                            logIndex !== group.logs.length - 1 ? 'border-b border-[var(--color-border)]/50' : ''
+                          className={`w-full flex items-center justify-between px-4 py-2.5 pl-11 hover:bg-[var(--color-surface-elevated)] transition-colors text-left bg-[var(--color-bg)] ${
+                            logIndex !== group.logs.length - 1 ? 'border-b border-[var(--color-border)]' : ''
                           }`}
                           aria-label={`View ${log.itemName} log`}
                         >
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className="text-sm text-[var(--color-text)]">{log.result}</span>
+                              <span className="text-sm font-medium text-[var(--color-text)]">{log.result}</span>
                               {log.variant && (
-                                <span className="px-1.5 py-0.5 text-xs rounded-full bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]">
+                                <span className="px-1.5 py-0.5 text-[10px] font-display tracking-wider bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]">
                                   {log.variant}
                                 </span>
                               )}
                             </div>
                             <span className="text-xs text-[var(--color-text-muted)]">{log.date}</span>
                           </div>
-                          <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)] flex-shrink-0 ml-2" />
+                          <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)] flex-shrink-0 ml-2 opacity-50" />
                         </button>
                       ))}
                     </div>
@@ -364,10 +358,8 @@ export const Home = () => {
             })}
           </div>
         ) : (
-          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-6 text-center">
-            <p className="text-[var(--color-text-muted)]">
-              No logs yet. Start tracking your PRs!
-            </p>
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-6 text-center">
+            <p className="text-sm text-[var(--color-text-muted)]">No logs yet. Start tracking your PRs!</p>
           </div>
         )}
       </section>
@@ -378,15 +370,13 @@ export const Home = () => {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Target className="w-4 h-4 text-[var(--color-primary)]" />
-              <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
-                Active Goals
-              </h2>
+              <h2 className="font-display text-sm tracking-widest text-[var(--color-text-muted)]">ACTIVE GOALS</h2>
             </div>
             <button
               onClick={handleGoals}
-              className="text-xs text-[var(--color-primary)] hover:underline flex items-center gap-1"
+              className="flex items-center gap-1 text-xs text-[var(--color-primary)] font-display tracking-wider"
             >
-              View all <ChevronRight className="w-3 h-3" />
+              ALL <ChevronRight className="w-3 h-3" />
             </button>
           </div>
           <div className="space-y-2">
@@ -394,18 +384,17 @@ export const Home = () => {
               <button
                 key={goal.id}
                 onClick={() => handleItemClick(goal.itemId)}
-                className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-3 text-left hover:border-[var(--color-text-muted)] transition-colors"
+                className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-3.5 text-left hover:border-[var(--color-border-strong)] transition-colors"
+                style={{ borderLeft: '3px solid var(--color-primary)' }}
               >
-                <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center justify-between mb-2">
                   <span className="font-medium text-[var(--color-text)]">{goal.itemName}</span>
-                  <span className="text-xs text-[var(--color-text-muted)]">
-                    {goal.daysRemaining >= 0 ? `${goal.daysRemaining}d left` : 'Overdue'}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 mb-1.5 text-sm">
-                  <span className="text-[var(--color-text-muted)]">{goal.currentResult || '—'}</span>
-                  <span className="text-[var(--color-text-muted)]">→</span>
-                  <span className="text-[var(--color-text)]">{goal.targetResult}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-display text-lg text-[var(--color-primary)]">{Math.round(goal.progress)}%</span>
+                    <span className="text-[10px] text-[var(--color-text-muted)] tracking-wide">
+                      {goal.daysRemaining >= 0 ? `${goal.daysRemaining}D` : 'OVERDUE'}
+                    </span>
+                  </div>
                 </div>
                 <GoalProgress progress={goal.progress} size="sm" showLabel={false} />
               </button>
@@ -415,30 +404,30 @@ export const Home = () => {
       )}
 
       {/* Action buttons */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-2">
         <button
           onClick={handleTimer}
-          className="flex flex-col items-center justify-center gap-1.5 px-3 py-4 bg-[var(--color-surface)] hover:bg-[var(--color-surface-elevated)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] font-medium transition-colors"
+          className="flex flex-col items-center justify-center gap-2 px-3 py-4 bg-[var(--color-surface)] hover:bg-[var(--color-surface-elevated)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] transition-colors"
           aria-label="Open timer"
         >
-          <Timer className="w-5 h-5" />
-          <span className="text-sm">Timer</span>
+          <Timer className="w-5 h-5 text-[var(--color-text-muted)]" />
+          <span className="font-display text-xs tracking-widest">TIMER</span>
         </button>
         <button
           onClick={handleGoals}
-          className="flex flex-col items-center justify-center gap-1.5 px-3 py-4 bg-[var(--color-surface)] hover:bg-[var(--color-surface-elevated)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] font-medium transition-colors"
+          className="flex flex-col items-center justify-center gap-2 px-3 py-4 bg-[var(--color-surface)] hover:bg-[var(--color-surface-elevated)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] transition-colors"
           aria-label="View goals"
         >
-          <Target className="w-5 h-5" />
-          <span className="text-sm">Goals</span>
+          <Target className="w-5 h-5 text-[var(--color-text-muted)]" />
+          <span className="font-display text-xs tracking-widest">GOALS</span>
         </button>
         <button
           onClick={handleLogPR}
-          className="flex flex-col items-center justify-center gap-1.5 px-3 py-4 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] rounded-xl text-white font-medium transition-colors"
+          className="flex flex-col items-center justify-center gap-2 px-3 py-4 bg-[var(--color-primary)] hover:opacity-90 rounded-lg text-white transition-colors"
           aria-label="Log a new PR"
         >
           <Plus className="w-5 h-5" />
-          <span className="text-sm">Log PR</span>
+          <span className="font-display text-xs tracking-widest">LOG PR</span>
         </button>
       </div>
     </div>

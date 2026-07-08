@@ -206,15 +206,19 @@ export const GoalModal = ({
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-lg bg-[var(--color-surface)] border-t sm:border border-[var(--color-border)] sm:rounded-xl overflow-hidden animate-slide-up max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-[var(--color-surface)] border-t sm:border border-[var(--color-border)] sm:rounded-lg overflow-hidden animate-slide-up max-h-[90vh] overflow-y-auto">
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-1 sm:hidden">
+          <div className="w-10 h-1 bg-[var(--color-border-strong)] rounded-full" />
+        </div>
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)]">
-          <h2 className="text-lg font-semibold text-[var(--color-text)]">
-            {isEditing ? 'Edit Goal' : 'Set Goal'}
+          <h2 className="font-display text-xl text-[var(--color-text)]">
+            {isEditing ? 'EDIT GOAL' : 'SET GOAL'}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 -m-2 rounded-lg hover:bg-[var(--color-surface-elevated)] transition-colors"
+            className="p-2 rounded-sm hover:bg-[var(--color-surface-elevated)] active:scale-95 transition-all"
             aria-label="Close modal"
           >
             <X className="w-5 h-5 text-[var(--color-text-muted)]" />
@@ -255,7 +259,7 @@ export const GoalModal = ({
                   value={targetValue}
                   onChange={(e) => setTargetValue(e.target.value)}
                   placeholder={getResultPlaceholder(selectedItem.scoreType)}
-                  className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+                  className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border-strong)] rounded-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
                   autoFocus={!isEditing}
                 />
               )}
@@ -307,10 +311,10 @@ export const GoalModal = ({
                         key={v.value}
                         type="button"
                         onClick={() => setVariant(v.value)}
-                        className={`flex-1 px-4 py-2 rounded-lg border font-medium transition-colors ${
+                        className={`flex-1 px-4 py-2.5 rounded-sm border font-display text-sm tracking-widest transition-colors active:scale-95 ${
                           variant === v.value
                             ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white'
-                            : 'bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-text-muted)]'
+                            : 'bg-[var(--color-bg)] border-[var(--color-border-strong)] text-[var(--color-text-muted)] hover:border-[var(--color-text-muted)]'
                         }`}
                       >
                         {v.label}
@@ -332,10 +336,10 @@ export const GoalModal = ({
                         key={r}
                         type="button"
                         onClick={() => setReps(r)}
-                        className={`px-4 py-2 rounded-lg border font-medium transition-colors ${
+                        className={`px-4 py-2.5 rounded-sm border font-display text-sm tracking-widest transition-colors active:scale-95 ${
                           reps === r
                             ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white'
-                            : 'bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-text-muted)]'
+                            : 'bg-[var(--color-bg)] border-[var(--color-border-strong)] text-[var(--color-text-muted)] hover:border-[var(--color-text-muted)]'
                         }`}
                       >
                         {r === 1 ? '1RM' : `${r}RM`}
@@ -358,9 +362,9 @@ export const GoalModal = ({
           <button
             type="submit"
             disabled={isSubmitting || !selectedItem || !targetValue.trim()}
-            className="w-full py-3 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-white font-semibold transition-colors"
+            className="w-full py-4 bg-[var(--color-primary)] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed rounded-sm text-white font-display tracking-widest text-base transition-all active:scale-[0.98]"
           >
-            {isSubmitting ? 'Saving...' : isEditing ? 'Update Goal' : 'Create Goal'}
+            {isSubmitting ? 'SAVING...' : isEditing ? 'UPDATE GOAL' : 'CREATE GOAL'}
           </button>
         </form>
       </div>

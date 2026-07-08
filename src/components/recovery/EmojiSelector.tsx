@@ -8,17 +8,11 @@
 import type { MetricValue } from '../../types/training';
 
 interface EmojiSelectorProps {
-  /** Current selected value (1-5 or undefined) */
   value: MetricValue | undefined;
-  /** Called when a value is selected */
   onChange: (value: MetricValue) => void;
-  /** Mapping of values to emoji characters */
   emojis: Record<number, string>;
-  /** Mapping of values to labels */
   labels: Record<number, string>;
-  /** Accessible label for the group */
   ariaLabel: string;
-  /** Whether the selector is disabled */
   disabled?: boolean;
 }
 
@@ -40,11 +34,7 @@ export const EmojiSelector = ({
   };
 
   return (
-    <div
-      role="radiogroup"
-      aria-label={ariaLabel}
-      className="flex gap-1.5 w-full"
-    >
+    <div role="radiogroup" aria-label={ariaLabel} className="flex gap-1.5 w-full">
       {values.map((optionValue) => {
         const isSelected = value === optionValue;
         const emoji = emojis[optionValue] ?? '?';
@@ -63,24 +53,19 @@ export const EmojiSelector = ({
             onKeyDown={(e) => handleKeyDown(e, optionValue)}
             className={`
               flex flex-col items-center justify-center
-              flex-1 h-14 rounded-lg
+              flex-1 h-16 rounded-sm
               transition-all duration-150 ease-out
               ${isSelected
-                ? 'bg-[var(--color-primary)] text-white scale-105 shadow-md'
-                : 'bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)]'
+                ? 'bg-[var(--color-primary)] text-white border border-[var(--color-primary)]'
+                : 'bg-[var(--color-surface-elevated)] border border-[var(--color-border)] text-[var(--color-text)] hover:border-[var(--color-border-strong)]'
               }
-              ${disabled
-                ? 'opacity-50 cursor-not-allowed'
-                : 'hover:border-[var(--color-primary)] hover:bg-[var(--color-surface-elevated)] active:scale-95'
-              }
-              focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2 focus:ring-offset-[var(--color-bg)]
+              ${disabled ? 'opacity-40 cursor-not-allowed' : 'active:scale-95'}
+              focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-1 focus:ring-offset-[var(--color-bg)]
             `}
           >
-            <span className="text-xl" aria-hidden="true">
-              {emoji}
-            </span>
-            <span className={`text-[10px] mt-0.5 font-medium ${isSelected ? 'text-white/90' : 'text-[var(--color-text-muted)]'}`}>
-              {label}
+            <span className="text-2xl leading-none" aria-hidden="true">{emoji}</span>
+            <span className={`text-[9px] mt-1 font-display tracking-wider ${isSelected ? 'text-white/90' : 'text-[var(--color-text-muted)]'}`}>
+              {label.toUpperCase()}
             </span>
           </button>
         );
