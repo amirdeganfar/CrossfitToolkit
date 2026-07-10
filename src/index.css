@@ -1,41 +1,49 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-/* ─── Design Tokens — Tactical Green/Yellow ─────────────────────────────── */
+/* ─── Design Tokens — BLACKOUT (gym-floor) ──────────────────────────────── */
 :root {
   /* Backgrounds */
-  --color-bg: #0B130B;
-  --color-surface: #111D11;
-  --color-surface-elevated: #172317;
+  --color-bg: #0A0A0B;
+  --color-surface: #161617;
+  --color-surface-elevated: #1C1C1E;
 
-  /* Borders */
-  --color-border: #243524;
-  --color-border-strong: #2F462F;
+  /* Borders (hairlines on dark) */
+  --color-border: rgba(255,255,255,0.06);
+  --color-border-strong: rgba(255,255,255,0.10);
 
   /* Brand accent — Electric Yellow */
-  --color-primary: #D4FF00;
-  --color-primary-dark: #AACF00;
-  --color-primary-glow: rgba(212,255,0,0.1);
+  --color-primary: #FFD60A;
+  --color-primary-dark: #E6C000;
+  --color-primary-glow: rgba(255,214,10,0.12);
 
   /* Text */
-  --color-text: #EEF2E6;
-  --color-text-muted: #5C7A5C;
-  --color-text-dim: #2E4A2E;
+  --color-text: #FFFFFF;
+  --color-text-muted: #8E8E93;
+  --color-text-dim: #48484A;
 
   /* Semantic */
-  --color-success: #4ADE80;
-  --color-warning: #FCD34D;
-  --color-danger: #F87171;
+  --color-success: #34C759;
+  --color-warning: #FF9F0A;
+  --color-danger: #FF453A;
 
-  /* Category accent colors */
-  --color-cat-benchmark: #D4FF00;
-  --color-cat-lift: #60A5FA;
-  --color-cat-mono: #4ADE80;
-  --color-cat-skill: #C084FC;
-  --color-cat-custom: #FB923C;
+  /* Category / plate accent colors (dark-optimized) */
+  --color-cat-benchmark: #FF9F0A;
+  --color-cat-lift:       #0A84FF;
+  --color-cat-mono:       #34C759;
+  --color-cat-cardio:     #34C759;
+  --color-cat-skill:      #BF5AF2;
+  --color-cat-custom:     #FF375F;
 
-  /* Typography */
-  --font-display: 'Barlow Condensed', system-ui, sans-serif;
+  /* Competition plate colors (for badges / barbell) */
+  --plate-red:    #FF3B30;
+  --plate-blue:   #0A84FF;
+  --plate-green:  #34C759;
+  --plate-yellow: #FFD60A;
+
+  /* Typography — Apple SF stack (Inter fallback off-platform) */
+  --font-display: "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+  --font-text:    "SF Pro Text", system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
 }
 
 /* ─── Base ──────────────────────────────────────────────────────────────── */
@@ -43,132 +51,81 @@ body {
   margin: 0;
   background-color: var(--color-bg);
   color: var(--color-text);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: var(--font-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
+:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 
-/* ─── Display typography ────────────────────────────────────────────────── */
+a { color: var(--color-primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ─── Display typography ─────────────────────────────────────────────────
+   NOTE: no more forced uppercase / Barlow. Headings are SF Pro Display with
+   tight negative tracking (the Apple cadence). Use .label-eyebrow for the tiny
+   tracked uppercase micro-labels (section headers, category tags).            */
 .font-display {
   font-family: var(--font-display);
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: -0.02em;   /* tight, sentence/Title case */
 }
-
 .font-display-black {
   font-family: var(--font-display);
-  font-weight: 900;
-  letter-spacing: -0.02em;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+.label-eyebrow {
+  font-family: var(--font-text);
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
+  color: var(--color-text-muted);
 }
 
-/* ─── Timer numerals ────────────────────────────────────────────────────── */
+/* Timer numerals — tabular, tight */
 .timer-digits {
-  font-family: 'Barlow Condensed', monospace;
-  font-weight: 900;
+  font-family: var(--font-display);
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum' 1;
   letter-spacing: -0.03em;
   line-height: 1;
 }
 
-/* ─── Category accent bar (left-edge stripe) ────────────────────────────── */
-.cat-bar {
-  position: relative;
+/* ─── Gym-floor texture (apply to page backgrounds) ─────────────────────── */
+.mat-texture {
+  background-image: repeating-linear-gradient(
+    45deg, rgba(255,255,255,0.03) 0 2px, transparent 2px 15px
+  );
 }
-.cat-bar::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  border-radius: 0 2px 2px 0;
-}
-.cat-bar-Benchmark::before      { background-color: #D4FF00; }
-.cat-bar-Lift::before           { background-color: #60A5FA; }
-.cat-bar-Monostructural::before { background-color: #4ADE80; }
-.cat-bar-Skill::before          { background-color: #C084FC; }
-.cat-bar-Custom::before         { background-color: #FB923C; }
 
 /* ─── Nav active indicator ──────────────────────────────────────────────── */
-.nav-item-active {
-  position: relative;
-}
+.nav-item-active { position: relative; }
 .nav-item-active::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 24px;
-  height: 2px;
-  background-color: var(--color-primary);
-  border-radius: 0 0 2px 2px;
+  content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 24px; height: 2px; background-color: var(--color-primary); border-radius: 0 0 2px 2px;
 }
 
-/* ─── Animations ────────────────────────────────────────────────────────── */
-@keyframes slide-up {
-  from { transform: translateY(100%); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
-}
-
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes timer-pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.5; }
-}
-
-@keyframes card-enter {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
+/* ─── Animations (unchanged) ────────────────────────────────────────────── */
+@keyframes slide-up { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes fade-in  { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes timer-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+@keyframes card-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 .animate-slide-up    { animation: slide-up   0.28s cubic-bezier(0.32, 0.72, 0, 1); }
 .animate-fade-in     { animation: fade-in    0.15s ease-out; }
 .animate-card-enter  { animation: card-enter 0.2s ease-out both; }
 .animate-timer-pulse { animation: timer-pulse 1s ease-in-out infinite; }
 
-/* ─── Scrollbar hide ────────────────────────────────────────────────────── */
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
+/* ─── Utilities (unchanged) ─────────────────────────────────────────────── */
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 .scrollbar-hide::-webkit-scrollbar { display: none; }
-
-/* ─── Accordion / Calculator collapse ───────────────────────────────────── */
-.calculator-content {
-  display: grid;
-  grid-template-rows: 0fr;
-  opacity: 0;
-  transition: grid-template-rows 0.3s ease-out, opacity 0.2s ease-out;
-}
-.calculator-content.expanded {
-  grid-template-rows: 1fr;
-  opacity: 1;
-}
+.calculator-content { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 0.3s ease-out, opacity 0.2s ease-out; }
+.calculator-content.expanded { grid-template-rows: 1fr; opacity: 1; }
 .calculator-content > div { overflow: hidden; }
-
-.accordion-content {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.2s ease-out;
-}
+.accordion-content { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.2s ease-out; }
 .accordion-content.expanded { grid-template-rows: 1fr; }
-.accordion-content > div    { overflow: hidden; }
-
-/* ─── Safe area ─────────────────────────────────────────────────────────── */
+.accordion-content > div { overflow: hidden; }
 .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
-
-/* ─── Touch target ──────────────────────────────────────────────────────── */
 .touch-target { min-height: 44px; min-width: 44px; }

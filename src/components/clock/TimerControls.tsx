@@ -23,7 +23,7 @@ export const TimerControls = () => {
       {status === 'idle' && (
         <button
           onClick={handleStart}
-          className={`${baseBtn} flex-1 py-4 bg-[var(--color-primary)] text-[#0B130B] hover:opacity-90`}
+          className={`${baseBtn} flex-1 py-4 bg-[var(--color-primary)] text-[var(--color-bg)] hover:opacity-90`}
         >
           <Play className="w-5 h-5" fill="currentColor" />
           START
@@ -36,7 +36,7 @@ export const TimerControls = () => {
           <button
             onClick={pause}
             disabled={status === 'countdown'}
-            className={`${baseBtn} flex-1 py-4 bg-[var(--color-warning)] text-[#0B130B] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed`}
+            className={`${baseBtn} flex-1 py-4 bg-[var(--color-warning)] text-[var(--color-bg)] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed`}
           >
             <Pause className="w-5 h-5" />
             PAUSE
@@ -56,7 +56,7 @@ export const TimerControls = () => {
         <>
           <button
             onClick={handleResume}
-            className={`${baseBtn} flex-1 py-4 bg-[var(--color-primary)] text-[#0B130B] hover:opacity-90`}
+            className={`${baseBtn} flex-1 py-4 bg-[var(--color-primary)] text-[var(--color-bg)] hover:opacity-90`}
           >
             <Play className="w-5 h-5" fill="currentColor" />
             RESUME
@@ -75,7 +75,7 @@ export const TimerControls = () => {
       {status === 'complete' && (
         <button
           onClick={reset}
-          className={`${baseBtn} flex-1 py-4 bg-[var(--color-primary)] text-[#0B130B] hover:opacity-90`}
+          className={`${baseBtn} flex-1 py-4 bg-[var(--color-primary)] text-[var(--color-bg)] hover:opacity-90`}
         >
           <RotateCcw className="w-5 h-5" />
           NEW ROUND

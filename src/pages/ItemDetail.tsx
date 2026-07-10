@@ -8,7 +8,11 @@ import { LogResultModal } from '../components/LogResultModal';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { PercentageCalculator } from '../components/PercentageCalculator';
 import { GoalProgress, GoalModal } from '../components/goals';
+import { LoadedBarButton } from '../components/LoadedBarButton';
+import { Barbell } from '../components/Barbell';
+import { RxTag } from '../components/RxTag';
 import { isDualMetricItem, isDistanceOnlyItem } from '../utils/itemMetrics';
+import { categoryColorHex } from '../utils/categoryColors';
 import * as db from '../db';
 import type { PRLog, CatalogItem } from '../types/catalog';
 import type { CreateGoalInput, UpdateGoalInput } from '../types/goal';
@@ -307,15 +311,7 @@ export const ItemDetail = () => {
 
   const useGroupedHistory = groupedLogs.length > 0;
 
-  const getCategoryColor = (category: CatalogItem['category']) => {
-    switch (category) {
-      case 'Benchmark':      return '#D4FF00';
-      case 'Lift':           return '#60A5FA';
-      case 'Monostructural': return '#4ADE80';
-      case 'Skill':          return '#C084FC';
-      default:               return '#FB923C';
-    }
-  };
+  const getCategoryColor = (category: CatalogItem['category']) => categoryColorHex(category);
 
   if (!isInitialized || isInitializing) {
     return (
@@ -520,11 +516,7 @@ export const ItemDetail = () => {
               <span className="font-display text-6xl text-[var(--color-primary)]">
                 {getResultWithUnit(bestLog.result)}
               </span>
-              {bestLog.variant && (
-                <span className="font-display text-xs tracking-widest text-[var(--color-text-muted)] border border-[var(--color-border-strong)] px-2 py-0.5">
-                  {bestLog.variant}
-                </span>
-              )}
+              <RxTag variant={bestLog.variant} />
             </div>
             <p className="font-display text-xs text-[var(--color-text-muted)] tracking-widest mt-1">
               {formatDate(bestLog.date)}
@@ -540,7 +532,11 @@ export const ItemDetail = () => {
                     EDIT
                   </button>
                 </div>
-                <GoalProgress progress={activeGoal.progress} size="sm" />
+                {activeGoal.currentValue != null ? (
+                  <Barbell current={activeGoal.currentValue} goal={activeGoal.targetValue} lowerIsBetter={isLowerBetter} />
+                ) : (
+                  <GoalProgress progress={activeGoal.progress} size="sm" />
+                )}
                 <p className="font-display text-xs text-[var(--color-text-muted)] tracking-widest mt-1">
                   {activeGoal.daysRemaining >= 0 ? `${activeGoal.daysRemaining} DAYS REMAINING` : 'OVERDUE'}
                 </p>
@@ -632,11 +628,7 @@ export const ItemDetail = () => {
                                 <span className={`font-display text-sm ${isPR ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
                                   {getDisplayResult()}
                                 </span>
-                                {group.type !== 'variant' && log.variant && (
-                                  <span className="font-display text-[10px] tracking-widest border border-[var(--color-border)] px-1 py-0.5 text-[var(--color-text-muted)]">
-                                    {log.variant}
-                                  </span>
-                                )}
+                                {group.type !== 'variant' && <RxTag variant={log.variant} />}
                                 {isPR && (
                                   <span className="font-display text-[10px] tracking-widest bg-[var(--color-primary)]/20 text-[var(--color-primary)] px-1.5 py-0.5">
                                     PR
@@ -674,11 +666,7 @@ export const ItemDetail = () => {
                       <span className={`font-display text-sm ${isPR ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
                         {getResultWithUnit(log.result)}
                       </span>
-                      {log.variant && (
-                        <span className="font-display text-[10px] tracking-widest border border-[var(--color-border)] px-1.5 py-0.5 text-[var(--color-text-muted)]">
-                          {log.variant}
-                        </span>
-                      )}
+                      <RxTag variant={log.variant} />
                       {isPR && (
                         <span className="font-display text-[10px] tracking-widest bg-[var(--color-primary)]/20 text-[var(--color-primary)] px-1.5 py-0.5">
                           PR
@@ -711,13 +699,9 @@ export const ItemDetail = () => {
 
       {/* Sticky Log Result CTA */}
       <div className="sticky bottom-0 bg-[var(--color-bg)] border-t border-[var(--color-border)] p-4 pb-safe -mx-4">
-        <button
-          onClick={() => setShowModal(true)}
-          className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-[var(--color-primary)] text-[#0B130B] hover:opacity-90 active:scale-[0.98] font-display tracking-[0.15em] text-sm transition-all shadow-[0_0_20px_rgba(212,255,0,0.25)]"
-          aria-label="Log a result"
-        >
-          <Plus className="w-5 h-5" /> LOG RESULT
-        </button>
+        <LoadedBarButton onClick={() => setShowModal(true)}>
+          <Plus className="w-5 h-5" /> Log a result
+        </LoadedBarButton>
       </div>
 
       {/* Log Result Modal */}

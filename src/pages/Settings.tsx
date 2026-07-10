@@ -261,7 +261,7 @@ export const Settings = () => {
           >
             <span
               className={`absolute top-1 w-5 h-5 transition-transform ${
-                soundEnabled ? 'left-6 bg-[#0B130B]' : 'left-1 bg-[var(--color-text-muted)]'
+                soundEnabled ? 'left-6 bg-[var(--color-bg)]' : 'left-1 bg-[var(--color-text-muted)]'
               }`}
             />
           </button>

@@ -52,7 +52,7 @@ export const ConfirmDialog = ({
             className={`flex-1 py-3.5 px-4 font-display tracking-widest text-sm transition-all active:scale-[0.98] ${
               isDestructive
                 ? 'bg-[var(--color-danger)] hover:opacity-90 text-white'
-                : 'bg-[var(--color-primary)] hover:opacity-90 text-[#0B130B]'
+                : 'bg-[var(--color-primary)] hover:opacity-90 text-[var(--color-bg)]'
             }`}
           >
             {confirmLabel.toUpperCase()}

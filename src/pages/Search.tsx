@@ -1,11 +1,21 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search as SearchIcon, Star, ChevronRight, Loader2, Dumbbell } from 'lucide-react';
+import { Search as SearchIcon, Loader2, Dumbbell, Timer, Activity, Repeat } from 'lucide-react';
 import { useCatalogStore } from '../stores/catalogStore';
 import { useInitialize } from '../hooks/useInitialize';
-import type { CatalogItem, Category } from '../types/catalog';
+import { PlateBadge } from '../components/PlateBadge';
+import { categoryColorVar } from '../utils/categoryColors';
+import type { Category } from '../types/catalog';
 
 const CATEGORIES: (Category | 'All')[] = ['All', 'Benchmark', 'Lift', 'Monostructural', 'Skill'];
+
+const GLYPH: Record<Category, typeof Dumbbell> = {
+  Lift: Dumbbell,
+  Benchmark: Timer,
+  Monostructural: Activity,
+  Skill: Repeat,
+  Custom: Dumbbell,
+};
 
 export const Search = () => {
   const navigate = useNavigate();
@@ -46,22 +56,6 @@ export const Search = () => {
     navigate(`/item/${itemId}`);
   };
 
-  const handleFavoriteClick = async (e: React.MouseEvent, itemId: string) => {
-    e.stopPropagation();
-    await toggleFavorite(itemId);
-  };
-
-  const getCategoryColor = (category: CatalogItem['category']) => {
-    switch (category) {
-      case 'Benchmark':    return 'text-[#D4FF00]';
-      case 'Lift':         return 'text-[#60A5FA]';
-      case 'Monostructural': return 'text-[#4ADE80]';
-      case 'Skill':        return 'text-[#C084FC]';
-      case 'Custom':       return 'text-[#FB923C]';
-      default:             return 'text-[var(--color-text-muted)]';
-    }
-  };
-
   if (!isInitialized || isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -72,108 +66,99 @@ export const Search = () => {
 
   return (
     <div className="space-y-4">
-      {/* Search input — underline style */}
+      {/* Title */}
+      <h1 className="font-display-black text-[30px] text-[var(--color-text)]">Catalog</h1>
+
+      {/* Search input — dark field */}
       <div className="relative">
-        <SearchIcon className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
+        <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
         <input
           type="text"
           placeholder="Search benchmarks, lifts, skills..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-transparent border-b border-[var(--color-border-strong)] pl-7 pr-4 py-2.5 text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors font-display tracking-wider text-sm"
+          className="w-full rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] pl-10 pr-4 py-3 text-[15px] text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
           aria-label="Search catalog"
           autoFocus
         />
       </div>
 
-      {/* Category filters — underline tab style */}
-      <div className="flex overflow-x-auto scrollbar-hide border-b border-[var(--color-border)] -mx-4 px-4">
+      {/* Category filters — pill chips */}
+      <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4">
         {CATEGORIES.map((category) => {
           const isActive = selectedCategory === category;
           return (
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`
-                flex-shrink-0 px-3 py-2 font-display text-xs tracking-widest whitespace-nowrap transition-colors border-b-2 -mb-px
-                ${isActive
-                  ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
-                  : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
-                }
-              `}
+              className={`flex-shrink-0 rounded-full px-4 py-1.5 text-[13px] font-semibold whitespace-nowrap transition-transform active:scale-95 border ${
+                isActive
+                  ? 'bg-[var(--color-primary)] text-[var(--color-bg)] border-transparent'
+                  : 'bg-transparent text-[var(--color-text-muted)] border-[var(--color-border-strong)]'
+              }`}
               aria-label={`Filter by ${category}`}
               aria-pressed={isActive}
             >
-              {category.toUpperCase()}
+              {category}
             </button>
           );
         })}
       </div>
 
       {/* Results count */}
-      <div className="font-display text-xs text-[var(--color-text-muted)] tracking-widest">
-        {filteredItems.length} {filteredItems.length === 1 ? 'ITEM' : 'ITEMS'}
-        {selectedCategory !== 'All' && ` · ${selectedCategory.toUpperCase()}`}
-        {searchQuery && ` · "${searchQuery.toUpperCase()}"`}
+      <div className="label-eyebrow">
+        {filteredItems.length} {filteredItems.length === 1 ? 'Item' : 'Items'}
+        {selectedCategory !== 'All' && ` · ${selectedCategory}`}
       </div>
 
-      {/* Catalog list — data table */}
+      {/* Catalog list — plate cards */}
       {filteredItems.length > 0 ? (
-        <div className="divide-y divide-[var(--color-border)]">
-          {filteredItems.map((item) => (
-            <div
-              key={item.id}
-              className={`cat-bar cat-bar-${item.category} w-full flex items-center justify-between pl-5 pr-3 py-3 hover:bg-[var(--color-surface)] transition-colors group`}
-            >
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                {/* Favorite star */}
-                <button
-                  onClick={(e) => handleFavoriteClick(e, item.id)}
-                  className={`p-1.5 -m-1.5 transition-colors ${
-                    item.isFavorite
-                      ? 'text-[var(--color-primary)]'
-                      : 'text-[var(--color-border-strong)] hover:text-[var(--color-primary)]'
-                  }`}
-                  aria-label={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-                >
-                  <Star className={`w-4 h-4 ${item.isFavorite ? 'fill-current' : ''}`} />
-                </button>
-
-                {/* Item info */}
-                <button
-                  onClick={() => handleItemClick(item.id)}
-                  className="flex-1 min-w-0 text-left"
-                  aria-label={`View ${item.name}`}
-                >
-                  <div className="font-display text-sm text-[var(--color-text)] truncate tracking-wide">{item.name}</div>
-                  <div className="flex items-center gap-1.5 text-xs mt-0.5">
-                    <span className={getCategoryColor(item.category)}>{item.category.toUpperCase()}</span>
-                    <span className="text-[var(--color-text-dim)]">·</span>
-                    <span className="text-[var(--color-text-muted)]">{item.scoreType}</span>
-                  </div>
-                </button>
-              </div>
-              <button
-                onClick={() => handleItemClick(item.id)}
-                className="p-1"
-                aria-hidden="true"
-                tabIndex={-1}
+        <div>
+          {filteredItems.map((item) => {
+            const Icon = GLYPH[item.category] ?? Dumbbell;
+            return (
+              <div
+                key={item.id}
+                className="relative flex items-center gap-[14px] w-full rounded-2xl mb-[10px] px-[14px] py-[13px] transition-transform active:scale-[0.98]"
+                style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
               >
-                <ChevronRight className="w-4 h-4 text-[var(--color-text-dim)] opacity-50 group-hover:opacity-100 group-hover:text-[var(--color-primary)] transition-all" />
-              </button>
-            </div>
-          ))}
+                {/* full-card tap target for navigation (sibling to the favorite button, not a parent) */}
+                <button
+                  type="button"
+                  onClick={() => handleItemClick(item.id)}
+                  className="absolute inset-0 rounded-2xl"
+                  aria-label={`View ${item.name}`}
+                />
+                <div className="relative z-10">
+                  <PlateBadge
+                    category={item.category}
+                    favorite={item.isFavorite}
+                    onToggleFavorite={() => toggleFavorite(item.id)}
+                  >
+                    <Icon size={18} />
+                  </PlateBadge>
+                </div>
+                <div className="relative z-10 flex-1 min-w-0 pointer-events-none">
+                  <div className="font-display text-base text-[var(--color-text)] truncate">{item.name}</div>
+                  <div className="text-xs mt-0.5">
+                    <span style={{ color: categoryColorVar(item.category) }}>{item.category}</span>
+                    <span style={{ color: 'var(--color-text-muted)' }}> · {item.scoreType}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       ) : (
-        <div className="py-12 text-center border-t border-[var(--color-border)]">
+        <div className="py-12 text-center">
           <Dumbbell className="w-10 h-10 mx-auto mb-3 text-[var(--color-border-strong)]" />
-          <p className="font-display text-lg text-[var(--color-text)] mb-1 tracking-[0.2em]">NO RESULTS</p>
-          <p className="text-xs text-[var(--color-text-muted)] font-display tracking-widest">
+          <p className="font-display text-lg text-[var(--color-text)] mb-1">No results</p>
+          <p className="text-[13px] text-[var(--color-text-muted)]">
             {searchQuery
-              ? `NO MATCH FOR "${searchQuery.toUpperCase()}"${selectedCategory !== 'All' ? ` IN ${selectedCategory.toUpperCase()}` : ''}`
+              ? `No match for "${searchQuery}"${selectedCategory !== 'All' ? ` in ${selectedCategory}` : ''}`
               : selectedCategory !== 'All'
-                ? `NO ${selectedCategory.toUpperCase()} ITEMS`
-                : 'CATALOG EMPTY'}
+                ? `No ${selectedCategory} items`
+                : 'Catalog empty'}
           </p>
         </div>
       )}

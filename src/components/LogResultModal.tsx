@@ -6,6 +6,8 @@ import { parseResultToValue, validateResult, getResultPlaceholder, getResultLabe
 import { isDualMetricItem, isDistanceOnlyItem } from '../utils/itemMetrics';
 import { DatePicker } from './DatePicker';
 import { TimeInput } from './TimeInput';
+import { PlateStepper } from './PlateStepper';
+import { LoadedBarButton } from './LoadedBarButton';
 
 interface LogResultModalProps {
   item: CatalogItem;
@@ -48,6 +50,11 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
 
     if (!validateResult(result, item.scoreType)) {
       setError(`Invalid ${item.scoreType.toLowerCase()} format`);
+      return;
+    }
+
+    if (item.scoreType === 'Load' && parseFloat(result) <= 0) {
+      setError('Please enter a weight greater than 0');
       return;
     }
 
@@ -158,8 +165,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--color-border)]">
           <div>
-            <h2 className="font-display text-xl tracking-[0.15em] text-[var(--color-text)]">LOG RESULT</h2>
-            <p className="font-display text-xs tracking-[0.1em] text-[var(--color-text-muted)] mt-0.5">{item.name.toUpperCase()}</p>
+            <h2 className="font-display text-xl text-[var(--color-text)]">Log · {item.name}</h2>
           </div>
           <button
             onClick={onClose}
@@ -275,6 +281,15 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
                 onChange={setResult}
                 autoFocus
               />
+            ) : item.scoreType === 'Load' ? (
+              <div className="py-2">
+                <PlateStepper
+                  value={parseFloat(result) || 0}
+                  step={settings.weightUnit === 'lb' ? 5 : 2.5}
+                  unit={settings.weightUnit}
+                  onChange={(v) => setResult(String(v))}
+                />
+              </div>
             ) : (
               <input
                 type="text"
@@ -288,25 +303,33 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
             )}
           </div>
 
-          {/* Variant selector */}
+          {/* Variant selector — RxTag-style toggles */}
           {showVariant && (
             <div>
-              <label className="block font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)] mb-2">VARIANT</label>
-              <div className="flex border-b border-[var(--color-border)]">
-                {VARIANTS.map((v) => (
-                  <button
-                    key={v.value}
-                    type="button"
-                    onClick={() => setVariant(v.value)}
-                    className={`flex-1 py-2 font-display text-sm tracking-widest transition-colors border-b-2 -mb-px ${
-                      variant === v.value
-                        ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
-                        : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
-                    }`}
-                  >
-                    {v.label.toUpperCase()}
-                  </button>
-                ))}
+              <label className="block label-eyebrow mb-2">Effort</label>
+              <div className="flex gap-2">
+                {VARIANTS.map((v) => {
+                  const active = variant === v.value;
+                  const label = v.value === 'Rx+' ? 'RX+' : v.value === 'Scaled' ? 'SCALED' : 'RX';
+                  return (
+                    <button
+                      key={v.value}
+                      type="button"
+                      onClick={() => setVariant(v.value)}
+                      className="flex-1 py-2.5 rounded-xl text-[13px] font-extrabold tracking-[0.06em] transition-transform active:scale-95"
+                      style={
+                        active
+                          ? { background: 'var(--color-primary)', color: 'var(--color-bg)' }
+                          : v.value === 'Scaled'
+                            ? { color: 'var(--color-text-muted)', border: '1.5px dashed rgba(255,255,255,0.25)' }
+                            : { color: '#fff', border: '1.5px solid rgba(255,255,255,0.25)' }
+                      }
+                      aria-pressed={active}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -343,13 +366,9 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
           )}
 
           {/* Submit button */}
-          <button
-            type="submit"
-            disabled={isSubmitting || !result.trim()}
-            className="w-full py-4 bg-[var(--color-primary)] text-[#0B130B] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed font-display tracking-[0.15em] text-sm transition-all active:scale-[0.98] shadow-[0_0_20px_rgba(212,255,0,0.2)]"
-          >
-            {isSubmitting ? 'SAVING...' : 'SAVE RESULT'}
-          </button>
+          <LoadedBarButton type="submit" disabled={isSubmitting || !result.trim()}>
+            {isSubmitting ? 'Saving…' : `Save · ${item.name}`}
+          </LoadedBarButton>
         </form>
       </div>
     </div>

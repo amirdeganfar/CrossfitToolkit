@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { MoreVertical, Trophy, Calendar } from 'lucide-react';
 import type { GoalWithProgress } from '../../types/goal';
-import { GoalProgress } from './GoalProgress';
 import { TrendIndicator } from './TrendIndicator';
+import { Barbell } from '../Barbell';
 
 interface GoalCardProps {
   goal: GoalWithProgress;
@@ -166,7 +166,7 @@ export const GoalCard = ({
               {Math.round(goal.progress)}%
             </span>
           </div>
-          <GoalProgress progress={goal.progress} size="md" showLabel={false} />
+          <Barbell current={goal.progress} goal={100} />
         </div>
 
         {/* Bottom row: days remaining + trend */}
@@ -256,7 +256,7 @@ export const GoalCard = ({
                 {onAchieve && goal.progress >= 100 && (
                   <button
                     onClick={() => onAchieve(goal)}
-                    className="flex-1 py-2.5 px-3 bg-[var(--color-success)] hover:opacity-90 active:scale-[0.98] text-[#0B130B] font-display text-sm tracking-widest transition-all"
+                    className="flex-1 py-2.5 px-3 bg-[var(--color-success)] hover:opacity-90 active:scale-[0.98] text-[var(--color-bg)] font-display text-sm tracking-widest transition-all"
                   >
                     ACHIEVED
                   </button>
