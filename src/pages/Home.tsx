@@ -6,6 +6,7 @@ import { useGoalsStore, useSortedActiveGoals } from '../stores/goalsStore';
 import { useCheckInStore } from '../stores/checkInStore';
 import { useInitialize } from '../hooks/useInitialize';
 import { QuickCheckIn, RecoveryAlert } from '../components/recovery';
+import { WeekStreak } from '../components/WeekStreak';
 import { LoadedBarButton } from '../components/LoadedBarButton';
 import { Barbell } from '../components/Barbell';
 import { PlateBadge } from '../components/PlateBadge';
@@ -128,6 +129,9 @@ export const Home = () => {
           {statusLabel}
         </span>
       </div>
+
+      {/* Week streak strip */}
+      <WeekStreak />
 
       {/* Quick actions */}
       <div className="grid grid-cols-2 gap-2">

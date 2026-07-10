@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react';
+import type { Category } from '../types/catalog';
+import { categoryColorHex } from '../utils/categoryColors';
 
 /**
  * PlateBadge — a competition bumper plate seen head-on.
@@ -8,31 +10,22 @@ import type { ReactNode } from 'react';
  *   <PlateBadge category="Lift" favorite>
  *     <Dumbbell size={18} />
  *   </PlateBadge>
+ *
+ * Tapping the badge (when onToggleFavorite is provided) toggles favorite.
  */
-const CAT_COLOR: Record<string, string> = {
-  Lift: '#0A84FF',
-  Benchmark: '#FF9F0A',
-  Monostructural: '#34C759',
-  Cardio: '#34C759',
-  Skill: '#BF5AF2',
-  Custom: '#FF375F',
-};
-
 interface PlateBadgeProps {
-  category: string;
+  category: Category;
   size?: number;
   favorite?: boolean;
+  onToggleFavorite?: () => void;
   children: ReactNode;
 }
 
-export function PlateBadge({ category, size = 46, favorite = false, children }: PlateBadgeProps) {
-  const color = CAT_COLOR[category] ?? 'var(--color-text-muted)';
+export function PlateBadge({ category, size = 46, favorite = false, onToggleFavorite, children }: PlateBadgeProps) {
+  const color = categoryColorHex(category);
   const hub = Math.round(size * 0.65);
-  return (
-    <div
-      className="relative flex shrink-0 items-center justify-center"
-      style={{ width: size, height: size, borderRadius: 9999, background: color, boxShadow: `0 0 14px ${color}80` }}
-    >
+  const content = (
+    <>
       <div
         className="flex items-center justify-center"
         style={{ width: hub, height: hub, borderRadius: 9999, background: 'var(--color-surface)', color }}
@@ -49,6 +42,28 @@ export function PlateBadge({ category, size = 46, favorite = false, children }: 
           </svg>
         </span>
       )}
+    </>
+  );
+
+  const style = { width: size, height: size, borderRadius: 9999, background: color, boxShadow: `0 0 14px ${color}80` };
+
+  if (onToggleFavorite) {
+    return (
+      <button
+        type="button"
+        aria-label={favorite ? 'Remove favorite' : 'Add favorite'}
+        onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
+        className="relative flex shrink-0 items-center justify-center transition-transform active:scale-95"
+        style={style}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <div className="relative flex shrink-0 items-center justify-center" style={style}>
+      {content}
     </div>
   );
 }

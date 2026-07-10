@@ -11,16 +11,20 @@ interface LoadedBarButtonProps {
   onClick?: () => void;
   /** pill (default, full-width CTA) or a compact rounded variant for the quick-action row */
   variant?: 'pill' | 'compact';
+  type?: 'button' | 'submit';
+  disabled?: boolean;
   className?: string;
 }
 
-export function LoadedBarButton({ children, onClick, variant = 'pill', className = '' }: LoadedBarButtonProps) {
+export function LoadedBarButton({ children, onClick, variant = 'pill', type = 'button', disabled = false, className = '' }: LoadedBarButtonProps) {
   const radius = variant === 'pill' ? 9999 : 14;
   const cap = variant === 'pill' ? 14 : 11;
   return (
     <button
+      type={type}
       onClick={onClick}
-      className={`relative flex h-[54px] w-full items-center justify-center overflow-hidden transition-transform active:scale-[0.98] ${className}`}
+      disabled={disabled}
+      className={`relative flex h-[54px] w-full items-center justify-center overflow-hidden transition-transform active:scale-[0.98] disabled:opacity-40 disabled:active:scale-100 ${className}`}
       style={{ background: 'var(--color-primary)', borderRadius: radius }}
     >
       {/* knurl */}
