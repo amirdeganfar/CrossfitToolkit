@@ -20,15 +20,14 @@ function isoOf(d: Date) {
   return d.toISOString().split('T')[0];
 }
 
-/** Monday-based dates for the current week. */
+/** Monday-based dates for the current week (UTC, to match getTodayDate()). */
 function weekDates(): string[] {
   const now = new Date();
-  const dow = (now.getDay() + 6) % 7; // 0 = Monday
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - dow);
+  const dow = (now.getUTCDay() + 6) % 7; // 0 = Monday, in UTC
+  const monday = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - dow);
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
+    d.setUTCDate(d.getUTCDate() + i);
     return isoOf(d);
   });
 }
