@@ -1,12 +1,15 @@
 [
   {
     "id": "pullups-max",
-    "name": "Pull-ups (Max)",
+    "name": "Pull-ups",
     "category": "Skill",
     "scoreType": "Reps",
+    "scoreTypeIds": ["Reps", "RepsInTime", "TimeForReps"],
+    "timeCap": 60,
+    "targetReps": 20,
     "description": "Max unbroken pull-ups (strict or kipping)",
     "tags": ["gymnastics", "pull"],
-    "aliases": ["Pullups", "Max Pull-ups"],
+    "aliases": ["Pullups", "Max Pull-ups", "Pull-ups (Max)"],
     "source": "curated"
   },
   {
@@ -38,22 +41,28 @@
   },
   {
     "id": "c2b-pullups-max",
-    "name": "C2B Pull-ups (Max)",
+    "name": "C2B Pull-ups",
     "category": "Skill",
     "scoreType": "Reps",
+    "scoreTypeIds": ["Reps", "RepsInTime", "TimeForReps"],
+    "timeCap": 60,
+    "targetReps": 15,
     "description": "Max unbroken chest-to-bar pull-ups",
     "tags": ["gymnastics", "pull"],
-    "aliases": ["Chest-to-Bar Pull-ups (Max)"],
+    "aliases": ["Chest-to-Bar Pull-ups (Max)", "C2B Pull-ups (Max)"],
     "source": "curated"
   },
   {
     "id": "hspu-max",
-    "name": "HSPU (Max)",
+    "name": "HSPU",
     "category": "Skill",
     "scoreType": "Reps",
+    "scoreTypeIds": ["Reps", "RepsInTime", "TimeForReps"],
+    "timeCap": 60,
+    "targetReps": 10,
     "description": "Max unbroken handstand push-ups (kipping)",
     "tags": ["gymnastics", "press", "inversion"],
-    "aliases": ["Handstand Push-ups (Max)", "Max HSPU"],
+    "aliases": ["Handstand Push-ups (Max)", "Max HSPU", "HSPU (Max)"],
     "source": "curated"
   },
   {
@@ -67,22 +76,28 @@
   },
   {
     "id": "ring-muscle-ups-max",
-    "name": "Ring Muscle-ups (Max)",
+    "name": "Ring Muscle-ups",
     "category": "Skill",
     "scoreType": "Reps",
+    "scoreTypeIds": ["Reps", "RepsInTime", "TimeForReps"],
+    "timeCap": 120,
+    "targetReps": 10,
     "description": "Max unbroken ring muscle-ups",
     "tags": ["gymnastics", "pull", "rings"],
-    "aliases": ["Max Ring MU"],
+    "aliases": ["Max Ring MU", "Ring Muscle-ups (Max)"],
     "source": "curated"
   },
   {
     "id": "bar-muscle-ups-max",
-    "name": "Bar Muscle-ups (Max)",
+    "name": "Bar Muscle-ups",
     "category": "Skill",
     "scoreType": "Reps",
+    "scoreTypeIds": ["Reps", "RepsInTime", "TimeForReps"],
+    "timeCap": 120,
+    "targetReps": 10,
     "description": "Max unbroken bar muscle-ups",
     "tags": ["gymnastics", "pull"],
-    "aliases": ["Max Bar MU"],
+    "aliases": ["Max Bar MU", "Bar Muscle-ups (Max)"],
     "source": "curated"
   },
   {
@@ -96,12 +111,15 @@
   },
   {
     "id": "double-unders-max",
-    "name": "Double-unders (Max)",
+    "name": "Double-unders",
     "category": "Skill",
     "scoreType": "Reps",
+    "scoreTypeIds": ["Reps", "RepsInTime", "TimeForReps"],
+    "timeCap": 60,
+    "targetReps": 50,
     "description": "Max unbroken double-unders",
     "tags": ["jump-rope", "skill"],
-    "aliases": ["DUs (Max)", "Max Double-unders"],
+    "aliases": ["DUs (Max)", "Max Double-unders", "Double-unders (Max)"],
     "source": "curated"
   },
   {
@@ -124,12 +142,15 @@
   },
   {
     "id": "toes-to-bar-max",
-    "name": "Toes-to-Bar (Max)",
+    "name": "Toes-to-Bar",
     "category": "Skill",
     "scoreType": "Reps",
+    "scoreTypeIds": ["Reps", "RepsInTime", "TimeForReps"],
+    "timeCap": 60,
+    "targetReps": 20,
     "description": "Max unbroken toes-to-bar",
     "tags": ["gymnastics", "core", "pull"],
-    "aliases": ["TTB (Max)", "Max Toes-to-bar"],
+    "aliases": ["TTB (Max)", "Max Toes-to-bar", "Toes-to-Bar (Max)"],
     "source": "curated"
   },
   {
@@ -154,11 +175,15 @@
   },
   {
     "id": "rope-climb-max",
-    "name": "Rope Climb (Max)",
+    "name": "Rope Climb",
     "category": "Skill",
     "scoreType": "Reps",
+    "scoreTypeIds": ["Reps", "RepsInTime", "TimeForReps"],
+    "timeCap": 120,
+    "targetReps": 5,
     "description": "Max rope climbs (15 ft, for time cap or unbroken)",
     "tags": ["gymnastics", "pull", "rope"],
+    "aliases": ["Rope Climb (Max)"],
     "source": "curated"
   },
   {
@@ -200,30 +225,41 @@
   },
   {
     "id": "pistol-squat-max",
-    "name": "Pistol Squat (Max)",
+    "name": "Pistol Squat",
     "category": "Skill",
     "scoreType": "Reps",
+    "scoreTypeIds": ["Reps", "RepsInTime", "TimeForReps"],
+    "timeCap": 60,
+    "targetReps": 20,
     "description": "Max alternating pistol squats (single-leg squats)",
     "tags": ["gymnastics", "squat"],
-    "aliases": ["Pistols (Max)"],
+    "aliases": ["Pistols (Max)", "Pistol Squat (Max)"],
     "source": "curated"
   },
   {
     "id": "wall-walk-max",
-    "name": "Wall Walk (Max)",
+    "name": "Wall Walk",
     "category": "Skill",
     "scoreType": "Reps",
+    "scoreTypeIds": ["Reps", "RepsInTime", "TimeForReps"],
+    "timeCap": 120,
+    "targetReps": 10,
     "description": "Max wall walks",
     "tags": ["gymnastics", "inversion"],
+    "aliases": ["Wall Walk (Max)"],
     "source": "curated"
   },
   {
     "id": "push-ups-max",
-    "name": "Push-ups (Max)",
+    "name": "Push-ups",
     "category": "Skill",
     "scoreType": "Reps",
+    "scoreTypeIds": ["Reps", "RepsInTime", "TimeForReps"],
+    "timeCap": 60,
+    "targetReps": 30,
     "description": "Max unbroken push-ups",
     "tags": ["gymnastics", "press"],
+    "aliases": ["Push-ups (Max)"],
     "source": "curated"
   },
   {
@@ -237,38 +273,54 @@
   },
   {
     "id": "box-jump-max-reps",
-    "name": "Box Jump (Max Reps)",
+    "name": "Box Jump",
     "category": "Skill",
     "scoreType": "Reps",
+    "scoreTypeIds": ["Reps", "RepsInTime", "TimeForReps"],
+    "timeCap": 60,
+    "targetReps": 30,
     "description": "Max unbroken box jumps (24/20\")",
     "tags": ["plyometric"],
+    "aliases": ["Box Jump (Max Reps)"],
     "source": "curated"
   },
   {
     "id": "burpees-max",
-    "name": "Burpees (Max)",
+    "name": "Burpees",
     "category": "Skill",
     "scoreType": "Reps",
+    "scoreTypeIds": ["Reps", "RepsInTime", "TimeForReps"],
+    "timeCap": 60,
+    "targetReps": 30,
     "description": "Max burpees in set time or unbroken",
     "tags": ["conditioning"],
+    "aliases": ["Burpees (Max)"],
     "source": "curated"
   },
   {
     "id": "wall-ball-max",
-    "name": "Wall Ball (Max)",
+    "name": "Wall Ball",
     "category": "Skill",
     "scoreType": "Reps",
+    "scoreTypeIds": ["Reps", "RepsInTime", "TimeForReps"],
+    "timeCap": 60,
+    "targetReps": 30,
     "description": "Max unbroken wall balls (20/14 lb)",
     "tags": ["conditioning"],
+    "aliases": ["Wall Ball (Max)"],
     "source": "curated"
   },
   {
     "id": "sit-ups-max",
-    "name": "Sit-ups (Max)",
+    "name": "Sit-ups",
     "category": "Skill",
     "scoreType": "Reps",
+    "scoreTypeIds": ["Reps", "RepsInTime", "TimeForReps"],
+    "timeCap": 60,
+    "targetReps": 30,
     "description": "Max unbroken sit-ups",
     "tags": ["core"],
+    "aliases": ["Sit-ups (Max)"],
     "source": "curated"
   },
   {
@@ -292,11 +344,15 @@
   },
   {
     "id": "air-squats-max",
-    "name": "Air Squats (Max)",
+    "name": "Air Squats",
     "category": "Skill",
     "scoreType": "Reps",
+    "scoreTypeIds": ["Reps", "RepsInTime", "TimeForReps"],
+    "timeCap": 60,
+    "targetReps": 50,
     "description": "Max unbroken air squats",
     "tags": ["squat"],
+    "aliases": ["Air Squats (Max)"],
     "source": "curated"
   },
   {

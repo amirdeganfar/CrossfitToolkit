@@ -16,7 +16,16 @@ const ALLOWED_SUBCATEGORIES = new Set([
   'Test',
   'Other',
 ]);
-const ALLOWED_SCORE_TYPES = new Set(['Time', 'Load', 'Reps', 'Rounds+Reps', 'Distance', 'Calories']);
+const ALLOWED_SCORE_TYPES = new Set([
+  'Time',
+  'Load',
+  'Reps',
+  'Rounds+Reps',
+  'Distance',
+  'Calories',
+  'RepsInTime',
+  'TimeForReps',
+]);
 const ALLOWED_METRICS = new Set(['distance', 'calories', 'distance+calories']);
 
 /**
@@ -64,7 +73,7 @@ const main = async () => {
         continue;
       }
 
-      const { id, name, category, subCategory, scoreType, metrics } = item;
+      const { id, name, category, subCategory, scoreType, metrics, scoreTypeIds, timeCap, targetReps } = item;
 
       if (!id || typeof id !== 'string') errors.push(`${prefix}: missing/invalid id`);
       if (!name || typeof name !== 'string') errors.push(`${prefix}: missing/invalid name`);
@@ -79,6 +88,28 @@ const main = async () => {
         if (typeof subCategory !== 'string' || !ALLOWED_SUBCATEGORIES.has(subCategory)) {
           errors.push(`${prefix}: invalid subCategory "${subCategory}"`);
         }
+      }
+
+      if (scoreTypeIds !== undefined) {
+        if (!Array.isArray(scoreTypeIds) || scoreTypeIds.length === 0) {
+          errors.push(`${prefix}: scoreTypeIds must be a non-empty array`);
+        } else {
+          for (const st of scoreTypeIds) {
+            if (typeof st !== 'string' || !ALLOWED_SCORE_TYPES.has(st)) {
+              errors.push(`${prefix}: invalid scoreTypeIds entry "${st}"`);
+            }
+          }
+          if (typeof scoreType === 'string' && !scoreTypeIds.includes(scoreType)) {
+            errors.push(`${prefix}: scoreType "${scoreType}" must be included in scoreTypeIds`);
+          }
+        }
+      }
+
+      if (timeCap !== undefined && (typeof timeCap !== 'number' || timeCap <= 0)) {
+        errors.push(`${prefix}: timeCap must be a positive number (seconds)`);
+      }
+      if (targetReps !== undefined && (typeof targetReps !== 'number' || targetReps <= 0)) {
+        errors.push(`${prefix}: targetReps must be a positive number`);
       }
 
       if (metrics !== undefined) {
