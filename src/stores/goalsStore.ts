@@ -1,6 +1,7 @@
+import { useMemo } from 'react';
 import { create } from 'zustand';
 import type { Goal, GoalWithProgress, CreateGoalInput, UpdateGoalInput } from '../types/goal';
-import type { CatalogItem, PRLog } from '../types/catalog';
+import type { CatalogItem, PRLog, ScoreType } from '../types/catalog';
 import * as db from '../db';
 import * as goalService from '../services/goalService';
 
@@ -47,7 +48,8 @@ interface GoalsState {
   getActiveGoalForItem: (
     itemId: string,
     variant?: Goal['variant'],
-    reps?: number
+    reps?: number,
+    pool?: { scoreTypeId?: ScoreType; timeCap?: number; targetReps?: number }
   ) => Promise<Goal | undefined>;
 }
 
@@ -222,9 +224,10 @@ export const useGoalsStore = create<GoalsState>((set, get) => ({
   getActiveGoalForItem: async (
     itemId: string,
     variant?: Goal['variant'],
-    reps?: number
+    reps?: number,
+    pool?: { scoreTypeId?: ScoreType; timeCap?: number; targetReps?: number }
   ) => {
-    return db.getActiveGoalForItem(itemId, variant, reps);
+    return db.getActiveGoalForItem(itemId, variant, reps, pool);
   },
 }));
 
@@ -233,11 +236,42 @@ export const useGoalsStore = create<GoalsState>((set, get) => ({
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
- * Get active goal for a specific item from store
+ * Get active goal for a specific item from store.
+ *
+ * For multi-mode items, pass `pool` to resolve the goal bound to a specific
+ * score pool (score type + constraint). Legacy goals without a `scoreTypeId`
+ * backfill to `pool.primaryScoreType` (the item's primary). Without `pool`,
+ * returns the first active goal for the item — unchanged behavior.
  */
-export const useActiveGoalForItem = (itemId: string) => {
+export const useActiveGoalForItem = (
+  itemId: string,
+  pool?: { scoreTypeId?: ScoreType; timeCap?: number; targetReps?: number; primaryScoreType?: ScoreType }
+) => {
   return useGoalsStore((state) =>
-    state.activeGoals.find((goal) => goal.itemId === itemId)
+    state.activeGoals.find((goal) => {
+      if (goal.itemId !== itemId) return false;
+      if (!pool?.scoreTypeId) return true;
+      const goalScoreType = goal.scoreTypeId ?? pool.primaryScoreType;
+      if (goalScoreType !== pool.scoreTypeId) return false;
+      if (pool.timeCap !== undefined && goal.timeCap !== pool.timeCap) return false;
+      if (pool.targetReps !== undefined && goal.targetReps !== pool.targetReps) return false;
+      return true;
+    })
+  );
+};
+
+/**
+ * Get all active goals for a specific item (one per score pool for multi-mode
+ * items). Callers resolve the pool match themselves against each group.
+ */
+export const useActiveGoalsForItem = (itemId: string): GoalWithProgress[] => {
+  // Select the stable array reference from the store, then derive the filtered
+  // list with useMemo. Filtering inside the selector would return a fresh array
+  // each render, breaking snapshot caching → infinite re-render loop.
+  const activeGoals = useGoalsStore((state) => state.activeGoals);
+  return useMemo(
+    () => activeGoals.filter((goal) => goal.itemId === itemId),
+    [activeGoals, itemId]
   );
 };
 

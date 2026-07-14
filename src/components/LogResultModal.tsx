@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
-import type { CatalogItem, Variant } from '../types/catalog';
+import type { CatalogItem, Variant, ScoreType } from '../types/catalog';
 import { useCatalogStore } from '../stores/catalogStore';
-import { parseResultToValue, validateResult, getResultPlaceholder, getResultLabel, formatCompoundResult } from '../utils/resultParser';
+import { parseResultToValue, validateResult, getResultPlaceholder, getResultLabel, formatCompoundResult, formatSecondsToTime, parseTimeToSeconds } from '../utils/resultParser';
+import { getScoreModes, SCORE_TYPES } from '../config/scoreTypes';
 import { isDualMetricItem, isDistanceOnlyItem } from '../utils/itemMetrics';
 import { DatePicker } from './DatePicker';
 import { TimeInput } from './TimeInput';
@@ -25,11 +26,18 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
   const addPRLog = useCatalogStore((state) => state.addPRLog);
   const settings = useCatalogStore((state) => state.settings);
 
+  // Allowed score modes for this item; when >1 the user picks one per log.
+  const modes = getScoreModes(item);
+  const isMultiMode = modes.length > 1;
+
+  const [scoreType, setScoreType] = useState<ScoreType>(item.scoreType);
   const [result, setResult] = useState('');
   const [reps, setReps] = useState<string>('1');
   const [distance, setDistance] = useState<string>('');
   const [distanceUnit, setDistanceUnit] = useState<'m' | 'km' | 'mi'>('m');
   const [calories, setCalories] = useState<string>('');
+  const [timeCap, setTimeCap] = useState<string>(item.timeCap ? formatSecondsToTime(item.timeCap) : '');
+  const [targetReps, setTargetReps] = useState<string>(item.targetReps ? String(item.targetReps) : '');
   const [metricType, setMetricType] = useState<'distance' | 'calories'>('distance');
   const [variant, setVariant] = useState<Variant>(item.category === 'Benchmark' ? 'Rx' : null);
   const [date, setDate] = useState(new Date());
@@ -37,23 +45,36 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const showReps = item.scoreType === 'Load';
-  const isDual = isDualMetricItem(item);
-  const isDistanceOnly = isDistanceOnlyItem(item);
+  const showReps = scoreType === 'Load';
+  const isRepsInTime = scoreType === 'RepsInTime';
+  const isTimeForReps = scoreType === 'TimeForReps';
+  // Dual/distance metrics only apply to single-mode Monostructural items.
+  const isDual = !isMultiMode && isDualMetricItem(item);
+  const isDistanceOnly = !isMultiMode && isDistanceOnlyItem(item);
   const showDistance = isDistanceOnly || (isDual && metricType === 'distance');
   const showCalories = isDual && metricType === 'calories';
   const showVariant = item.category === 'Benchmark';
+
+  // Switching mode: clear the result (its format differs per mode) and re-prefill
+  // this mode's constraint default from the item.
+  const handleScoreTypeChange = (next: ScoreType) => {
+    setScoreType(next);
+    setResult('');
+    setError(null);
+    setTimeCap(item.timeCap ? formatSecondsToTime(item.timeCap) : '');
+    setTargetReps(item.targetReps ? String(item.targetReps) : '');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (!validateResult(result, item.scoreType)) {
-      setError(`Invalid ${item.scoreType.toLowerCase()} format`);
+    if (!validateResult(result, scoreType)) {
+      setError(`Invalid ${scoreType.toLowerCase()} format`);
       return;
     }
 
-    if (item.scoreType === 'Load' && parseFloat(result) <= 0) {
+    if (scoreType === 'Load' && parseFloat(result) <= 0) {
       setError('Please enter a weight greater than 0');
       return;
     }
@@ -73,11 +94,23 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
       return;
     }
 
+    if (isRepsInTime && (!timeCap || parseTimeToSeconds(timeCap) <= 0)) {
+      setError('Please enter a valid time cap');
+      return;
+    }
+
+    if (isTimeForReps && (!targetReps || parseInt(targetReps) < 1)) {
+      setError('Please enter a valid rep target');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const resultValue = parseResultToValue(result, item.scoreType);
+      const resultValue = parseResultToValue(result, scoreType);
       const repsValue = showReps ? parseInt(reps) : undefined;
+      const timeCapValue = isRepsInTime ? parseTimeToSeconds(timeCap) : undefined;
+      const targetRepsValue = isTimeForReps ? parseInt(targetReps) : undefined;
 
       let distanceInMeters: number | undefined;
       if (showDistance) {
@@ -105,8 +138,12 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
       } else if (showCalories) {
         caloriesValue = parseFloat(calories);
         displayResult = `${calories} cal in ${result}`;
+      } else if (isRepsInTime && timeCapValue) {
+        displayResult = `${result} reps in ${formatSecondsToTime(timeCapValue)}`;
+      } else if (isTimeForReps) {
+        displayResult = `${targetReps} reps in ${result}`;
       } else {
-        displayResult = formatCompoundResult(result, item.scoreType, {
+        displayResult = formatCompoundResult(result, scoreType, {
           reps: repsValue,
           weightUnit: settings.weightUnit,
           distanceUnit: settings.distanceUnit,
@@ -117,12 +154,15 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
         catalogItemId: item.id,
         result: displayResult,
         resultValue,
+        scoreTypeId: scoreType,
         variant,
         date: date.getTime(),
         notes: notes.trim() || undefined,
         reps: repsValue,
         distance: distanceInMeters,
         calories: caloriesValue,
+        timeCap: timeCapValue,
+        targetReps: targetRepsValue,
       });
 
       onSuccess();
@@ -136,15 +176,15 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
   };
 
   const getUnitLabel = () => {
-    switch (item.scoreType) {
+    switch (scoreType) {
       case 'Load':     return settings.weightUnit;
       case 'Distance': return settings.distanceUnit;
       default:         return '';
     }
   };
 
-  // Underline input class
-  const inputClass = 'w-full bg-transparent border-b border-[var(--color-border-strong)] px-0 py-2.5 text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors font-display tracking-wider text-sm';
+  // Filled field class (visible on near-black — see .field in index.css)
+  const inputClass = 'field w-full px-3 py-2.5 font-display tracking-wider text-sm';
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
@@ -178,6 +218,33 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-4 space-y-5">
+          {/* Score-type selector — only when the item supports multiple modes */}
+          {isMultiMode && (
+            <div>
+              <label className="block font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)] mb-2">LOG AS</label>
+              <div className="flex border-b border-[var(--color-border)] overflow-x-auto">
+                {modes.map((mode) => {
+                  const active = scoreType === mode;
+                  return (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => handleScoreTypeChange(mode)}
+                      className={`flex-1 whitespace-nowrap py-2.5 px-2 font-display text-xs tracking-widest transition-colors border-b-2 -mb-px ${
+                        active
+                          ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
+                          : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
+                      }`}
+                      aria-pressed={active}
+                    >
+                      {SCORE_TYPES[mode].name.toUpperCase()}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Reps input for Load type */}
           {showReps && (
             <div>
@@ -270,18 +337,41 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
             </div>
           )}
 
+          {/* Time cap for RepsInTime items (how long you had to rack up reps) */}
+          {isRepsInTime && (
+            <div>
+              <label className="block font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)] mb-2">TIME CAP</label>
+              <TimeInput value={timeCap} onChange={setTimeCap} />
+            </div>
+          )}
+
+          {/* Target reps for TimeForReps items (rep count you raced to complete) */}
+          {isTimeForReps && (
+            <div>
+              <label className="block font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)] mb-2">TARGET REPS</label>
+              <input
+                type="number"
+                min="1"
+                value={targetReps}
+                onChange={(e) => setTargetReps(e.target.value)}
+                placeholder="e.g., 10"
+                className={inputClass}
+              />
+            </div>
+          )}
+
           {/* Result input */}
           <div>
             <label className="block font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)] mb-2">
-              {getResultLabel(item.scoreType).toUpperCase()} {getUnitLabel() && item.scoreType === 'Load' && `(${getUnitLabel().toUpperCase()})`}
+              {getResultLabel(scoreType).toUpperCase()} {getUnitLabel() && scoreType === 'Load' && `(${getUnitLabel().toUpperCase()})`}
             </label>
-            {item.scoreType === 'Time' ? (
+            {scoreType === 'Time' || isTimeForReps ? (
               <TimeInput
                 value={result}
                 onChange={setResult}
                 autoFocus
               />
-            ) : item.scoreType === 'Load' ? (
+            ) : scoreType === 'Load' ? (
               <div className="py-2">
                 <PlateStepper
                   value={parseFloat(result) || 0}
@@ -295,7 +385,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
                 type="text"
                 value={result}
                 onChange={(e) => setResult(e.target.value)}
-                placeholder={getResultPlaceholder(item.scoreType)}
+                placeholder={getResultPlaceholder(scoreType)}
                 className={inputClass}
                 autoFocus
                 required
@@ -354,7 +444,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
               onChange={(e) => setNotes(e.target.value)}
               placeholder="How did it feel?"
               rows={2}
-              className="w-full bg-transparent border-b border-[var(--color-border-strong)] px-0 py-2.5 text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors resize-none text-sm"
+              className="field w-full px-3 py-2.5 resize-none text-sm"
             />
           </div>
 

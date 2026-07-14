@@ -1,13 +1,35 @@
 import type { CatalogItem, PRLog, ScoreType } from '../types/catalog';
 import type { Goal, GoalWithProgress, TrendStatus } from '../types/goal';
 import { formatSecondsToTime } from '../utils/resultParser';
+import { isLowerBetter as scoreTypeIsLowerBetter, getLogScoreType } from '../config/scoreTypes';
 import * as db from '../db';
 
 /**
  * Check if a score type is "lower is better" (e.g., Time)
  */
-export const isLowerBetter = (scoreType: ScoreType): boolean => {
-  return scoreType === 'Time';
+export const isLowerBetter = (scoreType: ScoreType): boolean => scoreTypeIsLowerBetter(scoreType);
+
+/**
+ * The score type a goal targets. For multi-mode items a goal binds to one score
+ * pool; single-mode goals (and all legacy goals) fall back to the item's primary
+ * score type — so behavior is unchanged for them.
+ */
+const goalScoreType = (goal: Goal, item: CatalogItem): ScoreType =>
+  goal.scoreTypeId ?? item.scoreType;
+
+/**
+ * Restrict logs to the goal's score pool: matching effective score type and, for
+ * constrained types, the same constraint. A no-op when the goal has no
+ * scoreTypeId (single-mode / legacy goals).
+ */
+const filterLogsToGoalPool = (logs: PRLog[], goal: Goal, item: CatalogItem): PRLog[] => {
+  if (!goal.scoreTypeId) return logs;
+  return logs.filter((log) => {
+    if (getLogScoreType(log, item) !== goal.scoreTypeId) return false;
+    if (goal.timeCap !== undefined && log.timeCap !== goal.timeCap) return false;
+    if (goal.targetReps !== undefined && log.targetReps !== goal.targetReps) return false;
+    return true;
+  });
 };
 
 /**
@@ -156,10 +178,12 @@ export const formatValueAsResult = (
 ): string => {
   switch (scoreType) {
     case 'Time':
+    case 'TimeForReps':
       return formatSecondsToTime(value);
     case 'Load':
       return `${value}${unit || ''}`;
     case 'Reps':
+    case 'RepsInTime':
       return `${value}`;
     case 'Distance':
       return `${value}${unit || 'm'}`;
@@ -195,11 +219,15 @@ export const getBestPRForGoal = async (
     filteredLogs = filteredLogs.filter((log) => log.reps === goal.reps);
   }
 
+  // Restrict to the goal's score pool (multi-mode items)
+  filteredLogs = filterLogsToGoalPool(filteredLogs, goal, item);
+
   if (filteredLogs.length === 0) return undefined;
 
   // Find best PR
+  const scoreType = goalScoreType(goal, item);
   return filteredLogs.reduce((best, current) => {
-    if (isLowerBetter(item.scoreType)) {
+    if (isLowerBetter(scoreType)) {
       return current.resultValue < best.resultValue ? current : best;
     }
     return current.resultValue > best.resultValue ? current : best;
@@ -223,7 +251,7 @@ export const getPRLogsForTrend = async (
     filteredLogs = filteredLogs.filter((log) => log.reps === goal.reps);
   }
 
-  return filteredLogs;
+  return filterLogsToGoalPool(filteredLogs, goal, item);
 };
 
 /**
@@ -236,17 +264,18 @@ export const enrichGoalWithProgress = async (
 ): Promise<GoalWithProgress> => {
   const bestPR = await getBestPRForGoal(goal, item);
   const logs = await getPRLogsForTrend(goal, item);
-  const unit = item.scoreType === 'Load' ? weightUnit : undefined;
+  const scoreType = goalScoreType(goal, item);
+  const unit = scoreType === 'Load' ? weightUnit : undefined;
 
   const currentValue = bestPR?.resultValue ?? null;
   const currentResult = bestPR?.result ?? null;
-  const progress = calculateProgress(currentValue, goal.targetValue, item.scoreType);
+  const progress = calculateProgress(currentValue, goal.targetValue, scoreType);
   const daysRemaining = calculateDaysRemaining(goal.targetDate);
   const { trend, projectedDate } = calculateTrend(
     logs,
     goal.targetValue,
     goal.targetDate,
-    item.scoreType
+    scoreType
   );
 
   return {
@@ -254,7 +283,7 @@ export const enrichGoalWithProgress = async (
     itemName: item.name,
     currentValue,
     currentResult,
-    targetResult: formatValueAsResult(goal.targetValue, item.scoreType, unit),
+    targetResult: formatValueAsResult(goal.targetValue, scoreType, unit),
     progress,
     daysRemaining,
     trend,
@@ -284,8 +313,15 @@ export const checkGoalsOnNewPR = async (
       continue;
     }
 
+    // Check score pool match (for multi-mode items)
+    if (goal.scoreTypeId) {
+      if (getLogScoreType(log, item) !== goal.scoreTypeId) continue;
+      if (goal.timeCap !== undefined && log.timeCap !== goal.timeCap) continue;
+      if (goal.targetReps !== undefined && log.targetReps !== goal.targetReps) continue;
+    }
+
     // Check if this PR achieves the goal
-    if (isGoalAchieved(log.resultValue, goal.targetValue, item.scoreType)) {
+    if (isGoalAchieved(log.resultValue, goal.targetValue, goalScoreType(goal, item))) {
       achievedGoalIds.push(goal.id);
     }
   }

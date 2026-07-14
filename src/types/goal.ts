@@ -1,4 +1,4 @@
-import type { Variant } from './catalog';
+import type { Variant, ScoreType } from './catalog';
 
 /**
  * Goal status
@@ -23,6 +23,9 @@ export interface Goal {
   achievedAt?: string;         // ISO date string when goal was achieved
   variant?: Variant;           // For benchmarks (Rx/Scaled/Rx+)
   reps?: number;               // For lifts (e.g., 1RM vs 3RM goal)
+  scoreTypeId?: ScoreType;     // For multi-mode items: which score pool the goal targets. Backfills to item.scoreType.
+  timeCap?: number;            // Constraint pool for RepsInTime goals (seconds)
+  targetReps?: number;         // Constraint pool for TimeForReps goals
 }
 
 /**
@@ -48,6 +51,9 @@ export interface CreateGoalInput {
   targetDate: string;
   variant?: Variant;
   reps?: number;
+  scoreTypeId?: ScoreType;
+  timeCap?: number;
+  targetReps?: number;
 }
 
 /**
@@ -60,4 +66,7 @@ export interface UpdateGoalInput {
   achievedAt?: string;
   variant?: Variant;
   reps?: number;
+  scoreTypeId?: ScoreType;
+  timeCap?: number;
+  targetReps?: number;
 }

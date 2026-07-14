@@ -1,8 +1,9 @@
 import Dexie, { type EntityTable } from 'dexie';
-import type { CatalogItem, PRLog, UserSettings, Favorite, CustomItem } from '../types/catalog';
+import type { CatalogItem, PRLog, UserSettings, Favorite, CustomItem, ScoreType } from '../types/catalog';
 import type { Goal, CreateGoalInput, UpdateGoalInput, GoalStatus } from '../types/goal';
 import type { DailyCheckIn } from '../types/training';
 import { getBuiltinCatalog, getBuiltinCatalogItemById } from '../catalog/catalogService';
+import { isLowerBetter as scoreTypeIsLowerBetter, getLogScoreType } from '../config/scoreTypes';
 
 /**
  * CrossfitToolkit IndexedDB Database
@@ -115,7 +116,10 @@ export const initializeDatabase = async (): Promise<void> => {
   // Ensure default settings exist
   const settings = await db.settings.get('default');
   if (!settings) {
-    await db.settings.add({
+    // `put` (not `add`) keeps this idempotent: React StrictMode double-invokes
+    // initialize() in dev, racing two inserts of the same key — `add` would
+    // throw a ConstraintError on the second. `put` is a safe no-op overwrite.
+    await db.settings.put({
       id: 'default',
       weightUnit: 'kg',
       distanceUnit: 'm',
@@ -280,14 +284,20 @@ export const getRecentPRLogs = async (limit: number = 10): Promise<PRLog[]> => {
 };
 
 /**
- * Get the best PR for a catalog item (by variant)
+ * Get the best PR for a catalog item (by variant).
+ *
+ * For multi-mode items, pass `opts.scoreTypeId` (and, where relevant, the
+ * constraint `timeCap`/`targetReps`) to isolate a single score pool — otherwise
+ * best is computed across all logs using the item's primary score type, which is
+ * only meaningful for single-mode items.
  */
 export const getBestPR = async (
   catalogItemId: string,
-  variant?: PRLog['variant']
+  variant?: PRLog['variant'],
+  opts?: { scoreTypeId?: ScoreType; timeCap?: number; targetReps?: number }
 ): Promise<PRLog | undefined> => {
   let logs = await getPRLogsForItem(catalogItemId);
-  
+
   if (variant !== undefined) {
     logs = logs.filter((log) => log.variant === variant);
   }
@@ -298,8 +308,17 @@ export const getBestPR = async (
   const item = await getCatalogItemById(catalogItemId);
   if (!item) return undefined;
 
-  const isLowerBetter = item.scoreType === 'Time';
-  
+  // Restrict to a single score pool when a score type is requested.
+  const scoreType = opts?.scoreTypeId ?? item.scoreType;
+  if (opts?.scoreTypeId) {
+    logs = logs.filter((log) => getLogScoreType(log, item) === opts.scoreTypeId);
+    if (opts.timeCap !== undefined) logs = logs.filter((log) => log.timeCap === opts.timeCap);
+    if (opts.targetReps !== undefined) logs = logs.filter((log) => log.targetReps === opts.targetReps);
+    if (logs.length === 0) return undefined;
+  }
+
+  const isLowerBetter = scoreTypeIsLowerBetter(scoreType);
+
   return logs.reduce((best, current) => {
     if (isLowerBetter) {
       return current.resultValue < best.resultValue ? current : best;
@@ -650,7 +669,8 @@ export const getGoalById = async (id: string): Promise<Goal | undefined> => {
 export const getActiveGoalForItem = async (
   itemId: string,
   variant?: Goal['variant'],
-  reps?: number
+  reps?: number,
+  pool?: { scoreTypeId?: ScoreType; timeCap?: number; targetReps?: number }
 ): Promise<Goal | undefined> => {
   const activeGoals = await db.goals
     .where('itemId')
@@ -658,11 +678,23 @@ export const getActiveGoalForItem = async (
     .and((goal) => goal.status === 'active')
     .toArray();
 
-  // Find goal matching variant and reps if specified
+  // Resolve the item once (only needed to backfill the score pool of legacy goals).
+  const item = pool?.scoreTypeId ? await getCatalogItemById(itemId) : undefined;
+
+  // Find goal matching variant, reps, and — for multi-mode items — the score pool.
   return activeGoals.find((goal) => {
     const variantMatch = variant === undefined || goal.variant === variant;
     const repsMatch = reps === undefined || goal.reps === reps;
-    return variantMatch && repsMatch;
+    let poolMatch = true;
+    if (pool?.scoreTypeId && item) {
+      // Backfill legacy goals (no scoreTypeId) to the item's primary score type.
+      const goalScoreType = goal.scoreTypeId ?? item.scoreType;
+      poolMatch =
+        goalScoreType === pool.scoreTypeId &&
+        (pool.timeCap === undefined || goal.timeCap === pool.timeCap) &&
+        (pool.targetReps === undefined || goal.targetReps === pool.targetReps);
+    }
+    return variantMatch && repsMatch && poolMatch;
   });
 };
 
@@ -689,6 +721,9 @@ export const addGoal = async (input: CreateGoalInput): Promise<string> => {
     status: 'active',
     variant: input.variant,
     reps: input.reps,
+    scoreTypeId: input.scoreTypeId,
+    timeCap: input.timeCap,
+    targetReps: input.targetReps,
   });
   
   return id;

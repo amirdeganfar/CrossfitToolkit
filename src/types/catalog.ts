@@ -26,13 +26,15 @@ export type SubCategory =
 /**
  * How the result is scored
  */
-export type ScoreType = 
+export type ScoreType =
   | 'Time'           // Measured in MM:SS (lower is better)
   | 'Load'           // Measured in kg/lb (higher is better)
   | 'Reps'           // Count of repetitions (higher is better)
   | 'Rounds+Reps'    // AMRAP format: "18+5" (higher is better)
   | 'Distance'       // Measured in meters (higher is better)
-  | 'Calories';      // Measured in cal (higher is better)
+  | 'Calories'       // Measured in cal (higher is better)
+  | 'RepsInTime'     // Reps within a fixed time cap (higher is better)
+  | 'TimeForReps';   // Time to complete a fixed rep target (lower is better)
 
 /**
  * Variant of performance (affects PR comparison)
@@ -63,6 +65,9 @@ export interface CatalogItem {
   isFavorite: boolean;     // user preference
   createdAt: number;       // timestamp
   metrics?: MetricType;    // For Monostructural items: what input metrics are supported
+  timeCap?: number;        // For RepsInTime items: default time cap in seconds
+  targetReps?: number;     // For TimeForReps items: default rep target
+  scoreTypeIds?: ScoreType[]; // Allowed score modes; when set (>1) the item is multi-mode. `scoreType` is the default.
 }
 
 /**
@@ -73,12 +78,15 @@ export interface PRLog {
   catalogItemId: string;
   result: string;          // "4:32", "100", "18+5", etc.
   resultValue: number;     // Normalized numeric value for comparison
+  scoreTypeId?: ScoreType; // The score mode this log used (for multi-mode items). Backfills to item.scoreType.
   variant: Variant;
   date: number;            // timestamp
   notes?: string;
   reps?: number;           // For Load scoreType (e.g., 5 reps @ 100kg)
   distance?: number;       // For Monostructural Time (e.g., 200m in 30s)
   calories?: number;       // For Monostructural Time on bike (e.g., 50 cal in 3:20)
+  timeCap?: number;        // For RepsInTime (e.g., 15 rope climbs in 120s)
+  targetReps?: number;     // For TimeForReps (e.g., 10 HSPU in 0:45)
   createdAt: number;
 }
 
@@ -117,4 +125,7 @@ export interface CustomItem {
   sourceUrl?: string;
   createdAt: number;
   metrics?: MetricType;
+  timeCap?: number;        // For RepsInTime items: default time cap in seconds
+  targetReps?: number;     // For TimeForReps items: default rep target
+  scoreTypeIds?: ScoreType[]; // Allowed score modes; when set (>1) the item is multi-mode. `scoreType` is the default.
 }

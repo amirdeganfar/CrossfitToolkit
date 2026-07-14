@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-import type { CatalogItem, Variant } from '../../types/catalog';
+import type { CatalogItem, Variant, ScoreType } from '../../types/catalog';
 import type { Goal, CreateGoalInput, UpdateGoalInput } from '../../types/goal';
 import { ItemSelector } from './ItemSelector';
 import { DatePicker } from '../DatePicker';
 import { TimeInput } from '../TimeInput';
 import { parseResultToValue, getResultPlaceholder } from '../../utils/resultParser';
+import { getScoreModes, getScoreTypeDef } from '../../config/scoreTypes';
 import * as db from '../../db';
 
 interface GoalModalProps {
   items: CatalogItem[];
   editGoal?: Goal | null;
   preselectedItem?: CatalogItem | null;
+  preselectedScoreType?: ScoreType | null;
   weightUnit?: string;
   onSave: (input: CreateGoalInput | { id: string; updates: UpdateGoalInput }) => Promise<void>;
   onClose: () => void;
@@ -29,6 +31,7 @@ export const GoalModal = ({
   items,
   editGoal,
   preselectedItem,
+  preselectedScoreType,
   weightUnit = 'kg',
   onSave,
   onClose,
@@ -45,6 +48,11 @@ export const GoalModal = ({
   });
   const [variant, setVariant] = useState<Variant>(null);
   const [reps, setReps] = useState<number>(1);
+  // For multi-mode items: which score pool the goal targets. Defaults to the
+  // pool the modal was opened for, else the item's primary score type.
+  const [scoreType, setScoreType] = useState<ScoreType>(
+    preselectedScoreType ?? preselectedItem?.scoreType ?? 'Reps'
+  );
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [currentBest, setCurrentBest] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,15 +60,29 @@ export const GoalModal = ({
 
   const isEditing = !!editGoal;
 
+  const modes = selectedItem ? getScoreModes(selectedItem) : [];
+  const isMultiMode = modes.length > 1;
+  // The score type the goal targets — the chosen pool for multi-mode items,
+  // otherwise the item's single score type.
+  const effectiveScoreType: ScoreType = selectedItem
+    ? isMultiMode
+      ? scoreType
+      : selectedItem.scoreType
+    : scoreType;
+  const isTimeInput = effectiveScoreType === 'Time' || effectiveScoreType === 'TimeForReps';
+
   // Load edit goal data
   useEffect(() => {
     if (editGoal) {
       const item = items.find((i) => i.id === editGoal.itemId);
       setSelectedItem(item || null);
 
+      const goalScoreType = editGoal.scoreTypeId ?? item?.scoreType;
+      if (goalScoreType) setScoreType(goalScoreType);
+
       // Convert target value back to display format
-      if (item) {
-        if (item.scoreType === 'Time') {
+      if (item && goalScoreType) {
+        if (goalScoreType === 'Time' || goalScoreType === 'TimeForReps') {
           // Convert seconds to MM:SS
           const minutes = Math.floor(editGoal.targetValue / 60);
           const seconds = Math.floor(editGoal.targetValue % 60);
@@ -77,6 +99,14 @@ export const GoalModal = ({
     }
   }, [editGoal, items]);
 
+  // When the selected item changes (creating a goal), default the pool to the
+  // pre-scoped score type if provided, else the item's primary score type.
+  useEffect(() => {
+    if (!editGoal && selectedItem) {
+      setScoreType(preselectedScoreType ?? selectedItem.scoreType);
+    }
+  }, [selectedItem, editGoal, preselectedScoreType]);
+
   // Fetch current best PR when item changes
   useEffect(() => {
     const fetchCurrentBest = async () => {
@@ -86,7 +116,14 @@ export const GoalModal = ({
       }
 
       try {
-        const bestPR = await db.getBestPR(selectedItem.id, variant || undefined);
+        const opts = isMultiMode
+          ? {
+              scoreTypeId: effectiveScoreType,
+              timeCap: effectiveScoreType === 'RepsInTime' ? selectedItem.timeCap : undefined,
+              targetReps: effectiveScoreType === 'TimeForReps' ? selectedItem.targetReps : undefined,
+            }
+          : undefined;
+        const bestPR = await db.getBestPR(selectedItem.id, variant || undefined, opts);
         if (bestPR) {
           setCurrentBest(bestPR.result);
         } else {
@@ -99,7 +136,7 @@ export const GoalModal = ({
     };
 
     fetchCurrentBest();
-  }, [selectedItem, variant]);
+  }, [selectedItem, variant, scoreType]);
 
   // Set default variant when item changes
   useEffect(() => {
@@ -112,6 +149,13 @@ export const GoalModal = ({
 
   const showVariantSelector = selectedItem?.category === 'Benchmark';
   const showRepsSelector = selectedItem?.scoreType === 'Load';
+
+  // Switching pool changes the target format — clear the entered value.
+  const handleScoreTypeChange = (next: ScoreType) => {
+    setScoreType(next);
+    setTargetValue('');
+    setError(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,8 +171,8 @@ export const GoalModal = ({
       return;
     }
 
-    // Parse target value based on score type
-    const parsedTargetValue = parseResultToValue(targetValue, selectedItem.scoreType);
+    // Parse target value based on the targeted score type
+    const parsedTargetValue = parseResultToValue(targetValue, effectiveScoreType);
     if (parsedTargetValue <= 0) {
       setError('Please enter a valid target value');
       return;
@@ -147,12 +191,23 @@ export const GoalModal = ({
     try {
       const targetDateStr = targetDate.toISOString().split('T')[0];
 
+      // Bind the goal to a score pool for multi-mode items (constraint from the
+      // item's default). Undefined for single-mode items — behavior unchanged.
+      const poolScoreType = isMultiMode ? effectiveScoreType : undefined;
+      const poolTimeCap =
+        poolScoreType === 'RepsInTime' ? selectedItem.timeCap : undefined;
+      const poolTargetReps =
+        poolScoreType === 'TimeForReps' ? selectedItem.targetReps : undefined;
+
       if (isEditing && editGoal) {
         const updates: UpdateGoalInput = {
           targetValue: parsedTargetValue,
           targetDate: targetDateStr,
           variant: showVariantSelector ? variant : undefined,
           reps: showRepsSelector ? reps : undefined,
+          scoreTypeId: poolScoreType,
+          timeCap: poolTimeCap,
+          targetReps: poolTargetReps,
         };
         await onSave({ id: editGoal.id, updates });
       } else {
@@ -162,6 +217,9 @@ export const GoalModal = ({
           targetDate: targetDateStr,
           variant: showVariantSelector ? variant : undefined,
           reps: showRepsSelector ? reps : undefined,
+          scoreTypeId: poolScoreType,
+          timeCap: poolTimeCap,
+          targetReps: poolTargetReps,
         };
         await onSave(input);
       }
@@ -178,12 +236,16 @@ export const GoalModal = ({
   const getTargetLabel = () => {
     if (!selectedItem) return 'Target';
 
-    switch (selectedItem.scoreType) {
+    switch (effectiveScoreType) {
       case 'Time':
+        return 'Target Time';
+      case 'TimeForReps':
         return 'Target Time';
       case 'Load':
         return `Target Weight (${weightUnit})`;
       case 'Reps':
+        return 'Target Reps';
+      case 'RepsInTime':
         return 'Target Reps';
       case 'Distance':
         return 'Target Distance (m)';
@@ -241,13 +303,38 @@ export const GoalModal = ({
             />
           </div>
 
+          {/* Score-type picker — only for multi-mode items */}
+          {selectedItem && isMultiMode && (
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-2">
+                Goal Type
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {modes.map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => handleScoreTypeChange(mode)}
+                    className={`px-4 py-2.5 rounded-sm border font-display text-sm tracking-widest transition-colors active:scale-95 ${
+                      effectiveScoreType === mode
+                        ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-[var(--color-bg)]'
+                        : 'bg-[var(--color-input)] border-[var(--color-input-border)] text-[var(--color-text-muted)] hover:border-[var(--color-input-border-hover)]'
+                    }`}
+                  >
+                    {getScoreTypeDef(mode).name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Target value input */}
           {selectedItem && (
             <div>
               <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-1">
                 {getTargetLabel()}
               </label>
-              {selectedItem.scoreType === 'Time' ? (
+              {isTimeInput ? (
                 <TimeInput
                   value={targetValue}
                   onChange={setTargetValue}
@@ -258,8 +345,8 @@ export const GoalModal = ({
                   type="text"
                   value={targetValue}
                   onChange={(e) => setTargetValue(e.target.value)}
-                  placeholder={getResultPlaceholder(selectedItem.scoreType)}
-                  className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border-strong)] rounded-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+                  placeholder={getResultPlaceholder(effectiveScoreType)}
+                  className="field w-full px-3 py-2"
                   autoFocus={!isEditing}
                 />
               )}

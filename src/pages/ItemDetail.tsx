@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Star, Plus, Trash2, Loader2, TrendingUp, TrendingDown, ChevronDown, ChevronRight, Dumbbell, Target } from 'lucide-react';
 import { useCatalogStore, useCatalogItem } from '../stores/catalogStore';
-import { useGoalsStore, useActiveGoalForItem } from '../stores/goalsStore';
+import { useGoalsStore, useActiveGoalForItem, useActiveGoalsForItem } from '../stores/goalsStore';
 import { useInitialize } from '../hooks/useInitialize';
 import { LogResultModal } from '../components/LogResultModal';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -13,9 +13,16 @@ import { Barbell } from '../components/Barbell';
 import { RxTag } from '../components/RxTag';
 import { isDualMetricItem, isDistanceOnlyItem } from '../utils/itemMetrics';
 import { categoryColorHex } from '../utils/categoryColors';
+import {
+  getScoreModes,
+  getLogScoreType,
+  getScoreTypeDef,
+  isLowerBetter as scoreIsLowerBetter,
+  formatSecondsToTime,
+} from '../config/scoreTypes';
 import * as db from '../db';
-import type { PRLog, CatalogItem } from '../types/catalog';
-import type { CreateGoalInput, UpdateGoalInput } from '../types/goal';
+import type { PRLog, CatalogItem, ScoreType } from '../types/catalog';
+import type { CreateGoalInput, UpdateGoalInput, GoalWithProgress } from '../types/goal';
 
 // Group structure for accordion display
 interface LogGroup {
@@ -25,6 +32,67 @@ interface LogGroup {
   logs: PRLog[];
   bestLog: PRLog;
 }
+
+// Group structure for multi-mode items (Option A): one section per score type + constraint
+interface ScoreTypeGroup {
+  key: string;           // `${scoreType}:${constraint ?? ''}`
+  scoreType: ScoreType;
+  label: string;         // "Reps in 2:00", "Time for 10", "Reps"
+  logs: PRLog[];         // sorted, best first
+  bestLog: PRLog;
+  lowerIsBetter: boolean;
+}
+
+// Human label for a score-type group, folding the captured constraint into the header.
+const scoreTypeGroupLabel = (scoreType: ScoreType, sample: PRLog): string => {
+  if (scoreType === 'RepsInTime') {
+    return sample.timeCap ? `Reps in ${formatSecondsToTime(sample.timeCap)}` : getScoreTypeDef(scoreType).name;
+  }
+  if (scoreType === 'TimeForReps') {
+    return sample.targetReps ? `Time for ${sample.targetReps} reps` : getScoreTypeDef(scoreType).name;
+  }
+  return getScoreTypeDef(scoreType).name;
+};
+
+// Group logs into per-score-type pools, keyed by (scoreType, constraint).
+// Best/PR is computed independently per pool using that type's better-direction.
+const groupLogsByScoreType = (logs: PRLog[], item: CatalogItem): ScoreTypeGroup[] => {
+  const groups = new Map<string, PRLog[]>();
+  logs.forEach((log) => {
+    const st = getLogScoreType(log, item);
+    const constraint = st === 'RepsInTime' ? log.timeCap : st === 'TimeForReps' ? log.targetReps : undefined;
+    const key = `${st}:${constraint ?? ''}`;
+    const existing = groups.get(key) || [];
+    existing.push(log);
+    groups.set(key, existing);
+  });
+
+  const modeOrder = getScoreModes(item);
+  const result: ScoreTypeGroup[] = [];
+  groups.forEach((groupLogs, key) => {
+    const st = key.slice(0, key.indexOf(':')) as ScoreType;
+    const lowerIsBetter = scoreIsLowerBetter(st);
+    const bestLog = groupLogs.reduce((best, curr) => {
+      if (lowerIsBetter) return curr.resultValue < best.resultValue ? curr : best;
+      return curr.resultValue > best.resultValue ? curr : best;
+    });
+    const sorted = [...groupLogs].sort((a, b) => {
+      if (a.id === bestLog.id) return -1;
+      if (b.id === bestLog.id) return 1;
+      return b.date - a.date;
+    });
+    result.push({ key, scoreType: st, label: scoreTypeGroupLabel(st, bestLog), logs: sorted, bestLog, lowerIsBetter });
+  });
+
+  // Order by the item's declared mode order, then by constraint key.
+  result.sort((a, b) => {
+    const ai = modeOrder.indexOf(a.scoreType);
+    const bi = modeOrder.indexOf(b.scoreType);
+    if (ai !== bi) return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+    return a.key.localeCompare(b.key);
+  });
+  return result;
+};
 
 const groupLogs = (
   logs: PRLog[],
@@ -152,6 +220,8 @@ export const ItemDetail = () => {
   const goalsAddGoal = useGoalsStore((s) => s.addGoal);
   const goalsUpdateGoal = useGoalsStore((s) => s.updateGoal);
   const activeGoal = useActiveGoalForItem(id ?? '');
+  // All active goals for this item — one per score pool for multi-mode items.
+  const activeGoals = useActiveGoalsForItem(id ?? '');
 
   const [logs, setLogs] = useState<PRLog[]>([]);
   const [bestLog, setBestLog] = useState<PRLog | null>(null);
@@ -160,6 +230,10 @@ export const ItemDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showGoalModal, setShowGoalModal] = useState(false);
+  // Goal modal context: which existing goal to edit and which score pool to
+  // pre-scope it to (multi-mode items). Null → create for the item's primary pool.
+  const [goalModalEditGoal, setGoalModalEditGoal] = useState<GoalWithProgress | null>(null);
+  const [goalModalScoreType, setGoalModalScoreType] = useState<ScoreType | null>(null);
   const [deleteLogId, setDeleteLogId] = useState<string | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
@@ -259,19 +333,57 @@ export const ItemDetail = () => {
   const formatDate = (timestamp: number): string =>
     new Date(timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-  const getResultWithUnit = (result: string): string => {
-    if (!item) return result;
+  const getResultWithUnit = (result: string, scoreType: ScoreType | undefined = item?.scoreType): string => {
+    if (!item || !scoreType) return result;
     if (result.includes('@') || result.includes(' in ') || result.includes('RM')) return result;
-    switch (item.scoreType) {
-      case 'Load':     return `${result} ${settings.weightUnit}`;
-      case 'Distance': return `${result} ${settings.distanceUnit}`;
-      case 'Reps':     return `${result} reps`;
-      case 'Calories': return `${result} cal`;
+    // The stored result is already unit-suffixed at save time (via the registry's
+    // format). Only append the unit when it isn't already present — avoids
+    // "22 reps reps" / "50 cal cal".
+    switch (scoreType) {
+      case 'Load':     return result.includes(settings.weightUnit) ? result : `${result} ${settings.weightUnit}`;
+      case 'Distance': return result.includes(settings.distanceUnit) ? result : `${result} ${settings.distanceUnit}`;
+      case 'Reps':     return result.includes('reps') ? result : `${result} reps`;
+      case 'Calories': return result.includes('cal') ? result : `${result} cal`;
+      case 'RepsInTime': return result.includes('reps') ? result : `${result} reps`;
       default:         return result;
     }
   };
 
-  const isLowerBetter = item?.scoreType === 'Time';
+  // Meaningful display value for a log within a score-type group (Option A).
+  const getScoreTypeResult = (log: PRLog, scoreType: ScoreType): string => {
+    if (scoreType === 'RepsInTime') {
+      return log.result.includes(' in ') ? log.result.split(' in ')[0] : `${log.resultValue} reps`;
+    }
+    if (scoreType === 'TimeForReps') {
+      return log.result.includes(' in ') ? log.result.split(' in ')[1] : log.result;
+    }
+    return getResultWithUnit(log.result, scoreType);
+  };
+
+  const isLowerBetter = item ? scoreIsLowerBetter(item.scoreType) : false;
+
+  // Multi-mode items (Option A): group history/PR by score type instead of variant.
+  const scoreModes = getScoreModes(item);
+  const useScoreTypeGrouping = scoreModes.length > 1 && !isDual && !isDistanceOnly;
+  const scoreTypeGroups = useScoreTypeGrouping && item ? groupLogsByScoreType(logs, item) : [];
+
+  // Resolve the active goal bound to a specific score pool (multi-mode items).
+  // Legacy goals with no scoreTypeId backfill to the item's primary score type.
+  const goalForGroup = (group: ScoreTypeGroup): GoalWithProgress | undefined =>
+    activeGoals.find((g) => {
+      const gst = g.scoreTypeId ?? item?.scoreType;
+      if (gst !== group.scoreType) return false;
+      if (group.scoreType === 'RepsInTime' && group.bestLog.timeCap !== undefined && g.timeCap !== group.bestLog.timeCap) return false;
+      if (group.scoreType === 'TimeForReps' && group.bestLog.targetReps !== undefined && g.targetReps !== group.bestLog.targetReps) return false;
+      return true;
+    });
+
+  // Open the goal modal, optionally pre-scoped to a score pool (multi-mode).
+  const openGoalModal = (editGoal: GoalWithProgress | null, scoreType: ScoreType | null) => {
+    setGoalModalEditGoal(editGoal);
+    setGoalModalScoreType(scoreType);
+    setShowGoalModal(true);
+  };
 
   const formatDistance = (meters: number): string => {
     if (meters >= 1609.34) {
@@ -350,7 +462,7 @@ export const ItemDetail = () => {
               className="font-display text-[10px] tracking-[0.2em] mb-0.5"
               style={{ color: getCategoryColor(item.category) }}
             >
-              {item.category.toUpperCase()} · {item.scoreType.toUpperCase()}
+              {item.category.toUpperCase()} · {scoreModes.length > 1 ? 'MULTI' : getScoreTypeDef(item.scoreType).name.toUpperCase()}
             </p>
             <h1 className="font-display text-3xl text-[var(--color-text)] leading-tight">{item.name}</h1>
           </div>
@@ -433,9 +545,9 @@ export const ItemDetail = () => {
             )}
             <span className="font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)]">PERSONAL BEST</span>
           </div>
-          {!activeGoal && bestLog && (
+          {!activeGoal && !useScoreTypeGrouping && bestLog && (
             <button
-              onClick={() => setShowGoalModal(true)}
+              onClick={() => openGoalModal(null, null)}
               className="flex items-center gap-1 font-display text-xs tracking-widest text-[var(--color-primary)] hover:underline"
             >
               <Target size={11} />
@@ -448,6 +560,71 @@ export const ItemDetail = () => {
           <div className="flex items-center justify-center h-16">
             <Loader2 className="w-5 h-5 text-[var(--color-text-muted)] animate-spin" />
           </div>
+        ) : useScoreTypeGrouping ? (
+          scoreTypeGroups.length > 0 ? (
+            <div className="space-y-4">
+              {scoreTypeGroups.map((group) => {
+                const groupGoal = goalForGroup(group);
+                return (
+                  <div key={group.key} className="space-y-1.5">
+                    <div className="flex items-baseline justify-between">
+                      <div className="flex items-center gap-1.5">
+                        {group.lowerIsBetter ? (
+                          <TrendingDown className="w-3 h-3 text-[var(--color-success)]" />
+                        ) : (
+                          <TrendingUp className="w-3 h-3 text-[var(--color-success)]" />
+                        )}
+                        <span className="font-display text-xs tracking-wider text-[var(--color-text-muted)]">{group.label}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-display text-2xl text-[var(--color-primary)]">
+                          {getScoreTypeResult(group.bestLog, group.scoreType)}
+                        </span>
+                        <p className="font-display text-xs text-[var(--color-text-muted)]">{formatDate(group.bestLog.date)}</p>
+                      </div>
+                    </div>
+                    {groupGoal ? (
+                      <div className="pl-5">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <div className="flex items-center gap-1.5 font-display text-xs tracking-widest text-[var(--color-text-muted)]">
+                            <Target size={11} className="text-[var(--color-primary)]" />
+                            <span>GOAL: {groupGoal.targetResult}</span>
+                          </div>
+                          <button onClick={() => openGoalModal(groupGoal, group.scoreType)} className="font-display text-xs tracking-widest text-[var(--color-primary)] hover:underline">
+                            EDIT
+                          </button>
+                        </div>
+                        {groupGoal.currentValue != null ? (
+                          <Barbell current={groupGoal.currentValue} goal={groupGoal.targetValue} lowerIsBetter={group.lowerIsBetter} />
+                        ) : (
+                          <GoalProgress progress={groupGoal.progress} size="sm" />
+                        )}
+                        <p className="font-display text-xs text-[var(--color-text-muted)] tracking-widest mt-1">
+                          {groupGoal.daysRemaining >= 0 ? `${groupGoal.daysRemaining} DAYS REMAINING` : 'OVERDUE'}
+                        </p>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => openGoalModal(null, group.scoreType)}
+                        className="pl-5 flex items-center gap-1.5 font-display text-xs tracking-widest text-[var(--color-primary)] hover:underline"
+                      >
+                        <Target size={11} />
+                        SET GOAL
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div>
+              <p className="font-display text-sm tracking-widest text-[var(--color-text-muted)]">NO RESULTS YET</p>
+              <button onClick={() => openGoalModal(null, null)} className="mt-2 flex items-center gap-1.5 font-display text-sm tracking-wider text-[var(--color-primary)] hover:underline">
+                <Target size={13} />
+                SET A GOAL
+              </button>
+            </div>
+          )
         ) : isDual && (sortedDistances.length > 0 || sortedCalorieTimes.length > 0) ? (
           <div className="space-y-3">
             {sortedDistances.length > 0 && (
@@ -528,7 +705,7 @@ export const ItemDetail = () => {
                     <Target size={11} className="text-[var(--color-primary)]" />
                     <span>GOAL: {activeGoal.targetResult}</span>
                   </div>
-                  <button onClick={() => setShowGoalModal(true)} className="font-display text-xs tracking-widest text-[var(--color-primary)] hover:underline">
+                  <button onClick={() => openGoalModal(activeGoal ?? null, null)} className="font-display text-xs tracking-widest text-[var(--color-primary)] hover:underline">
                     EDIT
                   </button>
                 </div>
@@ -547,7 +724,7 @@ export const ItemDetail = () => {
           <div>
             <p className="font-display text-sm tracking-widest text-[var(--color-text-muted)]">NO RESULTS YET</p>
             {!activeGoal && (
-              <button onClick={() => setShowGoalModal(true)} className="mt-2 flex items-center gap-1.5 font-display text-sm tracking-wider text-[var(--color-primary)] hover:underline">
+              <button onClick={() => openGoalModal(null, null)} className="mt-2 flex items-center gap-1.5 font-display text-sm tracking-wider text-[var(--color-primary)] hover:underline">
                 <Target size={13} />
                 SET A GOAL
               </button>
@@ -572,6 +749,79 @@ export const ItemDetail = () => {
           <div className="flex items-center justify-center h-32 border border-[var(--color-border)]">
             <Loader2 className="w-5 h-5 text-[var(--color-text-muted)] animate-spin" />
           </div>
+        ) : useScoreTypeGrouping ? (
+          scoreTypeGroups.length > 0 ? (
+            <div className="divide-y divide-[var(--color-border)]">
+              {scoreTypeGroups.map((group) => {
+                const groupKey = `st-${group.key}`;
+                const isExpanded = expandedGroups.has(groupKey);
+
+                return (
+                  <div key={groupKey}>
+                    <button
+                      onClick={() => toggleGroup(groupKey)}
+                      className="w-full flex items-center justify-between py-3 hover:bg-[var(--color-surface)] transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <ChevronDown className={`w-3.5 h-3.5 text-[var(--color-text-muted)] transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                        <span className="font-display text-sm text-[var(--color-text)] tracking-wider">{group.label}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-display text-base text-[var(--color-primary)]">{getScoreTypeResult(group.bestLog, group.scoreType)}</span>
+                        <span className="font-display text-xs text-[var(--color-text-muted)] border border-[var(--color-border)] px-1.5 py-0.5">{group.logs.length}</span>
+                      </div>
+                    </button>
+
+                    <div className={`accordion-content ${isExpanded ? 'expanded' : ''}`}>
+                      <div>
+                        {group.logs.map((log, logIndex) => {
+                          const isPR = log.id === group.bestLog.id;
+                          return (
+                            <div
+                              key={log.id}
+                              className={`flex items-center justify-between py-2 pl-10 pr-3 group bg-[var(--color-bg)] ${
+                                logIndex !== group.logs.length - 1 ? 'border-b border-[var(--color-border)]/50' : ''
+                              }`}
+                            >
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className={`font-display text-sm ${isPR ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
+                                    {getScoreTypeResult(log, group.scoreType)}
+                                  </span>
+                                  <RxTag variant={log.variant} />
+                                  {isPR && (
+                                    <span className="font-display text-[10px] tracking-widest bg-[var(--color-primary)]/20 text-[var(--color-primary)] px-1.5 py-0.5">
+                                      PR
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="font-display text-xs text-[var(--color-text-muted)] tracking-widest">
+                                  {formatDate(log.date)}{log.notes && ` — ${log.notes}`}
+                                </p>
+                              </div>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleDeleteLog(log.id); }}
+                                className="p-2 -m-2 text-[var(--color-text-muted)] hover:text-[var(--color-danger)] transition-colors opacity-60 group-hover:opacity-100"
+                                aria-label="Delete log"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="py-8 border-t border-[var(--color-border)]">
+              <p className="font-display text-sm tracking-widest text-[var(--color-text-muted)]">
+                NO RESULTS LOGGED YET
+              </p>
+            </div>
+          )
         ) : useGroupedHistory ? (
           <div className="divide-y divide-[var(--color-border)]">
             {groupedLogs.map((group) => {
@@ -726,8 +976,9 @@ export const ItemDetail = () => {
       {showGoalModal && item && (
         <GoalModal
           items={catalogItems}
-          editGoal={activeGoal || null}
+          editGoal={goalModalEditGoal}
           preselectedItem={item}
+          preselectedScoreType={goalModalScoreType}
           weightUnit={settings.weightUnit}
           onSave={handleSaveGoal}
           onClose={() => setShowGoalModal(false)}

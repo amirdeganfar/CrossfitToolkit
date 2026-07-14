@@ -41,7 +41,8 @@ export const Search = () => {
       const query = searchQuery.toLowerCase();
       items = items.filter((item) =>
         item.name.toLowerCase().includes(query) ||
-        item.description?.toLowerCase().includes(query)
+        item.description?.toLowerCase().includes(query) ||
+        item.aliases?.some((alias) => alias.toLowerCase().includes(query))
       );
     }
 
@@ -77,7 +78,7 @@ export const Search = () => {
           placeholder="Search benchmarks, lifts, skills..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] pl-10 pr-4 py-3 text-[15px] text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+          className="w-full rounded-2xl bg-[var(--color-input)] border border-[var(--color-input-border)] pl-10 pr-4 py-3 text-[15px] text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] hover:border-[var(--color-input-border-hover)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-colors"
           aria-label="Search catalog"
           autoFocus
         />
