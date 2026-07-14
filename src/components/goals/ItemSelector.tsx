@@ -90,9 +90,9 @@ export const ItemSelector = ({
     <div ref={containerRef} className={`relative ${className}`}>
       {/* Selected value or search input */}
       <div
-        className={`flex items-center gap-2 px-3 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border-strong)] rounded-sm cursor-pointer transition-colors ${
+        className={`flex items-center gap-2 px-3 py-2.5 bg-[var(--color-input)] border border-[var(--color-input-border)] rounded-md cursor-pointer transition-colors ${
           isOpen ? 'border-[var(--color-primary)]' : ''
-        } ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-[var(--color-text-muted)]'}`}
+        } ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-[var(--color-input-border-hover)]'}`}
         onClick={() => !disabled && setIsOpen(!isOpen)}
         onKeyDown={handleKeyDown}
         tabIndex={disabled ? -1 : 0}

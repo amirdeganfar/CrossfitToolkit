@@ -12,6 +12,13 @@
   --color-border: rgba(255,255,255,0.06);
   --color-border-strong: rgba(255,255,255,0.10);
 
+  /* Form fields — need a visible affordance on near-black (WCAG 3:1 non-text).
+     Hairline borders (above) are for dividers/cards, NOT inputs. */
+  --color-input: #1F1F22;                    /* field fill, clearly above page bg */
+  --color-input-border: #6A6A6F;             /* resting border, ~3:1 vs page */
+  --color-input-border-hover: #8A8A8F;       /* hover */
+  --color-focus-ring: rgba(255,214,10,0.35); /* accent focus halo */
+
   /* Brand accent — Electric Yellow */
   --color-primary: #FFD60A;
   --color-primary-dark: #E6C000;
@@ -57,6 +64,29 @@ body {
 }
 
 :focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+
+/* ─── Form fields ────────────────────────────────────────────────────────
+   Shared input treatment: a filled field on a visible border so the tap
+   target reads clearly on the near-black background. Applied to text inputs,
+   the notes textarea, TimeInput cells, the DatePicker trigger, and the Search
+   box. Kept minimal (color/border/focus only) so each site keeps its own
+   size/padding utilities. Defined outside Tailwind's layers so it wins over
+   utility classes without specificity hacks. */
+.field {
+  background-color: var(--color-input);
+  border: 1px solid var(--color-input-border);
+  border-radius: 0.375rem;
+  color: var(--color-text);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+.field::placeholder { color: var(--color-text-muted); opacity: 1; }
+.field:hover:not(:focus) { border-color: var(--color-input-border-hover); }
+.field:focus,
+.field:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
+}
 
 a { color: var(--color-primary); text-decoration: none; }
 a:hover { text-decoration: underline; }

@@ -291,7 +291,7 @@ export const PercentageCalculator = ({ logs, weightUnit }: PercentageCalculatorP
                 value={customPercentage}
                 onChange={(e) => handleCustomChange(e.target.value)}
                 placeholder="—"
-                className="w-full px-3 py-1.5 bg-[var(--color-bg)] border border-[var(--color-border-strong)] rounded-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors text-center font-display"
+                className="field w-full px-3 py-1.5 text-center font-display"
               />
             </div>
             <span className="text-sm text-[var(--color-text-muted)]">%</span>

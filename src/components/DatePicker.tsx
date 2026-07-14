@@ -122,7 +122,7 @@ export const DatePicker = ({ value, onChange, minDate, maxDate }: DatePickerProp
         ref={triggerRef}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-3 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border-strong)] rounded-sm text-[var(--color-text)] hover:border-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+        className="field w-full flex items-center justify-between px-3 py-2.5"
       >
         <span>{formatDisplayDate(value)}</span>
         <Calendar className="w-5 h-5 text-[var(--color-text-muted)]" />
@@ -199,7 +199,7 @@ export const DatePicker = ({ value, onChange, minDate, maxDate }: DatePickerProp
                       ${disabled
                         ? 'text-[var(--color-text-muted)]/40 cursor-not-allowed'
                         : selected
-                          ? 'bg-[var(--color-primary)] text-white'
+                          ? 'bg-[var(--color-primary)] text-[var(--color-bg)]'
                           : today
                             ? 'bg-[var(--color-primary)]/20 text-[var(--color-primary)] hover:bg-[var(--color-primary)]/30'
                             : 'text-[var(--color-text)] hover:bg-[var(--color-surface)]'
