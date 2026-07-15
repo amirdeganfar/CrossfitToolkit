@@ -1,5 +1,5 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Settings, Home, Search, Timer, Target } from 'lucide-react';
+import { Settings, Home, ClipboardList, Timer, LineChart } from 'lucide-react';
 
 export const Layout = () => {
   const navigate = useNavigate();
@@ -9,7 +9,7 @@ export const Layout = () => {
   const handleHomeClick = () => navigate('/');
   const handleSearchClick = () => navigate('/search');
   const handleClockClick = () => navigate('/clock');
-  const handleGoalsClick = () => navigate('/goals');
+  const handleProgressClick = () => navigate('/progress');
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -43,29 +43,29 @@ export const Layout = () => {
         </div>
       </header>
 
-      {/* Main content */}
-      <main className="mat-texture flex-1 px-4 py-4 max-w-lg mx-auto w-full">
+      {/* Main content — bottom padding reserves space for the sticky nav */}
+      <main className="mat-texture flex-1 px-4 pt-4 pb-24 max-w-lg mx-auto w-full">
         <Outlet />
       </main>
 
-      {/* Bottom navigation — Blackout tab bar (yellow active) */}
-      <nav className="sticky bottom-0 z-40 bg-[var(--color-bg)]/95 backdrop-blur border-t border-[var(--color-border-strong)] px-2 pb-safe sm:hidden">
+      {/* Bottom navigation — Blackout tab bar (yellow active). Always visible across viewports. */}
+      <nav className="sticky bottom-0 z-40 bg-[var(--color-bg)]/95 backdrop-blur border-t border-[var(--color-border-strong)] px-2 pb-safe">
         <div className="flex items-center justify-around max-w-lg mx-auto">
           <button onClick={handleHomeClick} className={navBtn(isActive('/'))} aria-label="Home" aria-current={isActive('/') ? 'page' : undefined}>
             <Home className="w-6 h-6" />
             <span className="text-[10px] font-semibold">Home</span>
           </button>
-          <button onClick={handleSearchClick} className={navBtn(isActive('/search'))} aria-label="Search" aria-current={isActive('/search') ? 'page' : undefined}>
-            <Search className="w-6 h-6" />
-            <span className="text-[10px] font-semibold">Search</span>
+          <button onClick={handleSearchClick} className={navBtn(isActive('/search'))} aria-label="Log a result" aria-current={isActive('/search') ? 'page' : undefined}>
+            <ClipboardList className="w-6 h-6" />
+            <span className="text-[10px] font-semibold">Log</span>
           </button>
           <button onClick={handleClockClick} className={navBtn(isActive('/clock'))} aria-label="Timer" aria-current={isActive('/clock') ? 'page' : undefined}>
             <Timer className="w-6 h-6" />
             <span className="text-[10px] font-semibold">Timer</span>
           </button>
-          <button onClick={handleGoalsClick} className={navBtn(isActive('/goals'))} aria-label="Goals" aria-current={isActive('/goals') ? 'page' : undefined}>
-            <Target className="w-6 h-6" />
-            <span className="text-[10px] font-semibold">Goals</span>
+          <button onClick={handleProgressClick} className={navBtn(isActive('/progress'))} aria-label="Progress" aria-current={isActive('/progress') ? 'page' : undefined}>
+            <LineChart className="w-6 h-6" />
+            <span className="text-[10px] font-semibold">Progress</span>
           </button>
         </div>
       </nav>

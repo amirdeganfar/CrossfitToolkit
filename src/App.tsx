@@ -5,7 +5,7 @@ import { Search } from './pages/Search';
 import { ItemDetail } from './pages/ItemDetail';
 import { Settings } from './pages/Settings';
 import { Clock } from './pages/Clock';
-import { Goals } from './pages/Goals';
+import { Progress } from './pages/Progress';
 import { Onboarding } from './pages/Onboarding';
 import { useInitialize } from './hooks/useInitialize';
 import { useCatalogStore } from './stores/catalogStore';
@@ -52,7 +52,9 @@ const App = () => {
           <Route index element={<Home />} />
           <Route path="search" element={<Search />} />
           <Route path="clock" element={<Clock />} />
-          <Route path="goals" element={<Goals />} />
+          <Route path="progress" element={<Progress />} />
+          {/* Goals consolidated into Progress; keep the old path working */}
+          <Route path="goals" element={<Navigate to="/progress" replace />} />
           <Route path="item/:id" element={<ItemDetail />} />
           <Route path="settings" element={<Settings />} />
         </Route>

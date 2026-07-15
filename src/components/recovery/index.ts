@@ -7,3 +7,4 @@
 export { EmojiSelector } from './EmojiSelector';
 export { QuickCheckIn } from './QuickCheckIn';
 export { RecoveryAlert } from './RecoveryAlert';
+export { RecoveryTrends } from './RecoveryTrends';
