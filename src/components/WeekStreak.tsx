@@ -68,7 +68,7 @@ export const WeekStreak = () => {
         } else if (rested) {
           dot = { background: 'var(--color-text-dim)' };
         } else if (isToday) {
-          dot = { background: 'transparent', border: '2px solid var(--color-primary)', boxShadow: '0 0 10px rgba(255,214,10,0.4)' };
+          dot = { background: 'transparent', border: '2px solid var(--color-primary)', boxShadow: '0 0 10px rgba(232,50,28,0.4)' };
         } else if (isFuture) {
           dot = { background: 'transparent', border: '1.5px solid rgba(255,255,255,0.12)' };
         } else {

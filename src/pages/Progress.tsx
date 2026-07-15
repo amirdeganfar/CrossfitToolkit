@@ -120,7 +120,7 @@ export const Progress = () => {
             <p className="text-xs text-[var(--color-text-muted)] mb-4">Set a goal to track your progress</p>
             <button
               onClick={() => setShowModal(true)}
-              className="px-6 py-3 bg-[var(--color-primary)] text-[var(--color-bg)] hover:opacity-90 active:scale-95 font-semibold text-sm rounded-full transition-all"
+              className="px-6 py-3 bg-[var(--color-primary)] text-[var(--color-text)] hover:opacity-90 active:scale-95 font-semibold text-sm rounded-full transition-all"
             >
               Set first goal
             </button>
@@ -170,7 +170,7 @@ export const Progress = () => {
       {/* Floating add-goal action — sits above the always-visible bottom nav */}
       <button
         onClick={() => setShowModal(true)}
-        className="fixed bottom-24 right-4 z-40 w-14 h-14 rounded-full bg-[var(--color-primary)] hover:opacity-90 active:scale-90 text-[var(--color-bg)] flex items-center justify-center transition-all shadow-[0_0_24px_rgba(255,214,10,0.3)]"
+        className="fixed bottom-24 right-4 z-40 w-14 h-14 rounded-full bg-[var(--color-primary)] hover:opacity-90 active:scale-90 text-[var(--color-text)] flex items-center justify-center transition-all shadow-[0_0_24px_rgba(232,50,28,0.3)]"
         aria-label="Add new goal"
       >
         <Plus size={24} />

@@ -94,7 +94,7 @@ export const Search = () => {
               onClick={() => setSelectedCategory(category)}
               className={`flex-shrink-0 rounded-full px-4 py-1.5 text-[13px] font-semibold whitespace-nowrap transition-transform active:scale-95 border ${
                 isActive
-                  ? 'bg-[var(--color-primary)] text-[var(--color-bg)] border-transparent'
+                  ? 'bg-[var(--color-primary)] text-[var(--color-text)] border-transparent'
                   : 'bg-transparent text-[var(--color-text-muted)] border-[var(--color-border-strong)]'
               }`}
               aria-label={`Filter by ${category}`}

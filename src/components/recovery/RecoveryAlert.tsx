@@ -127,7 +127,7 @@ export const RecoveryAlert = () => {
           <button
             onClick={handleLogRestDay}
             disabled={isSaving}
-            className="flex-1 py-2 px-3 bg-[var(--color-primary)] text-[var(--color-bg)] font-display text-xs tracking-[0.1em] transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
+            className="flex-1 py-2 px-3 bg-[var(--color-primary)] text-[var(--color-text)] font-display text-xs tracking-[0.1em] transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
             aria-label="Log rest day"
           >
             <Moon className="w-3.5 h-3.5" />

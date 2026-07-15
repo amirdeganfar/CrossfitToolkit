@@ -317,7 +317,7 @@ export const GoalModal = ({
                     onClick={() => handleScoreTypeChange(mode)}
                     className={`px-4 py-2.5 rounded-sm border font-display text-sm tracking-widest transition-colors active:scale-95 ${
                       effectiveScoreType === mode
-                        ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-[var(--color-bg)]'
+                        ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-[var(--color-text)]'
                         : 'bg-[var(--color-input)] border-[var(--color-input-border)] text-[var(--color-text-muted)] hover:border-[var(--color-input-border-hover)]'
                     }`}
                   >

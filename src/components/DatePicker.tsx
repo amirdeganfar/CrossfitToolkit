@@ -199,7 +199,7 @@ export const DatePicker = ({ value, onChange, minDate, maxDate }: DatePickerProp
                       ${disabled
                         ? 'text-[var(--color-text-muted)]/40 cursor-not-allowed'
                         : selected
-                          ? 'bg-[var(--color-primary)] text-[var(--color-bg)]'
+                          ? 'bg-[var(--color-primary)] text-[var(--color-text)]'
                           : today
                             ? 'bg-[var(--color-primary)]/20 text-[var(--color-primary)] hover:bg-[var(--color-primary)]/30'
                             : 'text-[var(--color-text)] hover:bg-[var(--color-surface)]'

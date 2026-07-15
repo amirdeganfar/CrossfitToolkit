@@ -409,7 +409,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
                       className="flex-1 py-2.5 rounded-xl text-[13px] font-extrabold tracking-[0.06em] transition-transform active:scale-95"
                       style={
                         active
-                          ? { background: 'var(--color-primary)', color: 'var(--color-bg)' }
+                          ? { background: 'var(--color-primary)', color: 'var(--color-text)' }
                           : v.value === 'Scaled'
                             ? { color: 'var(--color-text-muted)', border: '1.5px dashed rgba(255,255,255,0.25)' }
                             : { color: '#fff', border: '1.5px solid rgba(255,255,255,0.25)' }

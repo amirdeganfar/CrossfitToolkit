@@ -17,12 +17,12 @@
   --color-input: #1F1F22;                    /* field fill, clearly above page bg */
   --color-input-border: #6A6A6F;             /* resting border, ~3:1 vs page */
   --color-input-border-hover: #8A8A8F;       /* hover */
-  --color-focus-ring: rgba(255,214,10,0.35); /* accent focus halo */
+  --color-focus-ring: rgba(232,50,28,0.35); /* accent focus halo */
 
-  /* Brand accent — Electric Yellow */
-  --color-primary: #FFD60A;
-  --color-primary-dark: #E6C000;
-  --color-primary-glow: rgba(255,214,10,0.12);
+  /* Brand accent — CrossFit Red */
+  --color-primary: #E8321C;
+  --color-primary-dark: #C22818;
+  --color-primary-glow: rgba(232,50,28,0.12);
 
   /* Text */
   --color-text: #FFFFFF;

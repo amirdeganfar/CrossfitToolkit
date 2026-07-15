@@ -48,7 +48,7 @@ const SleepSelector = ({ value, onChange, disabled = false }: SleepSelectorProps
             onKeyDown={(e) => handleKeyDown(e, hours)}
             className={`flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-150 ease-out border ${
               isSelected
-                ? 'text-[var(--color-bg)] border-transparent'
+                ? 'text-[var(--color-text)] border-transparent'
                 : 'bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text)] hover:border-[var(--color-border-strong)]'
             } ${disabled ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'} focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2 focus:ring-offset-[var(--color-bg)]`}
             style={isSelected ? { background: 'var(--color-primary)' } : undefined}
@@ -72,7 +72,7 @@ const LoadedBar = ({ children, onClick, disabled }: { children: React.ReactNode;
     <span className="absolute inset-0" style={{ backgroundImage: 'repeating-linear-gradient(90deg, rgba(0,0,0,0.13) 0 1px, transparent 1px 6px)' }} />
     <span className="absolute inset-y-0 left-0 w-[14px]" style={{ background: 'var(--color-bg)' }} />
     <span className="absolute inset-y-0 right-0 w-[14px]" style={{ background: 'var(--color-bg)' }} />
-    <span className="relative flex items-center gap-2 text-[17px] font-bold" style={{ color: 'var(--color-bg)', letterSpacing: '-0.2px' }}>
+    <span className="relative flex items-center gap-2 text-[17px] font-bold" style={{ color: 'var(--color-text)', letterSpacing: '-0.2px' }}>
       {children}
     </span>
   </button>
@@ -161,14 +161,14 @@ export const QuickCheckIn = ({ onSaved, hideDatePicker = false }: QuickCheckInPr
       <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--color-surface)' }} role="tablist" aria-label="Select date">
         <button
           type="button" role="tab" aria-selected={isTodayActive} onClick={handleTodayClick} disabled={isLoading}
-          className={`flex-1 rounded-lg py-2 text-[13px] font-semibold transition-all disabled:opacity-50 ${isTodayActive ? 'text-[var(--color-bg)]' : 'text-[var(--color-text-muted)]'}`}
+          className={`flex-1 rounded-lg py-2 text-[13px] font-semibold transition-all disabled:opacity-50 ${isTodayActive ? 'text-[var(--color-text)]' : 'text-[var(--color-text-muted)]'}`}
           style={isTodayActive ? { background: 'var(--color-primary)' } : undefined}
         >
           Today
         </button>
         <button
           type="button" role="tab" aria-selected={isPickDateActive} onClick={handleOtherClick} disabled={isLoading}
-          className={`flex-1 rounded-lg py-2 text-[13px] font-semibold transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 ${isPickDateActive ? 'text-[var(--color-bg)]' : 'text-[var(--color-text-muted)]'}`}
+          className={`flex-1 rounded-lg py-2 text-[13px] font-semibold transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 ${isPickDateActive ? 'text-[var(--color-text)]' : 'text-[var(--color-text-muted)]'}`}
           style={isPickDateActive ? { background: 'var(--color-primary)' } : undefined}
         >
           <Calendar className="w-3.5 h-3.5" />

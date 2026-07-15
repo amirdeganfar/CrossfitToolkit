@@ -196,7 +196,7 @@ export const TimeInput = ({
           className={`
             ml-2 px-3 py-2 font-display text-sm tracking-wider rounded-sm border transition-colors
             ${showHours
-              ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-[var(--color-bg)]'
+              ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-[var(--color-text)]'
               : 'bg-[var(--color-input)] border-[var(--color-input-border)] text-[var(--color-text-muted)] hover:border-[var(--color-input-border-hover)]'
             }
           `}

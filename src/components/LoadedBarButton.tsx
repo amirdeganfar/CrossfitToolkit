@@ -37,7 +37,7 @@ export function LoadedBarButton({ children, onClick, variant = 'pill', type = 'b
       <span className="absolute inset-y-0 right-0" style={{ width: cap, background: 'var(--color-bg)' }} />
       <span
         className="relative flex items-center gap-2 text-[17px] font-bold"
-        style={{ color: 'var(--color-bg)', letterSpacing: '-0.2px' }}
+        style={{ color: 'var(--color-text)', letterSpacing: '-0.2px' }}
       >
         {children}
       </span>

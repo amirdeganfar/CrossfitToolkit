@@ -35,7 +35,7 @@ export function PlateBadge({ category, size = 46, favorite = false, onToggleFavo
       {favorite && (
         <span
           className="absolute -right-1 -top-1 flex items-center justify-center"
-          style={{ width: 18, height: 18, borderRadius: 9999, background: 'var(--color-primary)', color: 'var(--color-bg)' }}
+          style={{ width: 18, height: 18, borderRadius: 9999, background: 'var(--color-primary)', color: 'var(--color-text)' }}
         >
           <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
