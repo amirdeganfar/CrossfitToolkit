@@ -14,7 +14,8 @@ import { useCheckInStore } from '../stores/checkInStore';
 import type { DailyCheckIn } from '../types/training';
 
 const DOW = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-const PLATE = ['#FF3B30', '#0A84FF', '#34C759', '#FFD60A', '#FF9F0A', '#BF5AF2', '#34C759'];
+// One distinct color per weekday so the strip reads colorful even before training.
+const PLATE = ['#FF3B30', '#FF9F0A', '#FFD60A', '#34C759', '#0A84FF', '#BF5AF2', '#FF375F'];
 
 function isoOf(d: Date) {
   return d.toISOString().split('T')[0];
@@ -61,23 +62,27 @@ export const WeekStreak = () => {
         const trained = c?.type === 'training';
         const rested = c?.type === 'rest';
 
+        const color = PLATE[i % PLATE.length];
+
         let dot: React.CSSProperties;
         if (trained) {
-          const color = PLATE[i % PLATE.length];
           dot = { background: color, boxShadow: `0 0 8px ${color}66` };
         } else if (rested) {
           dot = { background: 'var(--color-text-dim)' };
         } else if (isToday) {
-          dot = { background: 'transparent', border: '2px solid var(--color-primary)', boxShadow: '0 0 10px rgba(232,50,28,0.4)' };
+          dot = { background: 'transparent', border: `2px solid ${color}`, boxShadow: `0 0 10px ${color}66` };
         } else if (isFuture) {
-          dot = { background: 'transparent', border: '1.5px solid rgba(255,255,255,0.12)' };
+          dot = { background: 'transparent', border: `1.5px solid ${color}40` };
         } else {
-          dot = { background: 'transparent', border: '1.5px solid rgba(255,255,255,0.12)' };
+          dot = { background: 'transparent', border: `1.5px solid ${color}80` };
         }
 
         return (
           <div key={date} className="flex flex-col items-center gap-1.5">
-            <span className="text-[10px] font-semibold" style={{ color: isToday ? 'var(--color-primary)' : 'var(--color-text-muted)' }}>
+            <span
+              className="text-[10px] font-semibold"
+              style={{ color, opacity: isToday ? 1 : isFuture ? 0.55 : 0.85 }}
+            >
               {DOW[i]}
             </span>
             <div className="w-[26px] h-[26px] rounded-full transition-all" style={dot} />
