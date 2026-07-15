@@ -8,6 +8,7 @@ import { useInitialize } from '../hooks/useInitialize';
 import { QuickCheckIn, RecoveryAlert } from '../components/recovery';
 import { WeekStreak } from '../components/WeekStreak';
 import { LoadedBarButton } from '../components/LoadedBarButton';
+import { BottomSheet } from '../components/BottomSheet';
 import { Barbell } from '../components/Barbell';
 import { PlateBadge } from '../components/PlateBadge';
 import { categoryColorVar } from '../utils/categoryColors';
@@ -48,8 +49,10 @@ export const Home = () => {
   const checkInIsInitialized = useCheckInStore((s) => s.isInitialized);
   const checkInInitialize = useCheckInStore((s) => s.initialize);
   const recoveryScore = useCheckInStore((s) => s.recoveryScore);
+  const todayCheckIn = useCheckInStore((s) => s.todayCheckIn);
 
   const [recentLogsWithItems, setRecentLogsWithItems] = useState<RecentLogWithItem[]>([]);
+  const [showCheckIn, setShowCheckIn] = useState(false);
 
   useEffect(() => {
     if (isInitialized && !goalsIsInitialized && catalogItems.length > 0) {
@@ -91,9 +94,8 @@ export const Home = () => {
   }, [recentLogs]);
 
   const handleItemClick = (itemId: string) => navigate(`/item/${itemId}`);
-  const handleLogPR = () => navigate('/search');
-  const handleTimer = () => navigate('/clock');
-  const handleGoals = () => navigate('/goals');
+  const handleLogResult = () => navigate('/search');
+  const handleGoals = () => navigate('/progress');
 
   if (!isInitialized || isLoading) {
     return (
@@ -106,70 +108,46 @@ export const Home = () => {
   const now = new Date();
   const heroDate = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
+  // Readiness chip: invite a check-in when today has none, otherwise reflect recovery state.
+  const hasCheckIn = !!todayCheckIn;
   const isRestRecommended = recoveryScore && (recoveryScore.level === 'warning' || recoveryScore.level === 'critical');
-  const statusLabel = isRestRecommended ? 'Rest recommended' : 'Primed';
+  const chipLabel = !hasCheckIn ? 'Check in' : isRestRecommended ? 'Rest recommended' : 'Primed';
+  const chipStyle = !hasCheckIn
+    ? { background: 'var(--color-surface)', color: 'var(--color-text)', border: '1px solid var(--color-border-strong)' }
+    : isRestRecommended
+      ? { background: 'rgba(255,159,10,0.14)', color: 'var(--color-warning)' }
+      : { background: 'rgba(52,199,89,0.14)', color: 'var(--color-success)' };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header — date, headline, tappable readiness chip */}
       <div className="flex items-start justify-between">
         <div>
           <div className="label-eyebrow">{heroDate}</div>
           <h1 className="font-display-black text-[30px] text-[var(--color-text)] mt-1 leading-[1.05]">Ready to train.</h1>
         </div>
-        <span
-          className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold self-center whitespace-nowrap"
-          style={
-            isRestRecommended
-              ? { background: 'rgba(255,159,10,0.14)', color: 'var(--color-warning)' }
-              : { background: 'rgba(52,199,89,0.14)', color: 'var(--color-success)' }
-          }
+        <button
+          onClick={() => setShowCheckIn(true)}
+          className="flex items-center gap-1.5 rounded-full px-3.5 min-h-[44px] text-[12px] font-semibold self-center whitespace-nowrap transition-transform active:scale-95"
+          style={chipStyle}
+          aria-label={hasCheckIn ? `Readiness: ${chipLabel}. Edit check-in` : 'Daily check-in'}
         >
           <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'currentColor' }} />
-          {statusLabel}
-        </span>
+          {chipLabel}
+          <ChevronRight className="w-3.5 h-3.5 -mr-1 opacity-70" />
+        </button>
       </div>
+
+      {/* Hero — the single primary action on Home */}
+      <LoadedBarButton onClick={handleLogResult}>
+        <Plus className="w-5 h-5" /> Log a result
+      </LoadedBarButton>
 
       {/* Week streak strip */}
       <WeekStreak />
 
-      {/* Quick actions */}
-      <div className="grid grid-cols-2 gap-2">
-        <LoadedBarButton variant="compact" onClick={handleLogPR}>
-          <Plus className="w-5 h-5" /> Log a PR
-        </LoadedBarButton>
-        <button
-          onClick={handleTimer}
-          className="flex items-center justify-center gap-2 h-[54px] rounded-[14px] border border-[var(--color-border-strong)] text-[var(--color-text)] font-semibold text-[15px] hover:bg-[var(--color-surface-elevated)] active:scale-[0.98] transition-all"
-          aria-label="Open timer"
-        >
-          <Timer className="w-5 h-5" /> Timer
-        </button>
-      </div>
-
-      {/* Check-in */}
-      <QuickCheckIn />
+      {/* Recovery alert — self-hides unless a warning is active */}
       <RecoveryAlert />
-
-      {/* Favorites */}
-      {favorites.length > 0 && (
-        <section>
-          <div className="label-eyebrow mb-3">Favorites</div>
-          <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide">
-            {favorites.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => handleItemClick(item.id)}
-                className="flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium text-[var(--color-text)] whitespace-nowrap transition-transform active:scale-95"
-                style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
-                aria-label={`View ${item.name}`}
-              >
-                {item.name}
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
 
       {/* Active goals */}
       {activeGoals.length > 0 && (
@@ -206,7 +184,7 @@ export const Home = () => {
 
       {/* Recent */}
       <section>
-        <div className="label-eyebrow mb-3">Recent</div>
+        <div className="label-eyebrow mb-3">Recent PRs</div>
         {recentLogsWithItems.length > 0 ? (
           <div>
             {recentLogsWithItems.slice(0, 5).map((log) => {
@@ -238,6 +216,33 @@ export const Home = () => {
           <p className="text-sm text-[var(--color-text-muted)] py-4">No logs yet — start tracking</p>
         )}
       </section>
+
+      {/* Favorites — quick jumps, demoted below the record */}
+      {favorites.length > 0 && (
+        <section>
+          <div className="label-eyebrow mb-3">Favorites</div>
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide">
+            {favorites.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => handleItemClick(item.id)}
+                className="flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium text-[var(--color-text)] whitespace-nowrap transition-transform active:scale-95"
+                style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+                aria-label={`View ${item.name}`}
+              >
+                {item.name}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Daily check-in — relocated into a bottom sheet off the readiness chip */}
+      {showCheckIn && (
+        <BottomSheet title="Daily check-in" onClose={() => setShowCheckIn(false)}>
+          <QuickCheckIn hideDatePicker onSaved={() => setShowCheckIn(false)} />
+        </BottomSheet>
+      )}
     </div>
   );
 };

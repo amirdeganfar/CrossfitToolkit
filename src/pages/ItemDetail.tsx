@@ -948,7 +948,7 @@ export const ItemDetail = () => {
       </section>
 
       {/* Sticky Log Result CTA */}
-      <div className="sticky bottom-0 bg-[var(--color-bg)] border-t border-[var(--color-border)] p-4 pb-safe -mx-4">
+      <div className="sticky bottom-[calc(3.75rem+env(safe-area-inset-bottom,0px))] bg-[var(--color-bg)] border-t border-[var(--color-border)] p-4 -mx-4">
         <LoadedBarButton onClick={() => setShowModal(true)}>
           <Plus className="w-5 h-5" /> Log a result
         </LoadedBarButton>

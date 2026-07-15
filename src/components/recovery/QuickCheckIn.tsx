@@ -79,7 +79,14 @@ const LoadedBar = ({ children, onClick, disabled }: { children: React.ReactNode;
 );
 
 // ── Main component ───────────────────────────────────────────────────────────
-export const QuickCheckIn = () => {
+interface QuickCheckInProps {
+  /** Called after a check-in (training or rest) is successfully saved. */
+  onSaved?: () => void;
+  /** Hide the date selector and lock the check-in to today (e.g. the readiness sheet). */
+  hideDatePicker?: boolean;
+}
+
+export const QuickCheckIn = ({ onSaved, hideDatePicker = false }: QuickCheckInProps = {}) => {
   const selectedDate = useCheckInStore((s) => s.selectedDate);
   const selectedCheckIn = useCheckInStore((s) => s.selectedCheckIn);
   const isSaving = useCheckInStore((s) => s.isSaving);
@@ -105,6 +112,14 @@ export const QuickCheckIn = () => {
   const [soreness, setSoreness] = useState<MetricValue | undefined>(selectedCheckIn?.soreness);
   const [sleepHours, setSleepHours] = useState<SleepHours | undefined>(selectedCheckIn?.sleepHours);
 
+  // When locked to today (readiness sheet), keep the selected date on today so
+  // a save reliably updates today's check-in / the readiness chip.
+  useEffect(() => {
+    if (hideDatePicker && selectedDate !== today) {
+      void setSelectedDate(today);
+    }
+  }, [hideDatePicker, selectedDate, today, setSelectedDate]);
+
   useEffect(() => {
     if (selectedCheckIn) {
       setMode('summary');
@@ -129,12 +144,13 @@ export const QuickCheckIn = () => {
     } else { setEnergy(undefined); setSoreness(undefined); setSleepHours(undefined); }
     setMode('training');
   }, [selectedCheckIn]);
-  const handleRestDayClick = useCallback(async () => { await saveRestDay(); setMode('summary'); }, [saveRestDay]);
+  const handleRestDayClick = useCallback(async () => { await saveRestDay(); setMode('summary'); onSaved?.(); }, [saveRestDay, onSaved]);
   const handleSave = useCallback(async () => {
     if (!energy || !soreness || !sleepHours) return;
     await saveTrainingCheckIn({ energy, soreness, sleepHours });
     setMode('summary');
-  }, [energy, soreness, sleepHours, saveTrainingCheckIn]);
+    onSaved?.();
+  }, [energy, soreness, sleepHours, saveTrainingCheckIn, onSaved]);
 
   const isFormValid = energy !== undefined && soreness !== undefined && sleepHours !== undefined;
   const formatOtherDate = (dateStr: string) => new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -167,12 +183,15 @@ export const QuickCheckIn = () => {
     </div>
   );
 
+  // Hidden when the check-in is hosted in the today-only readiness sheet.
+  const dateSelectorNode = hideDatePicker ? null : dateSelector;
+
   // Loading
   if (isLoading) {
     return (
       <section aria-label="Quick check-in">
         <div className="label-eyebrow mb-3">Quick check-in</div>
-        {dateSelector}
+        {dateSelectorNode}
         <div className="flex items-center justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-[var(--color-text-muted)]" /></div>
       </section>
     );
@@ -192,7 +211,7 @@ export const QuickCheckIn = () => {
             <Edit2 className="w-3 h-3" /> Edit
           </button>
         </div>
-        {dateSelector}
+        {dateSelectorNode}
         {isRestDay ? (
           <div className="flex items-center gap-2 rounded-2xl p-4" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
             <Moon className="w-5 h-5 text-[var(--color-primary)]" />
@@ -233,7 +252,7 @@ export const QuickCheckIn = () => {
             <button onClick={handleCancel} className="text-[13px] font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors">Cancel</button>
           )}
         </div>
-        {dateSelector}
+        {dateSelectorNode}
         <p className="font-display text-[15px] text-[var(--color-text-muted)] mb-4">{promptText}</p>
         <div className="flex flex-col gap-2.5">
           <LoadedBar onClick={handleTrainingClick}><Dumbbell className="w-[18px] h-[18px]" /> Training day</LoadedBar>
@@ -261,7 +280,7 @@ export const QuickCheckIn = () => {
       </div>
 
       <div className="space-y-3">
-        {dateSelector}
+        {dateSelectorNode}
 
         <div className="rounded-2xl p-4" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
           <div className="label-eyebrow mb-3">Energy level</div>
