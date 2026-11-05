@@ -27,6 +27,7 @@ import {
 import { formatWeight, formatDistance as formatDistanceUnit, formatMeters, convertWeight, convertDistance } from '../utils/units';
 import { PRCelebration, type Celebration } from '../components/PRCelebration';
 import { PRBadge } from '../components/PRBadge';
+import { ResultTrend, type TrendPool, type TrendKind } from '../components/ResultTrend';
 import * as db from '../db';
 import type { PRLog, CatalogItem, ScoreType } from '../types/catalog';
 import type { CreateGoalInput, UpdateGoalInput, GoalWithProgress } from '../types/goal';
@@ -586,6 +587,67 @@ export const ItemDetail = () => {
 
   const useGroupedHistory = groupedLogs.length > 0;
 
+  // Trend chart pools — one per history group, values in display units.
+  const wu = settings.weightUnit;
+  const du = settings.distanceUnit;
+  const trendValue = (log: PRLog, scoreType: ScoreType): number => {
+    if (scoreType === 'Load') return convertWeight(db.getComparableValue(log, 'Load'), 'kg', wu);
+    if (scoreType === 'Distance') return convertDistance(db.getComparableValue(log, 'Distance'), 'm', du);
+    if (scoreType === 'Rounds+Reps') return log.resultValue / 100;
+    return log.resultValue;
+  };
+  const goalTrendValue = (goal: GoalWithProgress | undefined, scoreType: ScoreType): number | undefined => {
+    if (!goal) return undefined;
+    if (scoreType === 'Load') return convertWeight(goal.targetValue, goal.unit, wu);
+    if (scoreType === 'Distance') return convertDistance(goal.targetValue, goal.distanceUnit, du);
+    if (scoreType === 'Rounds+Reps') return goal.targetValue / 100;
+    return goal.targetValue;
+  };
+  const trendKind = (scoreType: ScoreType): TrendKind => {
+    switch (scoreType) {
+      case 'Load': return 'weight';
+      case 'Distance': return 'distance';
+      case 'Time':
+      case 'TimeForReps': return 'time';
+      case 'Rounds+Reps': return 'rr';
+      case 'Calories': return 'cal';
+      default: return 'reps';
+    }
+  };
+  const makePool = (key: string, label: string, scoreType: ScoreType, poolLogs: PRLog[], goal?: GoalWithProgress): TrendPool => ({
+    key,
+    label,
+    kind: trendKind(scoreType),
+    lowerIsBetter: scoreIsLowerBetter(scoreType),
+    points: poolLogs.map((l) => ({ id: l.id, date: l.date, value: trendValue(l, scoreType) })),
+    goal: goalTrendValue(goal, scoreType),
+  });
+  const trendPools: TrendPool[] = useScoreTypeGrouping
+    ? scoreTypeGroups.map((g) => makePool(`st:${g.key}`, g.label, g.scoreType, g.logs, goalForGroup(g)))
+    : groupedLogs.map((g) => {
+        const key = `${g.type}:${g.key}`;
+        switch (g.type) {
+          case 'reps':
+            return makePool(key, g.label, 'Load', g.logs, activeGoals.find((goal) => (goal.reps ?? 1) === g.key));
+          case 'distance':
+            return makePool(key, g.label, 'Time', g.logs, activeGoals.find((goal) => goal.distance === g.key));
+          case 'calories':
+            return {
+              ...makePool(key, `Cal in ${g.label}`, 'Calories', g.logs),
+              points: g.logs.map((l) => ({ id: l.id, date: l.date, value: l.calories ?? 0 })),
+            };
+          case 'variant': {
+            const goal = activeGoals.find((gl) => gl.variant === g.key)
+              ?? (groupedLogs.length === 1 ? activeGoals.find((gl) => !gl.variant) : undefined);
+            return makePool(key, g.label, item?.scoreType ?? 'Time', g.logs, goal);
+          }
+        }
+      });
+  // Default to the pool holding the hero PB, else the busiest pool (ResultTrend's fallback).
+  const trendDefaultKey = bestLog
+    ? trendPools.find((p) => p.points.some((pt) => pt.id === bestLog.id))?.key
+    : undefined;
+
   const getCategoryColor = (category: CatalogItem['category']) => categoryColorHex(category);
 
   // One goal's progress. Direction comes from the goal's own score type.
@@ -935,6 +997,17 @@ export const ItemDetail = () => {
           </div>
         )}
       </div>
+
+      {/* Results trend (hidden until a pool has 2+ results) */}
+      {!isLoading && (
+        <ResultTrend
+          itemName={item.name}
+          pools={trendPools}
+          defaultKey={trendDefaultKey}
+          weightUnit={settings.weightUnit}
+          distanceUnit={settings.distanceUnit}
+        />
+      )}
 
       {/* Percentage Calculator */}
       {item.category === 'Lift' && item.scoreType === 'Load' && (
