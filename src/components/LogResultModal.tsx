@@ -1,6 +1,6 @@
 import { useId, useRef, useState } from 'react';
 import { X } from 'lucide-react';
-import type { CatalogItem, Variant, ScoreType } from '../types/catalog';
+import type { CatalogItem, PRLog, Variant, ScoreType } from '../types/catalog';
 import { useCatalogStore } from '../stores/catalogStore';
 import { parseResultToValue, validateResult, getResultPlaceholder, getResultLabel, formatCompoundResult, formatSecondsToTime, parseTimeToSeconds } from '../utils/resultParser';
 import { getScoreModes, SCORE_TYPES } from '../config/scoreTypes';
@@ -15,7 +15,7 @@ import { haptics } from '../utils/haptics';
 interface LogResultModalProps {
   item: CatalogItem;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (savedLog: PRLog) => void;
 }
 
 const VARIANTS: { value: Variant; label: string }[] = [
@@ -164,7 +164,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
         });
       }
 
-      await addPRLog({
+      const savedLog = await addPRLog({
         catalogItemId: item.id,
         result: displayResult,
         resultValue,
@@ -180,7 +180,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
       });
 
       haptics.success();
-      onSuccess();
+      onSuccess(savedLog);
       onClose();
     } catch (err) {
       setError('Failed to save. Please try again.');

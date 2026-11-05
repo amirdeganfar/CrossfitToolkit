@@ -365,9 +365,8 @@ export const ItemDetail = () => {
     }
   };
 
-  const handleModalSuccess = async () => {
+  const handleModalSuccess = async (savedLog: PRLog) => {
     if (!id || !item) return;
-    const prevIds = new Set(logs.map((l) => l.id));
     const before = bestIdsByPool({ logs, bestLog, bestByDistance, bestByCalories }, item, isDual, isDistanceOnly);
     try {
       const data = await loadLogsAndBests(id, isDual, isDistanceOnly);
@@ -376,11 +375,7 @@ export const ItemDetail = () => {
       const after = bestIdsByPool(data, item, isDual, isDistanceOnly);
       if ([...before].some(([pool, logId]) => after.has(pool) && after.get(pool) !== logId)) haptics.pr();
 
-      // LogResultModal doesn't pass the saved log back — find it by id diff.
-      const savedLog = data.logs
-        .filter((l) => !prevIds.has(l.id))
-        .reduce<PRLog | undefined>((latest, l) => (!latest || l.createdAt > latest.createdAt ? l : latest), undefined);
-      const achieved = savedLog ? await goalsCheckOnNewPR(savedLog, item) : [];
+      const achieved = await goalsCheckOnNewPR(savedLog, item);
       if (achieved.length > 0) haptics.goal();
       else if (goalsIsInitialized) await goalsRefresh(catalogItems);
     } catch (error) {
