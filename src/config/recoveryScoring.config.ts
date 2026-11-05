@@ -88,8 +88,14 @@ export const MAX_CONSECUTIVE_POINTS = 4;
 /** Multiplier for energy points: (5 - value) × WEIGHT */
 export const ENERGY_WEIGHT = 1.0;
 
+/** Energy at or above this is a normal training day: 0 points ("Good" is fine). */
+export const ENERGY_NO_PENALTY_MIN = 4;
+
 /** Multiplier for soreness points: (value - 1) × WEIGHT */
 export const SORENESS_WEIGHT = 1.0;
+
+/** Soreness at or below this is normal: 0 points (light soreness is expected). */
+export const SORENESS_NO_PENALTY_MAX = 2;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ALERT THRESHOLDS
@@ -104,10 +110,10 @@ export interface AlertThreshold {
 }
 
 export const ALERT_THRESHOLDS: AlertThreshold[] = [
-  { min: 0, max: 2, level: 'none' },
-  { min: 3, max: 5, level: 'info' },
-  { min: 6, max: 8, level: 'warning' },
-  { min: 9, max: Infinity, level: 'critical' },
+  { min: 0, max: 1, level: 'none' },
+  { min: 2, max: 4, level: 'info' },
+  { min: 5, max: 7, level: 'warning' },
+  { min: 8, max: Infinity, level: 'critical' },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -144,25 +150,23 @@ export const getConsecutiveMessage = (days: number): string => {
 
 /**
  * Get user-facing message for energy level.
- * Shown whenever energy adds points (value <= 4).
+ * Shown whenever energy adds points (value < ENERGY_NO_PENALTY_MIN).
  */
 export const getEnergyMessage = (value: number): string | null => {
   if (value === 1) return 'Very low energy';
   if (value === 2) return 'Low energy';
   if (value === 3) return 'Moderate energy';
-  if (value === 4) return 'Energy slightly below peak';
   return null;
 };
 
 /**
  * Get user-facing message for soreness level.
- * Shown whenever soreness adds points (value >= 2).
+ * Shown whenever soreness adds points (value > SORENESS_NO_PENALTY_MAX).
  */
 export const getSorenessMessage = (value: number): string | null => {
   if (value === 5) return 'High soreness';
   if (value === 4) return 'Elevated soreness';
   if (value === 3) return 'Moderate soreness';
-  if (value === 2) return 'Light soreness';
   return null;
 };
 

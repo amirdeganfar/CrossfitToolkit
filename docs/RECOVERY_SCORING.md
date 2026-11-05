@@ -62,26 +62,26 @@ The algorithm calculates fatigue points for each metric. Higher points = more re
 
 ### Energy Points
 
-- **Formula**: `(5 - value) × 1.0`
+- **Formula**: `(5 - value) × 1.0`, but 0 when value ≥ 4 (`ENERGY_NO_PENALTY_MIN`)
 - **Max Points**: 4
 
 | Energy Value | Points |
 | ------------ | ------ |
 | 5 (Great)    | 0      |
-| 4 (Good)     | 1      |
+| 4 (Good)     | 0      |
 | 3 (OK)       | 2      |
 | 2 (Low)      | 3      |
 | 1 (Exhausted)| 4      |
 
 ### Soreness Points
 
-- **Formula**: `(value - 1) × 1.0`
+- **Formula**: `(value - 1) × 1.0`, but 0 when value ≤ 2 (`SORENESS_NO_PENALTY_MAX`)
 - **Max Points**: 4
 
 | Soreness Value | Points |
 | -------------- | ------ |
 | 1 (None)       | 0      |
-| 2 (Light)      | 1      |
+| 2 (Light)      | 0      |
 | 3 (Moderate)   | 2      |
 | 4 (High)       | 3      |
 | 5 (Severe)     | 4      |
@@ -114,12 +114,14 @@ The algorithm calculates fatigue points for each metric. Higher points = more re
 
 Total score determines the alert level displayed to the user.
 
-| Score Range | Level    | Title                        | Color  |
-| ----------- | -------- | ---------------------------- | ------ |
-| 0-2         | None     | No alert shown               | —      |
-| 3-5         | Info     | "Monitor Your Recovery"      | Yellow |
-| 6-8         | Warning  | "Consider Lighter Intensity" | Orange |
-| 9+          | Critical | "Rest Day Recommended"       | Red    |
+| Score Range | Level    | Home chip | Title                        | Intent                     |
+| ----------- | -------- | --------- | ---------------------------- | -------------------------- |
+| 0-1         | None     | Primed    | No alert shown               | Good check-in              |
+| 2-4         | Info     | Fair      | "Monitor Your Recovery"      | One mild issue             |
+| 5-7         | Warning  | Low       | "Consider Lighter Intensity" | Clear problems             |
+| 8+          | Critical | Depleted  | "Rest Day Recommended"       | Multiple severe factors    |
+
+Every metric that adds points has a reason message; a Primed score may have no reasons.
 
 ---
 
@@ -135,11 +137,13 @@ Each contributing factor displays a user-friendly message (no raw point values s
 
 ### Energy Messages
 
+- Value 3: "Moderate energy"
 - Value 2: "Low energy"
 - Value 1: "Very low energy"
 
 ### Soreness Messages
 
+- Value 3: "Moderate soreness"
 - Value 4: "Elevated soreness"
 - Value 5: "High soreness"
 
@@ -153,14 +157,21 @@ Each contributing factor displays a user-friendly message (no raw point values s
 
 ## Sample Scenarios
 
-| Scenario         | Days | Energy | Soreness | Sleep | Score | Alert    |
-| ---------------- | ---- | ------ | -------- | ----- | ----- | -------- |
-| Fresh Monday     | 1    | 4      | 2        | 8h    | 2     | None     |
-| Day 3, tired     | 3    | 3      | 3        | 7h    | 7     | Warning  |
-| Pushed hard      | 4    | 2      | 4        | 6h    | 12    | Critical |
-| Bad sleep        | 1    | 4      | 2        | 5h    | 7     | Warning  |
-| Fully rested     | 1    | 5      | 1        | 9h    | 0     | None     |
-| Competition week | 5    | 1      | 5        | 5h    | 17    | Critical |
+Default min sleep 7h.
+
+| Scenario                    | Days | Energy | Soreness | Sleep | Score | Level           |
+| --------------------------- | ---- | ------ | -------- | ----- | ----- | --------------- |
+| Fully rested                | 1    | 5      | 1        | 9h    | 0     | None (Primed)   |
+| Good check-in               | 2    | 4      | 2        | 8h    | 1     | None (Primed)   |
+| Good, day 3                 | 3    | 4      | 2        | 8h    | 2     | Info (Fair)     |
+| Energy OK only              | 1    | 3      | 2        | 8h    | 2     | Info (Fair)     |
+| 1h short on sleep only      | 1    | 4      | 2        | 6h    | 2     | Info (Fair)     |
+| Bad sleep (2h short)        | 1    | 4      | 2        | 5h    | 4     | Info (Fair)     |
+| Day 3, tired                | 3    | 3      | 3        | 7h    | 6     | Warning (Low)   |
+| Low energy + high soreness  | 1    | 2      | 4        | 8h    | 6     | Warning (Low)   |
+| Exhausted + severe soreness | 1    | 1      | 5        | 8h    | 8     | Critical (Depleted) |
+| Pushed hard                 | 4    | 2      | 4        | 6h    | 11    | Critical (Depleted) |
+| Competition week            | 5    | 1      | 5        | 5h    | 16    | Critical (Depleted) |
 
 ---
 
@@ -196,5 +207,6 @@ All thresholds and messages are defined in `src/config/recoveryScoring.config.ts
 
 | Version | Date       | Changes                                      |
 | ------- | ---------- | -------------------------------------------- |
+| 1.2     | 2026-11-06 | Energy 4 / soreness 2 score 0; thresholds 0-1 / 2-4 / 5-7 / 8+ (good check-ins now Primed) |
 | 1.1     | 2026-01-24 | Added configurable min sleep hours setting   |
 | 1.0     | 2026-01-23 | Initial algorithm design                     |

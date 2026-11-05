@@ -104,6 +104,19 @@
   --plate-green:  #34C759;
   --plate-yellow: #FFD60A;
 
+  /* Week strip (WeekStreak): one hue per weekday Mon..Sun + state strengths */
+  --day-1: var(--plate-red);
+  --day-2: var(--color-warning);
+  --day-3: var(--plate-yellow);
+  --day-4: var(--plate-green);
+  --day-5: var(--plate-blue);
+  --day-6: var(--color-cat-skill);
+  --day-7: var(--color-cat-custom);
+  --day-label-past: 0.85;     /* label opacity */
+  --day-label-future: 0.55;
+  --day-ring-past: 50%;       /* outline color-mix strength */
+  --day-ring-future: 25%;
+
   /* Typography — Apple SF stack (Inter fallback off-platform) */
   --font-display: "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
   --font-text:    "SF Pro Text", system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
@@ -158,6 +171,21 @@
 
   /* Plates stay competition colors; yellow deepened a touch to hold on white. */
   --plate-yellow: #F2C200;
+
+  /* Week strip: deepened weekday hues + stronger states. On bg #F4F3F0,
+     labels >= 4.5:1 and outlines >= 3:1 in every state (min: Wed label-future
+     4.74, Wed ring-future 3.08). Full color: 6.76 6.75 6.71 7.49 7.05 7.40 6.85. */
+  --day-1: #A3221A;
+  --day-2: #7F4700;
+  --day-3: #6A5200;
+  --day-4: #155A2A;
+  --day-5: #004FA8;
+  --day-6: #722C9C;
+  --day-7: #A3193C;
+  --day-label-past: 1;
+  --day-label-future: 0.8;
+  --day-ring-past: 80%;
+  --day-ring-future: 65%;
 
   --color-backdrop: rgba(30,28,24,0.38);
   --color-pr-backdrop: rgba(30,28,24,0.32);

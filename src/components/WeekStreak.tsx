@@ -16,19 +16,11 @@ import type { DailyCheckIn } from '../types/training';
 
 const DOW = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 // One distinct color per weekday so the strip reads colorful even before
-// training (intentional palette, built from the design tokens in index.css).
-const PLATE = [
-  'var(--plate-red)',
-  'var(--color-warning)',
-  'var(--plate-yellow)',
-  'var(--plate-green)',
-  'var(--plate-blue)',
-  'var(--color-cat-skill)',
-  'var(--color-cat-custom)',
-];
+// training. --day-N tokens in index.css (deepened in light theme for contrast).
+const DAY_COLORS = Array.from({ length: 7 }, (_, i) => `var(--day-${i + 1})`);
 
-/** `color` at `pct`% opacity (works with CSS variables). */
-const tint = (color: string, pct: number) => `color-mix(in srgb, ${color} ${pct}%, transparent)`;
+/** `color` at `pct` opacity, e.g. '40%' or a CSS var (works with CSS variables). */
+const tint = (color: string, pct: string) => `color-mix(in srgb, ${color} ${pct}, transparent)`;
 
 /** Monday-based local dates (YYYY-MM-DD) for the week containing `today`. */
 function weekDates(today: string): string[] {
@@ -67,26 +59,26 @@ export const WeekStreak = () => {
         const trained = c?.type === 'training';
         const rested = c?.type === 'rest';
 
-        const color = PLATE[i % PLATE.length];
+        const color = DAY_COLORS[i];
 
         let dot: React.CSSProperties;
         if (trained) {
-          dot = { background: color, boxShadow: `0 0 8px ${tint(color, 40)}` };
+          dot = { background: color, boxShadow: `0 0 8px ${tint(color, '40%')}` };
         } else if (rested) {
           dot = { background: 'var(--color-text-dim)' };
         } else if (isToday) {
-          dot = { background: 'transparent', border: `2px solid ${color}`, boxShadow: `0 0 10px ${tint(color, 40)}` };
+          dot = { background: 'transparent', border: `2px solid ${color}`, boxShadow: `0 0 10px ${tint(color, '40%')}` };
         } else if (isFuture) {
-          dot = { background: 'transparent', border: `1.5px solid ${tint(color, 25)}` };
+          dot = { background: 'transparent', border: `1.5px solid ${tint(color, 'var(--day-ring-future)')}` };
         } else {
-          dot = { background: 'transparent', border: `1.5px solid ${tint(color, 50)}` };
+          dot = { background: 'transparent', border: `1.5px solid ${tint(color, 'var(--day-ring-past)')}` };
         }
 
         return (
           <div key={date} className="flex flex-col items-center gap-1.5">
             <span
               className="text-[10px] font-semibold"
-              style={{ color, opacity: isToday ? 1 : isFuture ? 0.55 : 0.85 }}
+              style={{ color, opacity: isToday ? 1 : isFuture ? 'var(--day-label-future)' : 'var(--day-label-past)' }}
             >
               {DOW[i]}
             </span>

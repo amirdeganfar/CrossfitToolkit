@@ -8,7 +8,9 @@
 import {
   MAX_CONSECUTIVE_POINTS,
   ENERGY_WEIGHT,
+  ENERGY_NO_PENALTY_MIN,
   SORENESS_WEIGHT,
+  SORENESS_NO_PENALTY_MAX,
   ALERT_THRESHOLDS,
   DEFAULT_MIN_SLEEP_HOURS,
   calculateSleepPointsFromThreshold,
@@ -40,19 +42,21 @@ export const calculateConsecutivePoints = (days: number): number => {
 
 /**
  * Calculate points for energy level.
- * Formula: (5 - value) × ENERGY_WEIGHT
+ * Formula: (5 - value) × ENERGY_WEIGHT; 0 at or above ENERGY_NO_PENALTY_MIN.
  * Lower energy = more points
  */
 export const calculateEnergyPoints = (energy: number): number => {
+  if (energy >= ENERGY_NO_PENALTY_MIN) return 0;
   return (5 - energy) * ENERGY_WEIGHT;
 };
 
 /**
  * Calculate points for soreness level.
- * Formula: (value - 1) × SORENESS_WEIGHT
+ * Formula: (value - 1) × SORENESS_WEIGHT; 0 at or below SORENESS_NO_PENALTY_MAX.
  * Higher soreness = more points
  */
 export const calculateSorenessPoints = (soreness: number): number => {
+  if (soreness <= SORENESS_NO_PENALTY_MAX) return 0;
   return (soreness - 1) * SORENESS_WEIGHT;
 };
 

@@ -14,8 +14,8 @@ export default defineConfig({
         name: 'CrossfitToolkit — PR Tracker',
         short_name: 'CrossfitToolkit',
         description: 'Track your CrossFit PRs, benchmarks, and progress with ease.',
-        theme_color: '#0f0f0f',
-        background_color: '#0f0f0f',
+        theme_color: '#0A0A0B',
+        background_color: '#0A0A0B',
         display: 'standalone',
         start_url: '/',
         icons: [
