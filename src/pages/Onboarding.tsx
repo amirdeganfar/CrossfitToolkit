@@ -67,15 +67,15 @@ export const Onboarding = () => {
       </div>
       <ol className="space-y-2 text-sm text-[var(--color-text-muted)]">
         <li className="flex items-start gap-2">
-          <span className="text-[var(--color-primary)] font-bold">1.</span>
+          <span className="text-[var(--color-primary-text)] font-bold">1.</span>
           <span>Tap the <Share className="w-4 h-4 inline text-blue-400" /> Share button in Safari</span>
         </li>
         <li className="flex items-start gap-2">
-          <span className="text-[var(--color-primary)] font-bold">2.</span>
+          <span className="text-[var(--color-primary-text)] font-bold">2.</span>
           <span>Scroll down and tap <strong className="text-[var(--color-text)]">"Add to Home Screen"</strong></span>
         </li>
         <li className="flex items-start gap-2">
-          <span className="text-[var(--color-primary)] font-bold">3.</span>
+          <span className="text-[var(--color-primary-text)] font-bold">3.</span>
           <span>Tap <strong className="text-[var(--color-text)]">"Add"</strong> to confirm</span>
         </li>
       </ol>
@@ -93,15 +93,15 @@ export const Onboarding = () => {
       </div>
       <ol className="space-y-2 text-sm text-[var(--color-text-muted)]">
         <li className="flex items-start gap-2">
-          <span className="text-[var(--color-primary)] font-bold">1.</span>
+          <span className="text-[var(--color-primary-text)] font-bold">1.</span>
           <span>Tap the <MoreVertical className="w-4 h-4 inline text-[var(--color-text)]" /> menu in Chrome</span>
         </li>
         <li className="flex items-start gap-2">
-          <span className="text-[var(--color-primary)] font-bold">2.</span>
+          <span className="text-[var(--color-primary-text)] font-bold">2.</span>
           <span>Tap <strong className="text-[var(--color-text)]">"Install app"</strong> or <Plus className="w-4 h-4 inline" /> <strong className="text-[var(--color-text)]">"Add to Home screen"</strong></span>
         </li>
         <li className="flex items-start gap-2">
-          <span className="text-[var(--color-primary)] font-bold">3.</span>
+          <span className="text-[var(--color-primary-text)] font-bold">3.</span>
           <span>Tap <strong className="text-[var(--color-text)]">"Install"</strong> to confirm</span>
         </li>
       </ol>
@@ -136,7 +136,7 @@ export const Onboarding = () => {
               Using a different device? Tap below to see other options.
             </p>
             <details className="group">
-              <summary className="text-center text-sm text-[var(--color-primary)] cursor-pointer">
+              <summary className="text-center text-sm text-[var(--color-primary-text)] cursor-pointer">
                 Show Android instructions
               </summary>
               <div className="mt-4">{androidInstructions}</div>
@@ -151,7 +151,7 @@ export const Onboarding = () => {
               Using a different device? Tap below to see other options.
             </p>
             <details className="group">
-              <summary className="text-center text-sm text-[var(--color-primary)] cursor-pointer">
+              <summary className="text-center text-sm text-[var(--color-primary-text)] cursor-pointer">
                 Show iOS instructions
               </summary>
               <div className="mt-4">{iOSInstructions}</div>
@@ -196,7 +196,7 @@ export const Onboarding = () => {
 
   const steps: OnboardingStep[] = [
     {
-      icon: <Rocket className="w-16 h-16 text-[var(--color-primary)]" />,
+      icon: <Rocket className="w-16 h-16 text-[var(--color-primary-text)]" />,
       title: 'Welcome to CrossfitToolkit',
       description: 'Your personal PR tracker for CrossFit workouts, benchmarks, and lifts.',
       content: (
@@ -228,13 +228,13 @@ export const Onboarding = () => {
       ),
     },
     {
-      icon: <Smartphone className="w-16 h-16 text-[var(--color-primary)]" />,
+      icon: <Smartphone className="w-16 h-16 text-[var(--color-primary-text)]" />,
       title: 'Install as an App',
       description: 'Add CrossfitToolkit to your home screen for the best experience.',
       content: getInstallContent(),
     },
     {
-      icon: <Database className="w-16 h-16 text-[var(--color-primary)]" />,
+      icon: <Database className="w-16 h-16 text-[var(--color-primary-text)]" />,
       title: 'Your Data, Your Device',
       description: 'All your data stays on your device. No account needed.',
       content: (
@@ -272,8 +272,8 @@ export const Onboarding = () => {
     {
       icon: (
         <div className="flex gap-2">
-          <Download className="w-12 h-12 text-[var(--color-primary)]" />
-          <Upload className="w-12 h-12 text-[var(--color-primary)]" />
+          <Download className="w-12 h-12 text-[var(--color-primary-text)]" />
+          <Upload className="w-12 h-12 text-[var(--color-primary-text)]" />
         </div>
       ),
       title: 'Backup & Restore',
@@ -315,7 +315,7 @@ export const Onboarding = () => {
       ),
     },
     {
-      icon: <Rocket className="w-16 h-16 text-[var(--color-primary)]" />,
+      icon: <Rocket className="w-16 h-16 text-[var(--color-primary-text)]" />,
       title: "You're All Set!",
       description: 'Start tracking your CrossFit journey.',
       content: (

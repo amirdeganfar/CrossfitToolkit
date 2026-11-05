@@ -62,7 +62,7 @@ export const ConfirmDialog = ({
             onClick={onConfirm}
             className={`flex-1 min-h-[48px] px-4 rounded-md font-semibold text-[15px] hover:opacity-90 ${
               isDestructive
-                ? 'bg-[var(--color-danger)] text-white'
+                ? 'bg-[var(--color-danger-fill)] text-white'
                 : 'bg-[var(--color-primary)] text-[var(--color-text)]'
             }`}
           >

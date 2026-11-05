@@ -112,6 +112,8 @@ export const ItemSelector = ({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (disabled) return;
     if (!isOpen) {
+      // Only the trigger opens on key press — not e.g. Enter/Space on the Clear button.
+      if (e.target !== triggerRef.current) return;
       if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown' || e.key === 'ArrowUp') {
         e.preventDefault();
         open();
@@ -138,6 +140,9 @@ export const ItemSelector = ({
         if (activeIndex >= 0 && orderedItems[activeIndex]) handleSelect(orderedItems[activeIndex]);
         break;
       case 'Tab':
+        // The focused search input unmounts on close; park focus on the trigger
+        // first so the browser's Tab moves on from there instead of <body>.
+        triggerRef.current?.focus();
         setIsOpen(false);
         setSearch('');
         break;

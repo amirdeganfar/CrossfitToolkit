@@ -30,7 +30,8 @@ export const Clock = () => {
   }, [loadPresetsFromDB]);
 
   // Screen wake lock - keep screen on during timer
-  const needsWakeLock = status === 'running' || status === 'rest' || status === 'countdown';
+  // (paused included: a paused workout is still on screen and about to resume)
+  const needsWakeLock = status === 'running' || status === 'rest' || status === 'countdown' || status === 'paused';
   useEffect(() => {
     if (!needsWakeLock || !('wakeLock' in navigator)) return;
     let cancelled = false;
@@ -100,14 +101,14 @@ export const Clock = () => {
   const isTimerActive = status !== 'idle' && status !== 'complete';
 
   // Haptic pulse on every timer phase change: countdown → work, work ↔ rest,
-  // and completion. Pause/reset/resume are user-initiated and stay silent.
+  // and completion. Start/pause/reset/resume are user-initiated and stay silent.
   const lastPhaseRef = useRef<string | null>(null);
   useEffect(() => {
     const key = status === 'running' || status === 'rest' ? `${status}:${phase}` : status;
     const prev = lastPhaseRef.current;
     lastPhaseRef.current = key;
     if (prev === null || prev === key) return;
-    if (status === 'idle' || status === 'paused' || prev === 'paused') return;
+    if (status === 'idle' || status === 'paused' || prev === 'paused' || prev === 'idle') return;
     haptics.phase();
   }, [status, phase]);
 

@@ -42,20 +42,26 @@
   --color-input-border-hover: #8A8A8F;       /* hover */
   --color-focus-ring: rgba(232,50,28,0.35); /* accent focus halo */
 
-  /* Brand accent — CrossFit Red */
-  --color-primary: #E8321C;
+  /* Brand accent — CrossFit Red.
+     --color-primary is the FILL red: white text on it is 4.51:1 (AA).
+     Use --color-primary-text for red TEXT on dark surfaces (4.51:1 on
+     surface-elevated, 4.79 on surface, 5.24 on bg). Borders/rings/icons may
+     use either (non-text needs 3:1). */
+  --color-primary: #E1311B;
+  --color-primary-text: #EB4A36;
   --color-primary-dark: #C22818;
   --color-primary-glow: rgba(232,50,28,0.12);
 
   /* Text */
   --color-text: #FFFFFF;
   --color-text-muted: #8E8E93;
-  --color-text-dim: #7C7C80;   /* lowest-emphasis text; still >= 4.5:1 on --color-bg */
+  --color-text-dim: #838387;   /* lowest-emphasis text; >= 4.5:1 on bg, surface and surface-elevated */
 
   /* Semantic */
   --color-success: #34C759;
   --color-warning: #FF9F0A;
-  --color-danger: #FF453A;
+  --color-danger: #FF453A;      /* danger TEXT / borders: >= 4.99:1 on every dark surface */
+  --color-danger-fill: #DA3B32; /* solid danger buttons: white text 4.51:1 (AA) */
   --color-info: #0A84FF;    /* neutral/informational — distinct from the red primary */
 
   /* Category / plate accent colors (dark-optimized) */
@@ -112,7 +118,7 @@ body {
   box-shadow: 0 0 0 3px var(--color-focus-ring);
 }
 
-a { color: var(--color-primary); text-decoration: none; }
+a { color: var(--color-primary-text); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
 /* ─── Display typography ─────────────────────────────────────────────────
@@ -225,7 +231,9 @@ a:hover { text-decoration: underline; }
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   padding-bottom: env(safe-area-inset-bottom, 0px);
   box-shadow: 0 -12px 40px rgba(0,0,0,0.5);
-  animation: slide-up 0.3s cubic-bezier(0.32, 0.72, 0, 1) both;
+  /* `backwards`, not `both`: no transform is left on the sheet once it lands,
+     so it doesn't become the containing block for fixed-position children. */
+  animation: slide-up 0.3s cubic-bezier(0.32, 0.72, 0, 1) backwards;
 }
 .sheet:focus { outline: none; }
 .sheet-sm { max-width: 24rem; }
@@ -301,18 +309,20 @@ a:hover { text-decoration: underline; }
 .touch-target { min-height: 44px; min-width: 44px; }
 
 /* ─── Tap feedback ────────────────────────────────────────────────────────
-   Every button (and .tap cards) dips slightly on press. In the base layer so
-   per-element `active:scale-*` / `transition-*` utilities still override. */
+   Every button dims slightly on press (works for wide rows without the jumpy
+   scale). Press-scale is opt-in: `.tap` or a per-element `active:scale-*`
+   utility (compact CTAs / icon buttons). In the base layer so utilities still
+   override. Disabled / aria-disabled controls give no feedback. */
 @layer base {
   button, [role="button"], .tap {
     -webkit-tap-highlight-color: transparent;
-    transition-property: scale, background-color, border-color, color, opacity;
+    transition-property: scale, filter, background-color, border-color, color, opacity;
     transition-duration: 0.12s;
     transition-timing-function: ease-out;
   }
-  button:not(:disabled):active,
-  [role="button"]:active,
-  .tap:active { scale: 0.97; }
+  button:not(:disabled):not([aria-disabled="true"]):active,
+  [role="button"]:not([aria-disabled="true"]):active { filter: brightness(0.85); }
+  .tap:not(:disabled):not([aria-disabled="true"]):active { scale: 0.97; }
 }
 
 /* ─── Reduced motion ──────────────────────────────────────────────────── */

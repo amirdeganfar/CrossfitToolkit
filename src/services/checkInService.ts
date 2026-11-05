@@ -7,6 +7,7 @@
 import { db } from '../db';
 import { GAP_RESET_DAYS } from '../config/recoveryScoring.config';
 import { todayLocal, toLocalDateString, addDaysLocal, daysBetween } from '../utils/date';
+import { makeId } from '../utils/id';
 import type {
   DailyCheckIn,
   TrainingCheckInInput,
@@ -82,7 +83,7 @@ const upsertCheckInForDate = async (
 
     const checkIn: DailyCheckIn = existing
       ? { ...existing, ...fields }
-      : { id: `checkin-${Date.now()}`, date, createdAt: Date.now(), ...fields };
+      : { id: makeId('checkin'), date, createdAt: Date.now(), ...fields };
 
     await db.dailyCheckIns.put(checkIn);
     return checkIn;

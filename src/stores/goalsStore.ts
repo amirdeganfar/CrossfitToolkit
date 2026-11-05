@@ -51,7 +51,12 @@ interface GoalsState {
     catalogItems: CatalogItem[],
     weightUnit?: string
   ) => Promise<void>;
-  checkGoalsOnNewPR: (log: PRLog, item: CatalogItem) => Promise<string[]>;
+  /**
+   * Call after saving a log (pass the saved log from addPRLog, with its unit).
+   * Marks every active goal it reaches as achieved, refreshes, and returns the
+   * newly achieved goals (empty when none).
+   */
+  checkGoalsOnNewPR: (log: PRLog, item: CatalogItem) => Promise<GoalWithProgress[]>;
   getActiveGoalForItem: (
     itemId: string,
     variant?: Goal['variant'],
@@ -104,6 +109,8 @@ const loadGoals = async (catalogItems: CatalogItem[]) => {
 
 /** Catalog items from the last load, so reload() can run without arguments. */
 let lastCatalogItems: CatalogItem[] = [];
+/** Incremented per load; only the latest load's result is applied. */
+let loadRequestId = 0;
 
 export const useGoalsStore = create<GoalsState>((set, get) => ({
   // Initial state
@@ -119,26 +126,32 @@ export const useGoalsStore = create<GoalsState>((set, get) => ({
     if (get().isInitialized) return;
     lastCatalogItems = catalogItems;
 
+    const requestId = ++loadRequestId;
     set({ isLoading: true });
 
     try {
       const loaded = await loadGoals(catalogItems);
-      set({ ...loaded, isInitialized: true, isLoading: false });
+      // A newer refresh owns the data; just end the initial-load state.
+      set(requestId === loadRequestId ? { ...loaded, isInitialized: true, isLoading: false } : { isLoading: false });
     } catch (error) {
       console.error('[GoalsStore] Failed to initialize:', error);
       set({ isLoading: false });
     }
   },
 
-  // Refresh goals from database (background — sets isRefreshing, not isLoading)
+  // Refresh goals from database (background — sets isRefreshing, not isLoading).
+  // Only the latest request applies its result and clears isRefreshing.
   refreshGoals: async (catalogItems: CatalogItem[]) => {
     lastCatalogItems = catalogItems;
+    const requestId = ++loadRequestId;
     set({ isRefreshing: true });
 
     try {
       const loaded = await loadGoals(catalogItems);
+      if (requestId !== loadRequestId) return;
       set({ ...loaded, isInitialized: true, isRefreshing: false });
     } catch (error) {
+      if (requestId !== loadRequestId) return;
       console.error('[GoalsStore] Failed to refresh:', error);
       set({ isRefreshing: false });
     }
@@ -201,9 +214,24 @@ export const useGoalsStore = create<GoalsState>((set, get) => ({
     await get().refreshGoals(catalogItems, weightUnit);
   },
 
-  // Check if any goals are achieved by a new PR
+  // Mark active goals reached by a just-saved log as achieved; returns them.
   checkGoalsOnNewPR: async (log: PRLog, item: CatalogItem) => {
-    return goalService.checkGoalsOnNewPR(log, item);
+    const ids = await goalService.checkGoalsOnNewPR(log, item);
+    if (ids.length === 0) return [];
+    await Promise.all(ids.map((id) => db.achieveGoal(id)));
+    // Enrich directly (not from store state, which a concurrent refresh may own).
+    const [goals, settings] = await Promise.all([
+      Promise.all(ids.map((id) => db.getGoalById(id))),
+      db.getSettings(),
+    ]);
+    const achieved = await enrichGoals(
+      goals.filter((g): g is Goal => g !== undefined),
+      [item],
+      settings.weightUnit,
+      settings.distanceUnit
+    );
+    await get().refreshGoals(lastCatalogItems.length ? lastCatalogItems : [item]);
+    return achieved;
   },
 
   // Get active goal for a specific item

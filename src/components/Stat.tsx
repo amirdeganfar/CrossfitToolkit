@@ -5,6 +5,7 @@ import { splitUnit } from '../utils/units';
  *
  *   <Stat value="100" unit="kg" size="hero" tone="primary" />
  *   <Stat text="220.5lb" />          // splits the suffix itself
+ *   <Stat text="5 reps @ 100kg" />   // small "5 reps @", big "100", small "kg"
  */
 interface StatProps {
   /** Pre-split value. Ignored when `text` is given. */
@@ -25,10 +26,13 @@ const SIZE: Record<NonNullable<StatProps['size']>, string> = {
 };
 
 export function Stat({ value, unit, text, size = 'md', tone = 'default', className = '' }: StatProps) {
-  const parts = text !== undefined ? splitUnit(text) : { value: String(value ?? ''), unit: unit ?? '' };
-  const color = tone === 'primary' ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]';
+  const parts =
+    text !== undefined ? splitUnit(text) : { prefix: '', value: String(value ?? ''), unit: unit ?? '' };
+  const color = tone === 'primary' ? 'text-[var(--color-primary-text)]' : 'text-[var(--color-text)]';
   return (
     <span className={`stat ${SIZE[size]} ${className}`}>
+      {/* Compound label ("5 reps @") stays caption-sized; only the number is big. */}
+      {parts.prefix && <span className="stat-unit mr-[0.2em]">{parts.prefix}</span>}
       <span className={`stat-value ${color}`}>{parts.value}</span>
       {parts.unit && <span className="stat-unit">{parts.unit}</span>}
     </span>

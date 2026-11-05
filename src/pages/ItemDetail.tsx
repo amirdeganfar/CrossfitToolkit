@@ -6,7 +6,7 @@ import { EmptyState } from '../components/EmptyState';
 import { Stat } from '../components/Stat';
 import { haptics } from '../utils/haptics';
 import { useCatalogStore, useCatalogItem } from '../stores/catalogStore';
-import { useGoalsStore, useActiveGoalForItem, useActiveGoalsForItem } from '../stores/goalsStore';
+import { useGoalsStore, useActiveGoalsForItem } from '../stores/goalsStore';
 import { useInitialize } from '../hooks/useInitialize';
 import { LogResultModal } from '../components/LogResultModal';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -24,7 +24,7 @@ import {
   isLowerBetter as scoreIsLowerBetter,
   formatSecondsToTime,
 } from '../config/scoreTypes';
-import { convertWeight, formatWeight, formatDistance as formatDistanceUnit } from '../utils/units';
+import { formatWeight, formatDistance as formatDistanceUnit, formatMeters } from '../utils/units';
 import * as db from '../db';
 import type { PRLog, CatalogItem, ScoreType } from '../types/catalog';
 import type { CreateGoalInput, UpdateGoalInput, GoalWithProgress } from '../types/goal';
@@ -59,6 +59,14 @@ const scoreTypeGroupLabel = (scoreType: ScoreType, sample: PRLog): string => {
   return getScoreTypeDef(scoreType).name;
 };
 
+// Best log of a pool, compared unit-independently (kg / meters / raw).
+const pickBest = (logs: PRLog[], scoreType: ScoreType, lowerIsBetter: boolean): PRLog =>
+  logs.reduce((best, curr) => {
+    const c = db.getComparableValue(curr, scoreType);
+    const b = db.getComparableValue(best, scoreType);
+    return (lowerIsBetter ? c < b : c > b) ? curr : best;
+  });
+
 // Group logs into per-score-type pools, keyed by (scoreType, constraint).
 // Best/PR is computed independently per pool using that type's better-direction.
 const groupLogsByScoreType = (logs: PRLog[], item: CatalogItem): ScoreTypeGroup[] => {
@@ -77,10 +85,7 @@ const groupLogsByScoreType = (logs: PRLog[], item: CatalogItem): ScoreTypeGroup[
   groups.forEach((groupLogs, key) => {
     const st = key.slice(0, key.indexOf(':')) as ScoreType;
     const lowerIsBetter = scoreIsLowerBetter(st);
-    const bestLog = groupLogs.reduce((best, curr) => {
-      if (lowerIsBetter) return curr.resultValue < best.resultValue ? curr : best;
-      return curr.resultValue > best.resultValue ? curr : best;
-    });
+    const bestLog = pickBest(groupLogs, st, lowerIsBetter);
     const sorted = [...groupLogs].sort((a, b) => {
       if (a.id === bestLog.id) return -1;
       if (b.id === bestLog.id) return 1;
@@ -165,8 +170,7 @@ const groupLogsByReps = (logs: PRLog[]): LogGroup[] => {
   Array.from(repsGroups.keys()).sort((a, b) => a - b).forEach(reps => {
     const groupLogs = repsGroups.get(reps)!;
     // Compare in one unit — logs may have been saved in kg or lb.
-    const inKg = (log: PRLog) => convertWeight(log.resultValue, log.unit, 'kg');
-    const bestLog = groupLogs.reduce((best, curr) => inKg(curr) > inKg(best) ? curr : best);
+    const bestLog = pickBest(groupLogs, 'Load', false);
     const sorted = [...groupLogs].sort((a, b) => {
       if (a.id === bestLog.id) return -1;
       if (b.id === bestLog.id) return 1;
@@ -177,7 +181,7 @@ const groupLogsByReps = (logs: PRLog[]): LogGroup[] => {
   return result;
 };
 
-const groupLogsByVariant = (logs: PRLog[], isLowerBetter: boolean): LogGroup[] => {
+const groupLogsByVariant = (logs: PRLog[], scoreType: ScoreType): LogGroup[] => {
   const variantGroups = new Map<string, PRLog[]>();
   logs.forEach(log => {
     const variant = log.variant ?? 'Unspecified';
@@ -196,10 +200,7 @@ const groupLogsByVariant = (logs: PRLog[], isLowerBetter: boolean): LogGroup[] =
 
   sortedVariants.forEach(variant => {
     const groupLogs = variantGroups.get(variant)!;
-    const bestLog = groupLogs.reduce((best, curr) => {
-      if (isLowerBetter) return curr.resultValue < best.resultValue ? curr : best;
-      return curr.resultValue > best.resultValue ? curr : best;
-    });
+    const bestLog = pickBest(groupLogs, scoreType, scoreIsLowerBetter(scoreType));
     const sorted = [...groupLogs].sort((a, b) => {
       if (a.id === bestLog.id) return -1;
       if (b.id === bestLog.id) return 1;
@@ -236,6 +237,24 @@ const loadLogsAndBests = async (itemId: string, isDual: boolean, isDistanceOnly:
   return { logs, bestLog: best ?? null, bestByDistance: new Map(), bestByCalories: new Map() };
 };
 
+// Best log id per pool (global, distance, calories, score type, rep scheme,
+// variant). Used to detect a new PR after a save by comparing before/after.
+const bestIdsByPool = (data: LogsAndBests, item: CatalogItem, isDual: boolean, isDistanceOnly: boolean): Map<string, string> => {
+  const ids = new Map<string, string>();
+  if (data.bestLog) ids.set('best', data.bestLog.id);
+  data.bestByDistance.forEach((l, k) => ids.set(`d:${k}`, l.id));
+  data.bestByCalories.forEach((l, k) => ids.set(`c:${k}`, l.id));
+  if (isDual || isDistanceOnly || data.logs.length === 0) return ids;
+  if (getScoreModes(item).length > 1) {
+    groupLogsByScoreType(data.logs, item).forEach((g) => ids.set(`st:${g.key}`, g.bestLog.id));
+  } else if (item.category === 'Lift' && item.scoreType === 'Load') {
+    groupLogsByReps(data.logs).forEach((g) => ids.set(`r:${g.key}`, g.bestLog.id));
+  } else {
+    groupLogsByVariant(data.logs, item.scoreType).forEach((g) => ids.set(`v:${g.key}`, g.bestLog.id));
+  }
+  return ids;
+};
+
 export const ItemDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -252,8 +271,8 @@ export const ItemDetail = () => {
   const goalsRefresh = useGoalsStore((s) => s.refreshGoals);
   const goalsAddGoal = useGoalsStore((s) => s.addGoal);
   const goalsUpdateGoal = useGoalsStore((s) => s.updateGoal);
-  const activeGoal = useActiveGoalForItem(id ?? '');
-  // All active goals for this item — one per score pool for multi-mode items.
+  const goalsCheckOnNewPR = useGoalsStore((s) => s.checkGoalsOnNewPR);
+  // All active goals for this item — one per score pool / distance / rep scheme.
   const activeGoals = useActiveGoalsForItem(id ?? '');
 
   const [logs, setLogs] = useState<PRLog[]>([]);
@@ -346,28 +365,26 @@ export const ItemDetail = () => {
     }
   };
 
-  // Ids of every current "best" log, across all pools — used only to detect a
-  // new PR after a save so we can fire a celebratory haptic.
-  const bestIdsOf = (data: LogsAndBests): Set<string> => {
-    const ids = new Set<string>();
-    if (data.bestLog) ids.add(data.bestLog.id);
-    data.bestByDistance.forEach((l) => ids.add(l.id));
-    data.bestByCalories.forEach((l) => ids.add(l.id));
-    if (useScoreTypeGrouping && item) groupLogsByScoreType(data.logs, item).forEach((g) => ids.add(g.bestLog.id));
-    return ids;
-  };
-
   const handleModalSuccess = async () => {
     if (!id || !item) return;
-    const hadLogs = logs.length > 0;
-    const before = bestIdsOf({ logs, bestLog, bestByDistance, bestByCalories });
-    const data = await loadLogsAndBests(id, isDual, isDistanceOnly);
-    applyLogsAndBests(data);
-    if (hadLogs && [...bestIdsOf(data)].some((logId) => !before.has(logId))) haptics.pr();
-    if (goalsIsInitialized) {
-      const achievedBefore = useGoalsStore.getState().achievedGoals.length;
-      await goalsRefresh(catalogItems);
-      if (useGoalsStore.getState().achievedGoals.length > achievedBefore) haptics.goal();
+    const prevIds = new Set(logs.map((l) => l.id));
+    const before = bestIdsByPool({ logs, bestLog, bestByDistance, bestByCalories }, item, isDual, isDistanceOnly);
+    try {
+      const data = await loadLogsAndBests(id, isDual, isDistanceOnly);
+      applyLogsAndBests(data);
+      // New PR = a pool that already had a best now has a different one.
+      const after = bestIdsByPool(data, item, isDual, isDistanceOnly);
+      if ([...before].some(([pool, logId]) => after.has(pool) && after.get(pool) !== logId)) haptics.pr();
+
+      // LogResultModal doesn't pass the saved log back — find it by id diff.
+      const savedLog = data.logs
+        .filter((l) => !prevIds.has(l.id))
+        .reduce<PRLog | undefined>((latest, l) => (!latest || l.createdAt > latest.createdAt ? l : latest), undefined);
+      const achieved = savedLog ? await goalsCheckOnNewPR(savedLog, item) : [];
+      if (achieved.length > 0) haptics.goal();
+      else if (goalsIsInitialized) await goalsRefresh(catalogItems);
+    } catch (error) {
+      console.error('[ItemDetail] Error refreshing after save:', error);
     }
   };
 
@@ -441,15 +458,23 @@ export const ItemDetail = () => {
     setShowGoalModal(true);
   };
 
-  const formatDistance = (meters: number): string => {
-    if (meters >= 1609.34) {
-      const miles = meters / 1609.34;
-      return miles === 1 ? '1 mile' : `${miles.toFixed(1)} mi`;
-    } else if (meters >= 1000) {
-      const km = meters / 1000;
-      return `${km % 1 === 0 ? km.toFixed(0) : km.toFixed(1)}km`;
+  // Pool distances are stored in meters; show them in the user's unit.
+  const formatDistance = (meters: number): string => formatMeters(meters, settings.distanceUnit);
+
+  const isLift = item?.category === 'Lift' && item?.scoreType === 'Load';
+
+  // Short label for the pool a goal targets ("5km", "3RM", "Reps in 2:00", "Rx").
+  const goalPoolLabel = (goal: GoalWithProgress): string => {
+    const parts: string[] = [];
+    if (goal.distance !== undefined) parts.push(formatDistance(goal.distance));
+    if (goal.scoreTypeId && (useScoreTypeGrouping || isDual)) {
+      if (goal.scoreTypeId === 'RepsInTime' && goal.timeCap) parts.push(`Reps in ${formatSecondsToTime(goal.timeCap)}`);
+      else if (goal.scoreTypeId === 'TimeForReps' && goal.targetReps) parts.push(`Time for ${goal.targetReps} reps`);
+      else parts.push(getScoreTypeDef(goal.scoreTypeId).name);
     }
-    return `${meters}m`;
+    if (isLift) parts.push(`${goal.reps ?? 1}RM`);
+    if (goal.variant) parts.push(goal.variant);
+    return parts.join(' · ');
   };
 
   const sortedDistances = Array.from(bestByDistance.keys()).sort((a, b) => a - b);
@@ -458,10 +483,10 @@ export const ItemDetail = () => {
   const getGroupedLogs = (): LogGroup[] => {
     if (isDual || isDistanceOnly) {
       return groupLogs(logs, bestByDistance, bestByCalories, formatDistance);
-    } else if (item?.category === 'Lift' && item?.scoreType === 'Load') {
+    } else if (isLift) {
       return groupLogsByReps(logs);
-    } else if (logs.length > 0) {
-      return groupLogsByVariant(logs, isLowerBetter);
+    } else if (logs.length > 0 && item) {
+      return groupLogsByVariant(logs, item.scoreType);
     }
     return [];
   };
@@ -481,29 +506,51 @@ export const ItemDetail = () => {
 
   const getCategoryColor = (category: CatalogItem['category']) => categoryColorHex(category);
 
-  // Active goal progress (single-pool view) — shared by the single-best, dual-metric
-  // and distance layouts so goals show for every item type.
-  const activeGoalBlock = activeGoal ? (
-    <div className="mt-3 pt-3 border-t border-[var(--color-border)]">
+  // One goal's progress. Direction comes from the goal's own score type.
+  const renderGoal = (goal: GoalWithProgress, label?: string) => (
+    <div key={goal.id}>
       <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center gap-1.5 text-[13px] text-[var(--color-text-muted)] num">
           <Target size={12} className="text-[var(--color-text-muted)]" />
-          <span>Goal: {activeGoal.targetResult}</span>
+          <span>{label ? `${label} goal` : 'Goal'}: {goal.targetResult}</span>
         </div>
-        <button onClick={() => openGoalModal(activeGoal, null)} className="text-[13px] font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
+        <button onClick={() => openGoalModal(goal, goal.scoreTypeId ?? null)} className="text-[13px] font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
           Edit
         </button>
       </div>
-      {activeGoal.currentValue != null ? (
-        <Barbell current={activeGoal.currentValue} goal={activeGoal.targetValue} lowerIsBetter={isLowerBetter} />
+      {goal.currentValue != null ? (
+        <Barbell
+          current={goal.currentValue}
+          goal={goal.targetValue}
+          lowerIsBetter={scoreIsLowerBetter(goal.scoreTypeId ?? item?.scoreType ?? 'Time')}
+        />
       ) : (
-        <GoalProgress progress={activeGoal.progress} size="sm" />
+        <GoalProgress progress={goal.progress} size="sm" />
       )}
       <p className="t-caption num mt-1">
-        {activeGoal.daysRemaining >= 0 ? `${activeGoal.daysRemaining}d left` : 'Overdue'}
+        {goal.daysRemaining >= 0 ? `${goal.daysRemaining}d left` : 'Overdue'}
       </p>
     </div>
+  );
+
+  // All active goals for the item (single-pool, dual-metric and distance layouts).
+  // Pool labels are shown whenever they disambiguate.
+  const activeGoalBlock = activeGoals.length > 0 ? (
+    <div className="mt-3 pt-3 border-t border-[var(--color-border)] space-y-3">
+      {activeGoals.map((g) => renderGoal(g, activeGoals.length > 1 || g.distance !== undefined ? goalPoolLabel(g) : undefined))}
+    </div>
   ) : null;
+
+  // Multi-pool items (lift rep schemes, distances, variants) can hold several goals.
+  const canAddGoal = activeGoals.length === 0 || isDual || isDistanceOnly || isLift;
+
+  // Multi-mode: goals whose pool has no logs yet, and the first mode still without a goal.
+  const orphanGoals = useScoreTypeGrouping
+    ? activeGoals.filter((g) => !scoreTypeGroups.some((group) => goalForGroup(group)?.id === g.id))
+    : [];
+  const modeWithoutGoal = scoreModes.find(
+    (mode) => !activeGoals.some((g) => (g.scoreTypeId ?? item?.scoreType) === mode)
+  );
 
   const backBtn = 'w-10 h-10 -ml-2 flex items-center justify-center rounded-full hover:bg-[var(--color-surface-elevated)]';
 
@@ -651,7 +698,7 @@ export const ItemDetail = () => {
             )}
             <h2 className="t-section">Personal best</h2>
           </div>
-          {!activeGoal && !useScoreTypeGrouping && logs.length > 0 && (
+          {canAddGoal && !useScoreTypeGrouping && logs.length > 0 && (
             <button
               onClick={() => openGoalModal(null, null)}
               className="flex items-center gap-1 text-[13px] font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
@@ -686,25 +733,7 @@ export const ItemDetail = () => {
                       </div>
                     </div>
                     {groupGoal ? (
-                      <div className="pl-5">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <div className="flex items-center gap-1.5 text-[13px] text-[var(--color-text-muted)] num">
-                            <Target size={12} className="text-[var(--color-text-muted)]" />
-                            <span>Goal: {groupGoal.targetResult}</span>
-                          </div>
-                          <button onClick={() => openGoalModal(groupGoal, group.scoreType)} className="text-[13px] font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
-                            Edit
-                          </button>
-                        </div>
-                        {groupGoal.currentValue != null ? (
-                          <Barbell current={groupGoal.currentValue} goal={groupGoal.targetValue} lowerIsBetter={group.lowerIsBetter} />
-                        ) : (
-                          <GoalProgress progress={groupGoal.progress} size="sm" />
-                        )}
-                        <p className="t-caption num mt-1">
-                          {groupGoal.daysRemaining >= 0 ? `${groupGoal.daysRemaining}d left` : 'Overdue'}
-                        </p>
-                      </div>
+                      <div className="pl-5">{renderGoal(groupGoal)}</div>
                     ) : (
                       <button
                         onClick={() => openGoalModal(null, group.scoreType)}
@@ -717,14 +746,26 @@ export const ItemDetail = () => {
                   </div>
                 );
               })}
+              {orphanGoals.length > 0 && (
+                <div className="pt-3 border-t border-[var(--color-border)] space-y-3">
+                  {orphanGoals.map((g) => renderGoal(g, goalPoolLabel(g)))}
+                </div>
+              )}
             </div>
           ) : (
             <div>
               <p className="t-body text-[var(--color-text-muted)]">No results yet</p>
-              <button onClick={() => openGoalModal(null, null)} className="mt-2 flex items-center gap-1.5 min-h-[36px] text-sm font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
-                <Target size={13} />
-                Set a goal
-              </button>
+              {modeWithoutGoal && (
+                <button onClick={() => openGoalModal(null, modeWithoutGoal)} className="mt-2 flex items-center gap-1.5 min-h-[36px] text-sm font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
+                  <Target size={13} />
+                  Set a goal
+                </button>
+              )}
+              {orphanGoals.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-[var(--color-border)] space-y-3">
+                  {orphanGoals.map((g) => renderGoal(g, goalPoolLabel(g)))}
+                </div>
+              )}
             </div>
           )
         ) : isDual && (sortedDistances.length > 0 || sortedCalorieTimes.length > 0) ? (
@@ -802,7 +843,7 @@ export const ItemDetail = () => {
         ) : (
           <div>
             <p className="t-body text-[var(--color-text-muted)]">No results yet</p>
-            {!activeGoal && (
+            {canAddGoal && (
               <button onClick={() => openGoalModal(null, null)} className="mt-2 flex items-center gap-1.5 min-h-[36px] text-sm font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
                 <Target size={13} />
                 Set a goal
@@ -869,12 +910,12 @@ export const ItemDetail = () => {
                             >
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
-                                  <span className={`font-display text-[15px] font-semibold num ${isPR ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
+                                  <span className={`font-display text-[15px] font-semibold num ${isPR ? 'text-[var(--color-primary-text)]' : 'text-[var(--color-text)]'}`}>
                                     {getScoreTypeResult(log, group.scoreType)}
                                   </span>
                                   <RxTag variant={log.variant} />
                                   {isPR && (
-                                    <span className="text-[10px] font-extrabold tracking-[0.06em] rounded-xs bg-[var(--color-primary)]/20 text-[var(--color-primary)] px-1.5 py-0.5">
+                                    <span className="text-[10px] font-extrabold tracking-[0.06em] rounded-xs bg-[var(--color-primary)]/20 text-[var(--color-primary-text)] px-1.5 py-0.5">
                                       PR
                                     </span>
                                   )}
@@ -956,12 +997,12 @@ export const ItemDetail = () => {
                           >
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
-                                <span className={`font-display text-[15px] font-semibold num ${isPR ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
+                                <span className={`font-display text-[15px] font-semibold num ${isPR ? 'text-[var(--color-primary-text)]' : 'text-[var(--color-text)]'}`}>
                                   {getDisplayResult()}
                                 </span>
                                 {group.type !== 'variant' && <RxTag variant={log.variant} />}
                                 {isPR && (
-                                  <span className="text-[10px] font-extrabold tracking-[0.06em] rounded-xs bg-[var(--color-primary)]/20 text-[var(--color-primary)] px-1.5 py-0.5">
+                                  <span className="text-[10px] font-extrabold tracking-[0.06em] rounded-xs bg-[var(--color-primary)]/20 text-[var(--color-primary-text)] px-1.5 py-0.5">
                                     PR
                                   </span>
                                 )}
@@ -994,12 +1035,12 @@ export const ItemDetail = () => {
                 <div key={log.id} className="flex items-center justify-between py-3 group">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className={`font-display text-[15px] font-semibold num ${isPR ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
+                      <span className={`font-display text-[15px] font-semibold num ${isPR ? 'text-[var(--color-primary-text)]' : 'text-[var(--color-text)]'}`}>
                         {formatLogResult(log)}
                       </span>
                       <RxTag variant={log.variant} />
                       {isPR && (
-                        <span className="text-[10px] font-extrabold tracking-[0.06em] rounded-xs bg-[var(--color-primary)]/20 text-[var(--color-primary)] px-1.5 py-0.5">
+                        <span className="text-[10px] font-extrabold tracking-[0.06em] rounded-xs bg-[var(--color-primary)]/20 text-[var(--color-primary-text)] px-1.5 py-0.5">
                           PR
                         </span>
                       )}

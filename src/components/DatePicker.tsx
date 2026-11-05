@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { toLocalDateString } from '../utils/date';
 import { useModalA11y } from '../hooks/useModalA11y';
@@ -136,12 +137,13 @@ export const DatePicker = ({ value, onChange, minDate, maxDate, labelledBy }: Da
         <Calendar className="w-5 h-5 text-[var(--color-text-muted)]" />
       </button>
 
-      {/* Calendar dropdown */}
-      {isOpen && (
+      {/* Calendar popover — portaled to <body> so a transformed / scrolling
+          ancestor (sheet slide-up, card-enter) can't offset or clip it. */}
+      {isOpen && createPortal(
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 z-40"
+            className="fixed inset-0 z-[59]"
             onClick={close}
             aria-hidden="true"
           />
@@ -231,7 +233,8 @@ export const DatePicker = ({ value, onChange, minDate, maxDate, labelledBy }: Da
               })}
             </div>
           </div>
-        </>
+        </>,
+        document.body
       )}
     </div>
   );

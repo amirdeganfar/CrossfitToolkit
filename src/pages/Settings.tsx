@@ -101,25 +101,33 @@ export const Settings = () => {
   const [importError, setImportError] = useState<string | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [clearError, setClearError] = useState<string | null>(null);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
 
   const handleBack = () => navigate(-1);
 
-  const handleWeightUnitChange = async (unit: 'kg' | 'lb') => {
-    await updateSettings({ weightUnit: unit });
+  // Persist a settings change; surface failures instead of rejecting silently.
+  const saveSettings = async (updates: Parameters<typeof updateSettings>[0]) => {
+    setSettingsError(null);
+    try {
+      await updateSettings(updates);
+    } catch (error) {
+      console.error('[Settings] Update error:', error);
+      setSettingsError('Failed to save setting. Please try again.');
+    }
   };
 
-  const handleDistanceUnitChange = async (unit: 'm' | 'ft') => {
-    await updateSettings({ distanceUnit: unit });
-  };
+  const handleWeightUnitChange = (unit: 'kg' | 'lb') => saveSettings({ weightUnit: unit });
+
+  const handleDistanceUnitChange = (unit: 'm' | 'ft') => saveSettings({ distanceUnit: unit });
 
   const handleCountdownChange = (delta: number) => {
     setCountdownSeconds(countdownSeconds + delta);
   };
 
-  const handleMinSleepChange = async (delta: number) => {
+  const handleMinSleepChange = (delta: number) => {
     const current = settings.minSleepHours ?? 7;
     const newValue = Math.max(5, Math.min(9, current + delta));
-    await updateSettings({ minSleepHours: newValue });
+    return saveSettings({ minSleepHours: newValue });
   };
 
   const handleExport = async () => {
@@ -207,6 +215,12 @@ export const Settings = () => {
         </button>
         <h1 className="t-title">Settings</h1>
       </div>
+
+      {settingsError && (
+        <div className="px-1 py-2 border-l-2 border-[var(--color-danger)]" role="alert">
+          <p className="text-[13px] font-medium text-[var(--color-danger)]">{settingsError}</p>
+        </div>
+      )}
 
       {/* Units section */}
       <section className="space-y-3">
@@ -354,7 +368,7 @@ export const Settings = () => {
           <AlertCircle className="w-4 h-4 text-[var(--color-danger)]" />
           <div>
             <span className="text-[15px] font-semibold text-[var(--color-danger)]">Clear all data</span>
-            <p className="text-xs text-[var(--color-text-muted)]">Permanently delete all PRs, goals, check-ins, favorites, and settings</p>
+            <p className="text-xs text-[var(--color-text-muted)]">Permanently delete all PRs, goals, check-ins, favorites, timer presets, and settings</p>
           </div>
         </button>
 
@@ -368,7 +382,7 @@ export const Settings = () => {
       {showClearConfirm && (
         <ConfirmDialog
           title="Clear all data?"
-          message="This permanently deletes all PRs, goals, check-ins, favorites, custom items, and settings. This cannot be undone. You may want to export a backup first."
+          message="This permanently deletes all PRs, goals, check-ins, favorites, custom items, timer presets, and settings (incl. countdown and sound). This cannot be undone. You may want to export a backup first."
           confirmLabel="Clear everything"
           onConfirm={handleClearData}
           onCancel={() => setShowClearConfirm(false)}

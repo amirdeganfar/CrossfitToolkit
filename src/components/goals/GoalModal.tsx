@@ -1,15 +1,23 @@
 import { useState, useEffect, useId, useRef } from 'react';
 import { X } from 'lucide-react';
-import type { CatalogItem, Variant, ScoreType } from '../../types/catalog';
+import type { CatalogItem, Variant, ScoreType, PRLog } from '../../types/catalog';
 import type { Goal, CreateGoalInput, UpdateGoalInput } from '../../types/goal';
 import { ItemSelector } from './ItemSelector';
 import { DatePicker } from '../DatePicker';
 import { TimeInput } from '../TimeInput';
-import { parseResultToValue, getResultPlaceholder } from '../../utils/resultParser';
-import { getScoreModes, getScoreTypeDef } from '../../config/scoreTypes';
+import { parseResultToValue, getResultPlaceholder, formatResult } from '../../utils/resultParser';
+import { getScoreModes, getScoreTypeDef, formatSecondsToTime } from '../../config/scoreTypes';
 import { supportsDistance } from '../../utils/itemMetrics';
 import { toLocalDateString, parseLocalDate } from '../../utils/date';
-import { convertWeight, convertDistance, formatMeters } from '../../utils/units';
+import {
+  convertWeight,
+  convertDistance,
+  formatMeters,
+  formatWeight,
+  formatDistance,
+  type WeightUnit,
+  type DistanceUnit,
+} from '../../utils/units';
 import { useCatalogStore } from '../../stores/catalogStore';
 import { useModalA11y } from '../../hooks/useModalA11y';
 import * as db from '../../db';
@@ -44,13 +52,11 @@ const needsDistance = (item: CatalogItem | null, scoreType: ScoreType): boolean 
 const formatTargetForEdit = (
   goal: Goal,
   scoreType: ScoreType,
-  weightUnit: 'kg' | 'lb',
-  distanceUnit: 'm' | 'ft'
+  weightUnit: WeightUnit,
+  distanceUnit: DistanceUnit
 ): string => {
   if (scoreType === 'Time' || scoreType === 'TimeForReps') {
-    const minutes = Math.floor(goal.targetValue / 60);
-    const seconds = Math.floor(goal.targetValue % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    return formatSecondsToTime(goal.targetValue); // MM:SS, or H:MM:SS from 60 min
   }
   if (scoreType === 'Load') {
     return String(Math.round(convertWeight(goal.targetValue, goal.unit, weightUnit) * 10) / 10);
@@ -59,6 +65,22 @@ const formatTargetForEdit = (
     return String(Math.round(convertDistance(goal.targetValue, goal.distanceUnit, distanceUnit)));
   }
   return String(goal.targetValue);
+};
+
+/** Meters → editable distance string in the display unit (whole units). */
+const metersToInput = (meters: number, distanceUnit: DistanceUnit): string =>
+  String(Math.round(convertDistance(meters, 'm', distanceUnit)));
+
+/** A stored best PR, formatted in the current display units. */
+const formatBest = (
+  log: PRLog,
+  scoreType: ScoreType,
+  weightUnit: WeightUnit,
+  distanceUnit: DistanceUnit
+): string => {
+  if (scoreType === 'Load') return formatWeight(log.resultValue, log.unit, weightUnit);
+  if (scoreType === 'Distance') return formatDistance(log.resultValue, log.distanceUnit, distanceUnit);
+  return formatResult(log.result, scoreType);
 };
 
 const defaultTargetDate = () => {
@@ -105,7 +127,10 @@ export const GoalModal = ({
     editGoal ? editGoal.variant || null : initialItem?.category === 'Benchmark' ? 'Rx' : null
   );
   const [reps, setReps] = useState<number>(editGoal?.reps || 1);
-  const [distance, setDistance] = useState<string>(editGoal?.distance ? String(editGoal.distance) : '');
+  // Distance input, in the user's display unit (stored on the goal in meters).
+  const [distance, setDistance] = useState<string>(
+    editGoal?.distance ? metersToInput(editGoal.distance, distanceUnit) : ''
+  );
   const [loggedDistances, setLoggedDistances] = useState<number[]>([]);
   const [showAdvanced, setShowAdvanced] = useState(!!(editGoal?.variant || editGoal?.reps));
   const [currentBest, setCurrentBest] = useState<string | null>(null);
@@ -129,8 +154,12 @@ export const GoalModal = ({
   const effectiveScoreType = resolveScoreType(selectedItem, scoreType);
   const isTimeInput = effectiveScoreType === 'Time' || effectiveScoreType === 'TimeForReps';
   const showDistanceInput = needsDistance(selectedItem, effectiveScoreType);
-  const distanceMeters = showDistanceInput ? parseFloat(distance) : NaN;
-  const goalDistance = Number.isFinite(distanceMeters) && distanceMeters > 0 ? distanceMeters : undefined;
+  const enteredMeters = showDistanceInput ? convertDistance(parseFloat(distance), distanceUnit, 'm') : NaN;
+  // Snap to a logged distance when within rounding error of the ft display
+  // (e.g. 400m shows as 1312ft → 399.9m), so the pool matches exactly.
+  const knownDistances = editGoal?.distance ? [editGoal.distance, ...loggedDistances] : loggedDistances;
+  const snappedMeters = knownDistances.find((d) => Math.abs(d - enteredMeters) < 0.5) ?? enteredMeters;
+  const goalDistance = Number.isFinite(snappedMeters) && snappedMeters > 0 ? snappedMeters : undefined;
 
   // Logged distances for distance items — offered as quick picks, and the
   // first one becomes the default distance when creating a goal.
@@ -143,13 +172,13 @@ export const GoalModal = ({
         if (cancelled) return;
         const distances = [...byDistance.keys()].sort((a, b) => a - b);
         setLoggedDistances(distances);
-        if (distances.length > 0) setDistance((prev) => prev || String(distances[0]));
+        if (distances.length > 0) setDistance((prev) => prev || metersToInput(distances[0], distanceUnit));
       })
       .catch((err) => console.error('[GoalModal] Error fetching distances:', err));
     return () => {
       cancelled = true;
     };
-  }, [itemId, showDistanceInput]);
+  }, [itemId, showDistanceInput, distanceUnit]);
 
   // Fetch current best PR for the selected item / pool. Stale responses (item
   // or pool changed while loading) are ignored.
@@ -162,18 +191,23 @@ export const GoalModal = ({
         if (showDistanceInput) {
           const byDistance = await db.getBestPRsByDistance(selectedItem.id);
           if (cancelled) return;
-          setCurrentBest(goalDistance !== undefined ? byDistance.get(goalDistance)?.result ?? null : null);
+          const best = goalDistance !== undefined ? byDistance.get(goalDistance) : undefined;
+          setCurrentBest(best ? formatBest(best, effectiveScoreType, weightUnit, distanceUnit) : null);
           return;
         }
-        const opts = isMultiMode
-          ? {
-              scoreTypeId: effectiveScoreType,
-              timeCap: effectiveScoreType === 'RepsInTime' ? selectedItem.timeCap : undefined,
-              targetReps: effectiveScoreType === 'TimeForReps' ? selectedItem.targetReps : undefined,
-            }
-          : undefined;
+        const opts = {
+          ...(isMultiMode && {
+            scoreTypeId: effectiveScoreType,
+            timeCap: effectiveScoreType === 'RepsInTime' ? selectedItem.timeCap : undefined,
+            targetReps: effectiveScoreType === 'TimeForReps' ? selectedItem.targetReps : undefined,
+          }),
+          // Load goals target one rep scheme — compare against that scheme's best.
+          reps: effectiveScoreType === 'Load' ? reps : undefined,
+        };
         const bestPR = await db.getBestPR(selectedItem.id, variant || undefined, opts);
-        if (!cancelled) setCurrentBest(bestPR ? bestPR.result : null);
+        if (!cancelled) {
+          setCurrentBest(bestPR ? formatBest(bestPR, effectiveScoreType, weightUnit, distanceUnit) : null);
+        }
       } catch (err) {
         console.error('[GoalModal] Error fetching best PR:', err);
         if (!cancelled) setCurrentBest(null);
@@ -184,7 +218,7 @@ export const GoalModal = ({
     return () => {
       cancelled = true;
     };
-  }, [selectedItem, variant, effectiveScoreType, isMultiMode, showDistanceInput, goalDistance]);
+  }, [selectedItem, variant, effectiveScoreType, isMultiMode, showDistanceInput, goalDistance, reps, weightUnit, distanceUnit]);
 
   const showVariantSelector = selectedItem?.category === 'Benchmark';
   const showRepsSelector = selectedItem?.scoreType === 'Load';
@@ -192,7 +226,9 @@ export const GoalModal = ({
   // Changing the item resets everything derived from it: pool, target, variant, distance.
   const handleItemChange = (item: CatalogItem | null) => {
     setSelectedItem(item);
-    setScoreType(preselectedScoreType ?? item?.scoreType ?? 'Reps');
+    // Keep the preselected pool only if the new item actually offers it.
+    const keep = preselectedScoreType && getScoreModes(item).includes(preselectedScoreType) ? preselectedScoreType : null;
+    setScoreType(keep ?? item?.scoreType ?? 'Reps');
     setTargetValue('');
     setVariant(item?.category === 'Benchmark' ? 'Rx' : null);
     setDistance('');
@@ -401,7 +437,7 @@ export const GoalModal = ({
           {selectedItem && showDistanceInput && (
             <div>
               <label htmlFor={distanceFieldId} className="block label-eyebrow mb-1">
-                Distance (m)
+                Distance ({distanceUnit})
               </label>
               <input
                 id={distanceFieldId}
@@ -411,7 +447,7 @@ export const GoalModal = ({
                 inputMode="decimal"
                 value={distance}
                 onChange={(e) => setDistance(e.target.value)}
-                placeholder="e.g., 400"
+                placeholder={distanceUnit === 'ft' ? 'e.g., 1312' : 'e.g., 400'}
                 className="field w-full px-3 py-2"
               />
               {loggedDistances.length > 0 && (
@@ -420,7 +456,7 @@ export const GoalModal = ({
                     <button
                       key={d}
                       type="button"
-                      onClick={() => setDistance(String(d))}
+                      onClick={() => setDistance(metersToInput(d, distanceUnit))}
                       aria-pressed={goalDistance === d}
                       className={`px-3 py-1.5 rounded-sm border text-[13px] font-semibold num transition-colors ${
                         goalDistance === d

@@ -16,7 +16,7 @@ import { Barbell } from '../components/Barbell';
 import { PlateBadge } from '../components/PlateBadge';
 import { categoryColorVar } from '../utils/categoryColors';
 import { getLogScoreType } from '../config/scoreTypes';
-import { formatWeight } from '../utils/units';
+import { formatWeight, formatDistance } from '../utils/units';
 import * as db from '../db';
 import type { Category, Variant } from '../types/catalog';
 
@@ -46,6 +46,7 @@ export const Home = () => {
   const favorites = useCatalogStore((state) => state.favorites);
   const recentLogs = useCatalogStore((state) => state.recentLogs);
   const weightUnit = useCatalogStore((state) => state.settings.weightUnit);
+  const distanceUnit = useCatalogStore((state) => state.settings.distanceUnit);
 
   const goalsIsInitialized = useGoalsStore((s) => s.isInitialized);
   const goalsInitialize = useGoalsStore((s) => s.initialize);
@@ -57,6 +58,8 @@ export const Home = () => {
   const todayCheckIn = useCheckInStore((s) => s.todayCheckIn);
 
   const [recentLogsWithItems, setRecentLogsWithItems] = useState<RecentLogWithItem[]>([]);
+  // False until recent logs first resolve, so the empty state doesn't flash.
+  const [recentLoaded, setRecentLoaded] = useState(false);
   const [showCheckIn, setShowCheckIn] = useState(false);
 
   useEffect(() => {
@@ -75,31 +78,40 @@ export const Home = () => {
     let cancelled = false;
     const fetchItemNames = async () => {
       if (recentLogs.length === 0) {
-        if (!cancelled) setRecentLogsWithItems([]);
+        if (!cancelled) {
+          setRecentLogsWithItems([]);
+          setRecentLoaded(true);
+        }
         return;
       }
       const logsWithItems = await Promise.all(
         recentLogs.map(async (log) => {
           const item = await db.getCatalogItemById(log.catalogItemId);
+          const scoreType = item ? getLogScoreType(log, item) : undefined;
           return {
             id: log.id,
             itemId: log.catalogItemId,
             itemName: item?.name ?? 'Unknown',
             category: item?.category ?? 'Custom',
-            // Load results are shown in the current unit (converted from the log's unit).
-            result: item && getLogScoreType(log, item) === 'Load'
+            // Load / Distance results are shown in the current unit (converted from the log's unit).
+            result: scoreType === 'Load'
               ? `${log.result.includes('@ ') ? log.result.slice(0, log.result.lastIndexOf('@ ') + 2) : ''}${formatWeight(log.resultValue, log.unit, weightUnit)}`
-              : log.result,
+              : scoreType === 'Distance'
+                ? formatDistance(log.resultValue, log.distanceUnit, distanceUnit)
+                : log.result,
             variant: log.variant,
             date: new Date(log.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
           } as RecentLogWithItem;
         })
       );
-      if (!cancelled) setRecentLogsWithItems(logsWithItems);
+      if (!cancelled) {
+        setRecentLogsWithItems(logsWithItems);
+        setRecentLoaded(true);
+      }
     };
     void fetchItemNames();
     return () => { cancelled = true; };
-  }, [recentLogs, weightUnit]);
+  }, [recentLogs, weightUnit, distanceUnit]);
 
   const handleItemClick = (itemId: string) => navigate(`/item/${itemId}`);
   const handleLogResult = () => navigate('/search');
@@ -201,7 +213,9 @@ export const Home = () => {
       {/* Recent */}
       <section>
         <h2 className="t-section mb-3">Recent results</h2>
-        {recentLogsWithItems.length > 0 ? (
+        {!recentLoaded ? (
+          <SkeletonRows count={3} label="Loading recent results" />
+        ) : recentLogsWithItems.length > 0 ? (
           <div className="space-y-2">
             {recentLogsWithItems.slice(0, 5).map((log) => {
               const Icon = GLYPH[log.category] ?? Dumbbell;

@@ -3,6 +3,7 @@ import type { CatalogItem, PRLog, UserSettings } from '../types/catalog';
 import * as db from '../db';
 import { useGoalsStore } from './goalsStore';
 import { useCheckInStore } from './checkInStore';
+import { getClockBackup, restoreClockBackup, resetClockData } from './clockStore';
 
 interface CatalogState {
   // Data
@@ -25,14 +26,15 @@ interface CatalogState {
   setSearchQuery: (query: string) => void;
   setSelectedCategory: (category: CatalogItem['category'] | 'All') => void;
   toggleFavorite: (id: string) => Promise<void>;
-  addPRLog: (log: Omit<PRLog, 'id' | 'createdAt'>) => Promise<string>;
+  /** Save a log; resolves to the saved row (id + stamped units) — pass it to goalsStore.checkGoalsOnNewPR. */
+  addPRLog: (log: Omit<PRLog, 'id' | 'createdAt'>) => Promise<PRLog>;
   deletePRLog: (id: string) => Promise<void>;
   refreshData: () => Promise<void>;
   updateSettings: (updates: Partial<UserSettings>) => Promise<void>;
   exportData: () => Promise<string>;
   /** Import a backup, then reload catalog, goals and check-in stores. */
   importData: (json: string) => Promise<void>;
-  /** Delete all user data, reset settings to defaults, then reload all stores. */
+  /** Delete all user data (incl. timer presets/countdown/sound), reset settings to defaults, then reload all stores. */
   clearAllData: () => Promise<void>;
 }
 
@@ -114,10 +116,10 @@ export const useCatalogStore = create<CatalogState>((set, get) => ({
 
   // Add a new PR log
   addPRLog: async (log: Omit<PRLog, 'id' | 'createdAt'>) => {
-    const id = await db.addPRLog(log);
+    const saved = await db.addPRLog(log);
     const recentLogs = await db.getRecentPRLogs(10);
     set({ recentLogs });
-    return id;
+    return saved;
   },
 
   // Delete a PR log
@@ -170,17 +172,19 @@ export const useCatalogStore = create<CatalogState>((set, get) => ({
 
   // Export all data
   exportData: async () => {
-    return db.exportData();
+    return db.exportData({ clock: getClockBackup() });
   },
 
   // Import data from JSON
   importData: async (json: string) => {
-    await db.importData(json);
+    const { clock } = await db.importData(json);
+    restoreClockBackup(clock);
     await reloadAllStores();
   },
 
   clearAllData: async () => {
     await db.clearAllData();
+    resetClockData();
     await reloadAllStores();
   },
 }));

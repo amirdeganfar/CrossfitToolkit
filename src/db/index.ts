@@ -5,6 +5,8 @@ import type { DailyCheckIn } from '../types/training';
 import { getBuiltinCatalog, getBuiltinCatalogItemById } from '../catalog/catalogService';
 import { isLowerBetter as scoreTypeIsLowerBetter, getLogScoreType } from '../config/scoreTypes';
 import { todayLocal } from '../utils/date';
+import { makeId } from '../utils/id';
+import { convertWeight, convertDistance } from '../utils/units';
 
 /**
  * CrossfitToolkit IndexedDB Database
@@ -122,19 +124,63 @@ class CrossfitToolkitDB extends Dexie {
         const customItems = (await tx.table('customItems').toArray()) as CustomItem[];
         const customById = new Map(customItems.map((i) => [i.id, i]));
         await tx.table('prLogs').toCollection().modify((log: PRLog) => {
-          Object.assign(log, stampLogUnits(log, units));
-          // Bare-integer Rounds+Reps results ("18") used to parse as 0+18; they mean 18+0.
-          const item = getBuiltinCatalogItemById(log.catalogItemId) ?? customById.get(log.catalogItemId);
-          if (item && getLogScoreType(log, item) === 'Rounds+Reps' && /^\d+$/.test(log.result)) {
-            log.resultValue = parseInt(log.result, 10) * 100;
-          }
+          Object.assign(log, fixLegacyRoundsRepsLog(stampLogUnits(log, units), customById));
         });
         await tx.table('goals').toCollection().modify((goal: Goal) => {
           Object.assign(goal, stampGoalUnits(goal, units));
         });
       });
+
+    // Version 6: Rounds+Reps goals entered as a bare integer ("18") were stored
+    // as 0+18 (targetValue 18); they mean 18+0. Same schema.
+    this.version(6)
+      .stores({
+        favorites: 'id',
+        customItems: 'id, category, name',
+        prLogs: 'id, catalogItemId, date, variant',
+        settings: 'id',
+        goals: '++id, itemId, status, targetDate',
+        dailyCheckIns: 'id, date, type',
+      })
+      .upgrade(async (tx) => {
+        const customItems = (await tx.table('customItems').toArray()) as CustomItem[];
+        const customById = new Map(customItems.map((i) => [i.id, i]));
+        await tx.table('goals').toCollection().modify((goal: Goal) => {
+          Object.assign(goal, fixLegacyRoundsRepsGoal(goal, customById));
+        });
+      });
   }
 }
+
+type ItemLookup = Map<string, Pick<CustomItem, 'scoreType'>>;
+
+const lookupScoreTypeItem = (id: string, customById: ItemLookup) =>
+  getBuiltinCatalogItemById(id) ?? customById.get(id);
+
+/**
+ * Legacy Rounds+Reps fix for a log: bare-integer results ("18") used to parse
+ * as 0+18; they mean 18+0. Returns the (possibly) corrected log.
+ */
+const fixLegacyRoundsRepsLog = <T extends PRLog>(log: T, customById: ItemLookup): T => {
+  const item = lookupScoreTypeItem(log.catalogItemId, customById);
+  if (item && getLogScoreType(log, item) === 'Rounds+Reps' && /^\d+$/.test(log.result)) {
+    return { ...log, resultValue: parseInt(log.result, 10) * 100 };
+  }
+  return log;
+};
+
+/**
+ * Legacy Rounds+Reps fix for a goal. Goals store no result string, so a target
+ * below 100 (0 full rounds) is assumed to be a bare-integer entry ("18" → 18+0).
+ */
+const fixLegacyRoundsRepsGoal = <T extends Goal>(goal: T, customById: ItemLookup): T => {
+  const item = lookupScoreTypeItem(goal.itemId, customById);
+  const scoreType = goal.scoreTypeId ?? item?.scoreType;
+  if (scoreType === 'Rounds+Reps' && goal.targetValue > 0 && goal.targetValue < 100) {
+    return { ...goal, targetValue: goal.targetValue * 100 };
+  }
+  return goal;
+};
 
 /** Default user settings (fresh install / after clearAllData). */
 export const DEFAULT_SETTINGS: UserSettings = {
@@ -305,7 +351,7 @@ export const toggleFavorite = async (id: string): Promise<void> => {
 export const addCustomCatalogItem = async (
   item: Omit<CatalogItem, 'id' | 'isBuiltin' | 'isFavorite' | 'createdAt'>
 ): Promise<string> => {
-  const id = `custom-${Date.now()}`;
+  const id = makeId('custom');
   await db.customItems.add({
     ...item,
     id,
@@ -346,17 +392,34 @@ export const getRecentPRLogs = async (limit: number = 10): Promise<PRLog[]> => {
 };
 
 /**
+ * A log's `resultValue` in a unit-independent basis for comparison: Load in kg,
+ * Distance in meters; other score types unchanged. Logs without a stored unit
+ * are assumed to be in the base unit.
+ */
+export const getComparableValue = (log: PRLog, scoreType: ScoreType): number => {
+  if (scoreType === 'Load') return convertWeight(log.resultValue, log.unit, 'kg');
+  if (scoreType === 'Distance') return convertDistance(log.resultValue, log.distanceUnit, 'm');
+  return log.resultValue;
+};
+
+/**
  * Get the best PR for a catalog item (by variant).
  *
  * For multi-mode items, pass `opts.scoreTypeId` (and, where relevant, the
  * constraint `timeCap`/`targetReps`) to isolate a single score pool — otherwise
  * best is computed across all logs using the item's primary score type, which is
  * only meaningful for single-mode items.
+ *
+ * `opts.reps` restricts Load results to one rep scheme (a log without `reps`
+ * counts as 1RM). Results are compared unit-independently (kg / meters); the
+ * returned log is the raw stored row — format it from `log.unit` /
+ * `log.distanceUnit` to the display unit (formatWeight / formatDistance), not
+ * from `log.result`.
  */
 export const getBestPR = async (
   catalogItemId: string,
   variant?: PRLog['variant'],
-  opts?: { scoreTypeId?: ScoreType; timeCap?: number; targetReps?: number }
+  opts?: { scoreTypeId?: ScoreType; timeCap?: number; targetReps?: number; reps?: number }
 ): Promise<PRLog | undefined> => {
   let logs = await getPRLogsForItem(catalogItemId);
 
@@ -378,15 +441,17 @@ export const getBestPR = async (
     if (opts.targetReps !== undefined) logs = logs.filter((log) => log.targetReps === opts.targetReps);
     if (logs.length === 0) return undefined;
   }
+  if (opts?.reps !== undefined && scoreType === 'Load') {
+    logs = logs.filter((log) => (log.reps ?? 1) === opts.reps);
+    if (logs.length === 0) return undefined;
+  }
 
   const isLowerBetter = scoreTypeIsLowerBetter(scoreType);
 
   return logs.reduce((best, current) => {
-    if (isLowerBetter) {
-      return current.resultValue < best.resultValue ? current : best;
-    } else {
-      return current.resultValue > best.resultValue ? current : best;
-    }
+    const c = getComparableValue(current, scoreType);
+    const b = getComparableValue(best, scoreType);
+    return (isLowerBetter ? c < b : c > b) ? current : best;
   });
 };
 
@@ -438,20 +503,20 @@ export const getBestPRsByCalories = async (
 };
 
 /**
- * Add a new PR log
+ * Add a new PR log. Returns the saved row (with `id` and stamped units).
  */
 export const addPRLog = async (
   log: Omit<PRLog, 'id' | 'createdAt'>
-): Promise<string> => {
-  const id = `log-${Date.now()}`;
+): Promise<PRLog> => {
   // Stamp the entry unit at save time (callers may pass it explicitly).
   const settings = await getSettings();
-  await db.prLogs.add({
+  const saved: PRLog = {
     ...stampLogUnits(log, settings),
-    id,
+    id: makeId('log'),
     createdAt: Date.now(),
-  });
-  return id;
+  };
+  await db.prLogs.add(saved);
+  return saved;
 };
 
 /**
@@ -494,10 +559,14 @@ export const updateSettings = async (
 // DATA EXPORT / IMPORT
 // ═══════════════════════════════════════════════════════════════════════════
 
+/** Current backup format version. v5: Rounds+Reps values normalized, units stamped, optional `clock`. */
+const BACKUP_VERSION = 5;
+
 /**
- * Export all user data as JSON
+ * Export all user data as JSON. `extra.clock` (timer data kept outside
+ * IndexedDB) is written as an optional `clock` section.
  */
-export const exportData = async (): Promise<string> => {
+export const exportData = async (extra?: { clock?: unknown }): Promise<string> => {
   const [favorites, customItems, prLogs, goals, dailyCheckIns, settings] = await Promise.all([
     db.favorites.toArray(),
     db.customItems.toArray(),
@@ -509,7 +578,7 @@ export const exportData = async (): Promise<string> => {
 
   return JSON.stringify(
     {
-      version: 4,
+      version: BACKUP_VERSION,
       exportedAt: new Date().toISOString(),
       favorites,
       customItems,
@@ -517,6 +586,7 @@ export const exportData = async (): Promise<string> => {
       goals,
       dailyCheckIns,
       settings,
+      ...(extra?.clock !== undefined ? { clock: extra.clock } : {}),
     },
     null,
     2
@@ -530,6 +600,10 @@ interface BackupPayload {
   goals: Goal[];
   dailyCheckIns: DailyCheckIn[];
   settings?: Partial<UserSettings>;
+  /** Pre-v5 backups need the legacy Rounds+Reps fix applied. */
+  isLegacy: boolean;
+  /** Optional timer data section (opaque here; restored by the clock store). */
+  clock?: unknown;
 }
 
 /** Map a legacy v1 catalog item to the CustomItem shape. */
@@ -548,15 +622,16 @@ const toCustomItem = (item: CatalogItem): CustomItem => ({
   metrics: item.metrics,
 });
 
-/** Normalize any supported backup version (1-4) to the current table set. */
+/** Normalize any supported backup version (1-5) to the current table set. */
 const parseBackup = (data: Record<string, unknown>): BackupPayload => {
   const version = data.version;
-  if (version !== 1 && version !== 2 && version !== 3 && version !== 4) {
+  if (version !== 1 && version !== 2 && version !== 3 && version !== 4 && version !== 5) {
     throw new Error('Unsupported data format version');
   }
 
   const arr = <T>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
   const settings = (data.settings as Partial<UserSettings> | undefined) ?? undefined;
+  const isLegacy = version <= 4;
 
   if (version === 1) {
     const catalogItems = arr<CatalogItem>(data.catalogItems);
@@ -567,6 +642,7 @@ const parseBackup = (data: Record<string, unknown>): BackupPayload => {
       goals: [],
       dailyCheckIns: [],
       settings,
+      isLegacy,
     };
   }
 
@@ -577,18 +653,28 @@ const parseBackup = (data: Record<string, unknown>): BackupPayload => {
     goals: arr<Goal>(data.goals),
     dailyCheckIns: arr<DailyCheckIn>(data.dailyCheckIns),
     settings,
+    isLegacy,
+    clock: data.clock,
   };
 };
 
 /**
- * Import data from JSON (backup versions 1-4).
+ * Import data from JSON (backup versions 1-5).
  *
  * Replace semantics: every user-data table is cleared and refilled inside ONE
  * transaction — if anything fails, nothing is changed. Rows without a stored
- * unit are stamped with the backup's (or current) settings unit.
+ * unit are stamped with the backup's (or current) settings unit; pre-v5
+ * backups also get the legacy Rounds+Reps fix (same as DB upgrades v5/v6).
+ *
+ * Returns the backup's optional `clock` section for the caller to restore.
  */
-export const importData = async (json: string): Promise<void> => {
+export const importData = async (json: string): Promise<{ clock?: unknown }> => {
   const payload = parseBackup(JSON.parse(json));
+  if (payload.isLegacy) {
+    const customById = new Map(payload.customItems.map((i) => [i.id, i]));
+    payload.prLogs = payload.prLogs.map((log) => fixLegacyRoundsRepsLog(log, customById));
+    payload.goals = payload.goals.map((goal) => fixLegacyRoundsRepsGoal(goal, customById));
+  }
 
   await db.transaction('rw', USER_TABLES(), async () => {
     const current = await getSettings();
@@ -610,6 +696,8 @@ export const importData = async (json: string): Promise<void> => {
     if (payload.dailyCheckIns.length) await db.dailyCheckIns.bulkPut(payload.dailyCheckIns);
     if (settings) await db.settings.put({ id: 'default', ...settings });
   });
+
+  return { clock: payload.clock };
 };
 
 /**
@@ -677,7 +765,8 @@ export const getActiveGoalForItem = async (
   // Find goal matching variant, reps, and — for multi-mode items — the score pool.
   return activeGoals.find((goal) => {
     const variantMatch = variant === undefined || goal.variant === variant;
-    const repsMatch = reps === undefined || goal.reps === reps;
+    // A goal without reps is a 1RM goal (same convention as logs: reps ?? 1).
+    const repsMatch = reps === undefined || (goal.reps ?? 1) === reps;
     let poolMatch = true;
     if (pool?.scoreTypeId && item) {
       // Backfill legacy goals (no scoreTypeId) to the item's primary score type.
@@ -703,7 +792,7 @@ export const getGoalsForItem = async (itemId: string): Promise<Goal[]> => {
  * Add a new goal
  */
 export const addGoal = async (input: CreateGoalInput): Promise<string> => {
-  const id = `goal-${Date.now()}`;
+  const id = makeId('goal');
   const now = todayLocal();
   const settings = await getSettings();
 

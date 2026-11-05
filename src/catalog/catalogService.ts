@@ -47,14 +47,23 @@ const buildCatalog = (): CatalogItem[] => {
   }));
 };
 
+/** Copy an item including its array fields, so callers can't mutate the cache. */
+const copyItem = (item: CatalogItem): CatalogItem => ({
+  ...item,
+  tags: item.tags && [...item.tags],
+  movements: item.movements && [...item.movements],
+  aliases: item.aliases && [...item.aliases],
+  scoreTypeIds: item.scoreTypeIds && [...item.scoreTypeIds],
+});
+
 /**
  * Get all builtin catalog items (built once, then cached).
- * Returns shallow copies so callers can't mutate the cache.
+ * Returns copies (arrays included) so callers can't mutate the cache.
  * Future: fetch('/api/catalog')
  */
 export const getBuiltinCatalog = (): CatalogItem[] => {
   cachedCatalog ??= buildCatalog();
-  return cachedCatalog.map((item) => ({ ...item }));
+  return cachedCatalog.map(copyItem);
 };
 
 /**
@@ -65,7 +74,7 @@ export const getBuiltinCatalogItemById = (id: string): CatalogItem | undefined =
   cachedCatalog ??= buildCatalog();
   cachedById ??= new Map(cachedCatalog.map((item) => [item.id, item]));
   const item = cachedById.get(id);
-  return item ? { ...item } : undefined;
+  return item ? copyItem(item) : undefined;
 };
 
 /**

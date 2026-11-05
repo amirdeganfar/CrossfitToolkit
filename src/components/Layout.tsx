@@ -17,7 +17,7 @@ export const Layout = () => {
 
   const navBtn = (active: boolean) =>
     `flex flex-col items-center gap-1 px-4 py-2 min-w-[64px] rounded-md transition-colors active:scale-95 ${
-      active ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-dim)] hover:text-[var(--color-text-muted)]'
+      active ? 'text-[var(--color-primary-text)]' : 'text-[var(--color-text-dim)] hover:text-[var(--color-text-muted)]'
     }`;
 
   return (

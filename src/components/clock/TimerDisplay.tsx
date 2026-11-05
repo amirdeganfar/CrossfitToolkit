@@ -24,7 +24,7 @@ export const TimerDisplay = () => {
     if (status === 'countdown') return 'text-[var(--color-warning)]';
     if (status === 'complete')  return 'text-[var(--color-success)]';
     if (phase === 'rest' || status === 'rest') return 'text-[var(--color-info)]';
-    if (status === 'running')   return 'text-[var(--color-primary)]';
+    if (status === 'running')   return 'text-[var(--color-primary-text)]';
     return 'text-[var(--color-text)]';
   };
 
@@ -109,7 +109,7 @@ export const TimerDisplay = () => {
         <div className="mt-4 flex gap-2">
           <div className={`px-4 py-1 rounded-full text-xs font-semibold border ${
             phase === 'work'
-              ? 'bg-[var(--color-primary)]/20 text-[var(--color-primary)] border-[var(--color-primary)]/40'
+              ? 'bg-[var(--color-primary)]/20 text-[var(--color-primary-text)] border-[var(--color-primary)]/40'
               : 'bg-transparent text-[var(--color-text-muted)] border-[var(--color-border)]'
           }`}>Work</div>
           <div className={`px-4 py-1 rounded-full text-xs font-semibold border ${

@@ -3,7 +3,7 @@ import type { Goal, GoalWithProgress, TrendStatus } from '../types/goal';
 import { formatSecondsToTime } from '../utils/resultParser';
 import { isLowerBetter as scoreTypeIsLowerBetter, getLogScoreType } from '../config/scoreTypes';
 import * as db from '../db';
-import { todayLocal, daysBetween, addDaysLocal } from '../utils/date';
+import { todayLocal, daysBetween, addDaysLocal, toLocalDateString } from '../utils/date';
 import {
   convertWeight,
   convertDistance,
@@ -35,7 +35,8 @@ const goalScoreType = (goal: Goal, item: CatalogItem): ScoreType =>
 const logMatchesGoal = (log: PRLog, goal: Goal, item: CatalogItem): boolean => {
   if (log.catalogItemId !== goal.itemId) return false;
   if (goal.variant && log.variant !== goal.variant) return false;
-  if (goal.reps !== undefined && goalScoreType(goal, item) === 'Load' && log.reps !== goal.reps) {
+  // Missing reps means 1RM on both sides (UI convention: `reps ?? 1`).
+  if (goalScoreType(goal, item) === 'Load' && (log.reps ?? 1) !== (goal.reps ?? 1)) {
     return false;
   }
   if (goal.scoreTypeId) {
@@ -107,6 +108,8 @@ export const calculateProgress = (
   return Math.min(Math.max(progress, 0), 100);
 };
 
+const roundTenth = (value: number): number => Math.round(value * 10) / 10;
+
 /**
  * Check if a goal is achieved based on current value
  */
@@ -117,10 +120,14 @@ export const isGoalAchieved = (
 ): boolean => {
   if (currentValue === null) return false;
 
+  // Round to 0.1 (the display precision) so kg↔lb conversion noise
+  // (e.g. 220.462lb → 99.99999kg vs a 100kg target) still counts.
+  const current = roundTenth(currentValue);
+  const target = roundTenth(targetValue);
   if (isLowerBetter(scoreType)) {
-    return currentValue <= targetValue;
+    return current <= target;
   }
-  return currentValue >= targetValue;
+  return current >= target;
 };
 
 /**
@@ -194,8 +201,10 @@ export const calculateTrend = (
     return { trend: 'behind' };
   }
 
-  // Work in local calendar days so both dates use the same basis.
-  const projectedDateStr = addDaysLocal(todayLocal(), Math.round(daysToTarget));
+  // `logsNeeded` counts from the LAST log, so project from that log's date
+  // (local calendar days, same basis as targetDate).
+  const lastLogDate = toLocalDateString(new Date(recentLogs[n - 1].date));
+  const projectedDateStr = addDaysLocal(lastLogDate, Math.round(daysToTarget));
   const daysAheadOrBehind = daysBetween(projectedDateStr, targetDate);
 
   let trend: TrendStatus;

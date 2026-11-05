@@ -101,12 +101,24 @@ export const useCheckInStore = create<CheckInState>((set, get) => ({
   initialize: async () => {
     if (get().isInitialized) return;
 
-    // Recompute "today" when the app returns to the foreground (e.g. past midnight).
+    // Recompute "today" when the app returns to the foreground / regains focus,
+    // and at local midnight while it stays open.
     if (!visibilityListenerInstalled && typeof document !== 'undefined') {
       visibilityListenerInstalled = true;
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') void get().refreshToday();
       });
+      window.addEventListener('focus', () => void get().refreshToday());
+      const armMidnightTimer = () => {
+        const now = new Date();
+        const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+        // +1s margin so the new day is definitely in effect; re-arm after each fire.
+        window.setTimeout(() => {
+          void get().refreshToday();
+          armMidnightTimer();
+        }, nextMidnight.getTime() - now.getTime() + 1000);
+      };
+      armMidnightTimer();
     }
 
     await get().reload();

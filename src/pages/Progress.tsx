@@ -41,6 +41,7 @@ export const Progress = () => {
     type: 'achieve' | 'cancel' | 'delete';
     goal: GoalWithProgress;
   } | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isStoreInitialized && !goalsIsInitialized && catalogItems.length > 0) {
@@ -76,19 +77,26 @@ export const Progress = () => {
   const handleConfirmAction = async () => {
     if (!confirmAction) return;
     const { type, goal } = confirmAction;
-    switch (type) {
-      case 'achieve':
-        await goalsAchieveGoal(goal.id, catalogItems);
-        haptics.goal();
-        break;
-      case 'cancel':
-        await goalsCancelGoal(goal.id, catalogItems);
-        break;
-      case 'delete':
-        await goalsDeleteGoal(goal.id, catalogItems);
-        break;
+    setActionError(null);
+    try {
+      switch (type) {
+        case 'achieve':
+          await goalsAchieveGoal(goal.id, catalogItems);
+          haptics.goal();
+          break;
+        case 'cancel':
+          await goalsCancelGoal(goal.id, catalogItems);
+          break;
+        case 'delete':
+          await goalsDeleteGoal(goal.id, catalogItems);
+          break;
+      }
+    } catch (error) {
+      console.error('[Progress] Goal action failed:', error);
+      setActionError('Something went wrong updating the goal. Please try again.');
+    } finally {
+      setConfirmAction(null);
     }
-    setConfirmAction(null);
   };
 
   const handleCloseModal = () => {
@@ -96,7 +104,9 @@ export const Progress = () => {
     setEditingGoal(null);
   };
 
-  if (!isStoreInitialized || goalsIsLoading) {
+  // Goals initialize after the catalog loads; keep the skeleton until then so
+  // the empty state doesn't flash.
+  if (!isStoreInitialized || goalsIsLoading || (!goalsIsInitialized && catalogItems.length > 0)) {
     return (
       <div className="space-y-6" aria-busy="true">
         <Skeleton className="h-8 w-32" />
@@ -121,6 +131,12 @@ export const Progress = () => {
         <h2 className="t-section mb-3">
           Active goals <span className="t-caption num">({activeGoals.length})</span>
         </h2>
+
+        {actionError && (
+          <div className="mb-3 px-1 py-2 border-l-2 border-[var(--color-danger)]" role="alert">
+            <p className="text-[13px] font-medium text-[var(--color-danger)]">{actionError}</p>
+          </div>
+        )}
 
         {activeGoals.length === 0 ? (
           <EmptyState

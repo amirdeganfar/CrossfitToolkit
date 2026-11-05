@@ -51,11 +51,16 @@ export const formatDistance = (
  * suffix so the unit can be rendered smaller, e.g. "100kg" → { value: "100",
  * unit: "kg" }, "50 cal" → { value: "50", unit: "cal" }. Strings that don't end
  * in a letter suffix after a digit ("3:45", "5 rounds + 3") return unit "".
+ * A compound "<label> @ <value>" string splits the label off as `prefix`,
+ * e.g. "5 reps @ 100kg" → { prefix: "5 reps @", value: "100", unit: "kg" }.
  */
-export const splitUnit = (text: string): { value: string; unit: string } => {
-  const match = /^(.*\d)\s*([a-zA-Z]+)$/.exec(text.trim());
-  if (!match) return { value: text, unit: '' };
-  return { value: match[1], unit: match[2] };
+export const splitUnit = (text: string): { prefix: string; value: string; unit: string } => {
+  const at = /^(.*@)\s*(.+)$/.exec(text.trim());
+  const prefix = at ? at[1] : '';
+  const rest = at ? at[2] : text.trim();
+  const match = /^(.*\d)\s*([a-zA-Z]+)$/.exec(rest);
+  if (!match) return { prefix, value: at ? rest : text, unit: '' };
+  return { prefix, value: match[1], unit: match[2] };
 };
 
 /**

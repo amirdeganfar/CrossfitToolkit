@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { playBeep, playCompletionSound } from '../utils/audioUtils';
+import { makeId } from '../utils/id';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -269,7 +270,7 @@ export const useClockStore = create<ClockState>((set, get) => ({
   savePreset: (name) => {
     const state = get();
     const preset: TimerPreset = {
-      id: `preset-${Date.now()}`,
+      id: makeId('preset'),
       name,
       config: { ...state.config },
       createdAt: Date.now(),
@@ -321,6 +322,64 @@ export const useClockStore = create<ClockState>((set, get) => ({
     set({ countdownSeconds: value });
   },
 }));
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BACKUP / RESET (localStorage timer data is not in IndexedDB)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Timer data stored in localStorage, included as the `clock` section of a backup. */
+export interface ClockBackup {
+  presets: TimerPreset[];
+  countdownSeconds: number;
+  soundEnabled: boolean;
+}
+
+/** Snapshot of the persisted timer data (for export). */
+export const getClockBackup = (): ClockBackup => ({
+  presets: loadPresetsFromStorage(),
+  countdownSeconds: loadCountdownSeconds(),
+  soundEnabled: loadSoundEnabled(),
+});
+
+/** Restore timer data from a backup `clock` section. Invalid fields are ignored. */
+export const restoreClockBackup = (data: unknown): void => {
+  if (!data || typeof data !== 'object') return;
+  const backup = data as Partial<ClockBackup>;
+  const store = useClockStore.getState();
+  if (Array.isArray(backup.presets)) {
+    savePresetsToStorage(backup.presets);
+    useClockStore.setState({ presets: backup.presets });
+  }
+  if (typeof backup.countdownSeconds === 'number') store.setCountdownSeconds(backup.countdownSeconds);
+  if (typeof backup.soundEnabled === 'boolean') {
+    saveSoundEnabled(backup.soundEnabled);
+    useClockStore.setState({ soundEnabled: backup.soundEnabled });
+  }
+};
+
+/** Delete persisted timer data and reset the timer store to defaults (clear-all). */
+export const resetClockData = (): void => {
+  try {
+    [PRESETS_STORAGE_KEY, COUNTDOWN_STORAGE_KEY, SOUND_STORAGE_KEY].forEach((k) => localStorage.removeItem(k));
+  } catch (error) {
+    console.warn('[ClockStore] Failed to clear timer data:', error);
+  }
+  stopTicking();
+  useClockStore.setState({
+    config: DEFAULT_CONFIG,
+    status: 'idle',
+    phase: 'work',
+    timeRemaining: getInitialTime(DEFAULT_CONFIG),
+    elapsedTime: 0,
+    currentRound: 1,
+    currentSet: 1,
+    presets: [],
+    soundEnabled: true,
+    countdownSeconds: 10,
+    intervalId: null,
+    lastTickTime: null,
+  });
+};
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIMER LOGIC
@@ -635,6 +694,10 @@ export const useDisplayTime = () => {
   });
 };
 
+/** `part / total` as a percentage; 0 for a zero-length (or invalid) total. */
+const percentElapsed = (part: number, total: number): number =>
+  total > 0 ? (part / total) * 100 : 0;
+
 /**
  * Get progress percentage (0-100)
  */
@@ -644,17 +707,15 @@ export const useProgress = () => {
     
     switch (config.mode) {
       case 'amrap':
-        return ((config.totalTime - state.timeRemaining) / config.totalTime) * 100;
+        return percentElapsed(config.totalTime - state.timeRemaining, config.totalTime);
       case 'emom':
-        return ((config.intervalTime - state.timeRemaining) / config.intervalTime) * 100;
+        return percentElapsed(config.intervalTime - state.timeRemaining, config.intervalTime);
       case 'forTime':
-        return config.totalTime > 0 
-          ? (state.elapsedTime / config.totalTime) * 100 
-          : 0;
+        return percentElapsed(state.elapsedTime, config.totalTime);
       case 'tabata':
       case 'custom': {
         const currentDuration = state.phase === 'work' ? config.workTime : config.restTime;
-        return ((currentDuration - state.timeRemaining) / currentDuration) * 100;
+        return percentElapsed(currentDuration - state.timeRemaining, currentDuration);
       }
       default:
         return 0;
