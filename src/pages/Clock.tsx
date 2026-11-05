@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { Volume2, VolumeX, Maximize, Minimize, ListPlus } from 'lucide-react';
+import { Volume2, VolumeX, ListPlus } from 'lucide-react';
 import { useClockStore } from '../stores/clockStore';
 import {
   TimerDisplay,
-  TimerControls,
+  ActiveTimer,
   ModeSelector,
   TimerConfig,
   PresetManager
@@ -98,7 +98,8 @@ export const Clock = () => {
     };
   }, []);
 
-  const isTimerActive = status !== 'idle' && status !== 'complete';
+  // Everything past idle (countdown → complete) runs in the full-screen stage.
+  const isStageOpen = status !== 'idle';
 
   // Haptic pulse on every timer phase change: countdown → work, work ↔ rest,
   // and completion. Start/pause/reset/resume are user-initiated and stay silent.
@@ -114,6 +115,10 @@ export const Clock = () => {
 
   const iconBtn =
     'w-10 h-10 flex items-center justify-center rounded-full bg-[var(--color-surface)] border border-[var(--color-border)] hover:text-[var(--color-text)]';
+
+  if (isStageOpen) {
+    return <ActiveTimer isFullscreen={isFullscreen} onToggleFullscreen={toggleFullscreen} />;
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -138,33 +143,18 @@ export const Clock = () => {
           >
             {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
           </button>
-          <button
-            onClick={toggleFullscreen}
-            className={`${iconBtn} text-[var(--color-text-muted)]`}
-            title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
-            aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
-          >
-            {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
-          </button>
         </div>
       </div>
 
-      {/* Mode selector */}
-      {!isTimerActive && <ModeSelector />}
+      <ModeSelector />
 
-      {/* Timer display */}
+      {/* Preview + Start */}
       <TimerDisplay />
 
-      {/* Timer controls */}
-      <TimerControls />
-
-      {/* Timer configuration */}
-      {!isTimerActive && (
-        <section className="space-y-3">
-          <h2 className="t-section">Setup</h2>
-          <TimerConfig />
-        </section>
-      )}
+      <section className="space-y-3">
+        <h2 className="t-section">Setup</h2>
+        <TimerConfig />
+      </section>
 
       {/* Preset manager modal */}
       <PresetManager

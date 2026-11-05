@@ -1,9 +1,14 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Settings, Home, ClipboardList, Timer, LineChart } from 'lucide-react';
+import { useClockStore } from '../stores/clockStore';
 
 export const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
+
+  // The active timer takes over the screen — drop the chrome so it isn't
+  // reachable (or tabbable) underneath the full-screen stage.
+  const timerStageOpen = useClockStore((state) => state.status !== 'idle') && location.pathname === '/clock';
 
   const handleSettingsClick = () => navigate('/settings');
   const handleHomeClick = () => navigate('/');
@@ -23,7 +28,7 @@ export const Layout = () => {
   return (
     <div className="min-h-screen bg-[var(--color-bg)] flex flex-col">
       {/* Header — clean Blackout wordmark */}
-      <header className="sticky top-0 z-50 bg-[var(--color-bg)]/90 backdrop-blur border-b border-[var(--color-border)] px-4 py-3">
+      {!timerStageOpen && <header className="sticky top-0 z-50 bg-[var(--color-bg)]/90 backdrop-blur border-b border-[var(--color-border)] px-4 py-3">
         <div className="flex items-center justify-between max-w-lg mx-auto">
           <h1
             className="font-display-black text-[19px] text-[var(--color-text)] cursor-pointer tracking-[-0.02em]"
@@ -43,7 +48,7 @@ export const Layout = () => {
             <Settings className="w-[18px] h-[18px] text-[var(--color-text)]" />
           </button>
         </div>
-      </header>
+      </header>}
 
       {/* Main content — bottom padding reserves space for the sticky nav */}
       <main className="mat-texture flex-1 px-4 pt-4 pb-24 max-w-lg mx-auto w-full">
@@ -51,7 +56,7 @@ export const Layout = () => {
       </main>
 
       {/* Bottom navigation — Blackout tab bar (primary-colored active). Always visible across viewports. */}
-      <nav className="sticky bottom-0 z-40 bg-[var(--color-bg)]/95 backdrop-blur border-t border-[var(--color-border-strong)] px-2 pb-safe">
+      {!timerStageOpen && <nav className="sticky bottom-0 z-40 bg-[var(--color-bg)]/95 backdrop-blur border-t border-[var(--color-border-strong)] px-2 pb-safe">
         <div className="flex items-center justify-around max-w-lg mx-auto">
           <button onClick={handleHomeClick} className={navBtn(isActive('/'))} aria-label="Home" aria-current={isActive('/') ? 'page' : undefined}>
             <Home className="w-6 h-6" />
@@ -70,7 +75,7 @@ export const Layout = () => {
             <span className="text-[10px] font-semibold">Progress</span>
           </button>
         </div>
-      </nav>
+      </nav>}
     </div>
   );
 };

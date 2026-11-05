@@ -35,7 +35,7 @@ export const ModeSelector = ({ onModeChange }: ModeSelectorProps) => {
           disabled={status !== 'idle'}
           title={mode.description}
           className={`
-            flex-shrink-0 px-4 py-2.5 text-[14px] font-semibold
+            flex-1 shrink-0 whitespace-nowrap px-2.5 py-2.5 text-[14px] font-semibold
             transition-colors duration-150 border-b-2 -mb-px
             ${status !== 'idle' ? 'opacity-40 cursor-not-allowed' : ''}
             ${currentMode === mode.id

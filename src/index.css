@@ -64,6 +64,15 @@
   --color-danger-fill: #DA3B32; /* solid danger buttons: white text 4.51:1 (AA) */
   --color-info: #0A84FF;    /* neutral/informational — distinct from the red primary */
 
+  /* Timer stage — full-bleed phase tints. Each carries white text >= AA
+     (white: work 5.82, rest 5.65, ready 5.43, done 5.19, paused 17.01).
+     Also used as the text color on the white primary button (same ratios). */
+  --color-phase-work:   #C22818;
+  --color-phase-rest:   #0062D6;
+  --color-phase-ready:  #9A5B00;
+  --color-phase-done:   #1E7D3A;
+  --color-phase-paused: #1C1C1E;
+
   /* Category / plate accent colors (dark-optimized) */
   --color-cat-benchmark: #FF9F0A;
   --color-cat-lift:       #0A84FF;
@@ -268,6 +277,66 @@ a:hover { text-decoration: underline; }
   line-height: 1;
 }
 
+/* ─── Timer stage ─────────────────────────────────────────────────────────
+   Full-screen, phase-tinted view shown while a timer is active. Sits above
+   the header (z 50) and tab bar (z 40). --stage-bg is set inline per phase. */
+.timer-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: #FFFFFF;
+  background-color: var(--stage-bg, var(--color-bg));
+  transition: background-color 0.45s ease;
+  padding:
+    env(safe-area-inset-top, 0px)
+    env(safe-area-inset-right, 0px)
+    env(safe-area-inset-bottom, 0px)
+    env(safe-area-inset-left, 0px);
+}
+.timer-stage :focus-visible { outline: 3px solid #FFFFFF; outline-offset: 3px; }
+/* One white wash per phase change; keyed remount replays it. */
+.timer-flash {
+  position: absolute;
+  inset: 0;
+  background: #FFFFFF;
+  pointer-events: none;
+  opacity: 0;
+  animation: stage-flash 0.55s ease-out;
+}
+.timer-stage-digits {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  white-space: nowrap;
+}
+/* Last 3 seconds: a small beat on every second (element is keyed per second). */
+.timer-beat { animation: timer-beat 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.timer-phase-label {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(30px, 9vw, 56px);
+  line-height: 1;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+.timer-round {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(24px, 7vw, 44px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .timer-phase-label { font-size: clamp(24px, 7vh, 40px); }
+  .timer-round { font-size: clamp(20px, 6.5vh, 32px); }
+}
+
 /* ─── Gym-floor texture (apply to page backgrounds) ─────────────────────── */
 .mat-texture {
   background-image: repeating-linear-gradient(
@@ -289,6 +358,8 @@ a:hover { text-decoration: underline; }
 @keyframes card-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes backdrop-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes skeleton-shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+@keyframes stage-flash { from { opacity: 0.4; } to { opacity: 0; } }
+@keyframes timer-beat { from { transform: scale(1.07); } to { transform: scale(1); } }
 .animate-slide-up    { animation: slide-up   0.28s cubic-bezier(0.32, 0.72, 0, 1); }
 .animate-fade-in     { animation: fade-in    0.15s ease-out; }
 .animate-card-enter  { animation: card-enter 0.2s ease-out both; }
@@ -335,4 +406,7 @@ a:hover { text-decoration: underline; }
   }
   button:active, [role="button"]:active, .tap:active { scale: none !important; }
   .skeleton { animation: none !important; }
+  .timer-flash { display: none; }
+  .timer-beat { animation: none !important; }
+  .timer-stage { transition: none; }
 }
