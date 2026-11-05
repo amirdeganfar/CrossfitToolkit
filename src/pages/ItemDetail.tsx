@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Star, Plus, Trash2, TrendingUp, TrendingDown, ChevronDown, ChevronRight, Dumbbell, Target, SearchX, ClipboardList } from 'lucide-react';
 import { Skeleton, SkeletonRows } from '../components/Skeleton';
@@ -24,7 +24,9 @@ import {
   isLowerBetter as scoreIsLowerBetter,
   formatSecondsToTime,
 } from '../config/scoreTypes';
-import { formatWeight, formatDistance as formatDistanceUnit, formatMeters } from '../utils/units';
+import { formatWeight, formatDistance as formatDistanceUnit, formatMeters, convertWeight, convertDistance } from '../utils/units';
+import { PRCelebration, type Celebration } from '../components/PRCelebration';
+import { PRBadge } from '../components/PRBadge';
 import * as db from '../db';
 import type { PRLog, CatalogItem, ScoreType } from '../types/catalog';
 import type { CreateGoalInput, UpdateGoalInput, GoalWithProgress } from '../types/goal';
@@ -289,6 +291,8 @@ export const ItemDetail = () => {
   const [deleteLogId, setDeleteLogId] = useState<string | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [celebration, setCelebration] = useState<Celebration | null>(null);
+  const clearCelebration = useCallback(() => setCelebration(null), []);
 
   // Goal display units come from stored settings; the catalog store reloads
   // goals itself when the unit changes.
@@ -367,21 +371,104 @@ export const ItemDetail = () => {
 
   const handleModalSuccess = async (savedLog: PRLog) => {
     if (!id || !item) return;
+    const beforeLogs = logs;
     const before = bestIdsByPool({ logs, bestLog, bestByDistance, bestByCalories }, item, isDual, isDistanceOnly);
     try {
       const data = await loadLogsAndBests(id, isDual, isDistanceOnly);
       applyLogsAndBests(data);
       // New PR = a pool that already had a best now has a different one.
+      // Prefer a specific pool (rep scheme, variant…) over the item-wide 'best'.
       const after = bestIdsByPool(data, item, isDual, isDistanceOnly);
-      if ([...before].some(([pool, logId]) => after.has(pool) && after.get(pool) !== logId)) haptics.pr();
+      const changed = [...before].filter(([pool, logId]) => after.has(pool) && after.get(pool) !== logId);
+      const [prPool, prevId] = changed.find(([pool]) => pool !== 'best') ?? changed[0] ?? [];
+      if (prPool) haptics.pr();
 
       const achieved = await goalsCheckOnNewPR(savedLog, item);
       if (achieved.length > 0) haptics.goal();
       else if (goalsIsInitialized) await goalsRefresh(catalogItems);
+
+      const newLog = prPool ? data.logs.find((l) => l.id === after.get(prPool)) : undefined;
+      const prevLog = prevId ? beforeLogs.find((l) => l.id === prevId) : undefined;
+      if (prPool && newLog) {
+        setCelebration(buildCelebration(prPool, newLog, prevLog, achieved[0]?.targetResult));
+      } else if (achieved.length > 0) {
+        setCelebration({
+          id: Date.now(),
+          isPR: false,
+          goalTarget: achieved[0].targetResult,
+          itemName: item.name,
+          value: formatLogResult(savedLog, getLogScoreType(savedLog, item)),
+        });
+      }
     } catch (error) {
       console.error('[ItemDetail] Error refreshing after save:', error);
     }
   };
+
+  // Score type a best-pool key compares by (see bestIdsByPool).
+  const poolScoreType = (pool: string): ScoreType => {
+    if (pool.startsWith('st:')) return pool.slice(3, pool.indexOf(':', 3)) as ScoreType;
+    if (pool.startsWith('r:')) return 'Load';
+    if (pool.startsWith('d:')) return 'Time';
+    if (pool.startsWith('c:')) return 'Calories';
+    return item?.scoreType ?? 'Time';
+  };
+
+  // A log's value as shown for its pool (matches the history/PB rows).
+  const poolValue = (pool: string, log: PRLog): string => {
+    if (pool.startsWith('d:')) return log.result.includes(' in ') ? log.result.split(' in ')[1] : log.result;
+    if (pool.startsWith('c:')) return `${log.calories} cal`;
+    if (pool.startsWith('r:')) return formatWeight(log.resultValue, log.unit, settings.weightUnit);
+    if (pool.startsWith('st:')) return getScoreTypeResult(log, poolScoreType(pool));
+    return formatLogResult(log);
+  };
+
+  const poolContext = (pool: string, log: PRLog): string | undefined => {
+    const key = pool.slice(pool.indexOf(':') + 1);
+    if (pool.startsWith('r:')) return `${key}RM`;
+    if (pool.startsWith('d:')) return formatDistance(Number(key));
+    if (pool.startsWith('c:')) return `In ${formatSecondsToTime(Number(key))}`;
+    if (pool.startsWith('st:')) return scoreTypeGroupLabel(poolScoreType(pool), log);
+    if (pool.startsWith('v:') && key !== 'Unspecified') return key;
+    return undefined;
+  };
+
+  // "+10 kg", "−0:12", "+2 reps" — undefined where a difference isn't meaningful.
+  const improvementText = (pool: string, next: PRLog, prev: PRLog): string | undefined => {
+    const r1 = (n: number) => Math.round(n * 10) / 10;
+    if (pool.startsWith('c:')) return `+${r1((next.calories ?? 0) - (prev.calories ?? 0))} cal`;
+    switch (poolScoreType(pool)) {
+      case 'Load': {
+        const wu = settings.weightUnit;
+        return `+${r1(convertWeight(next.resultValue, next.unit, wu) - convertWeight(prev.resultValue, prev.unit, wu))}${wu}`;
+      }
+      case 'Distance': {
+        const du = settings.distanceUnit;
+        return `+${Math.round(convertDistance(next.resultValue, next.distanceUnit, du) - convertDistance(prev.resultValue, prev.distanceUnit, du))}${du}`;
+      }
+      case 'Time':
+      case 'TimeForReps':
+        return `−${formatSecondsToTime(prev.resultValue - next.resultValue)}`;
+      case 'Reps':
+      case 'RepsInTime':
+        return `+${r1(next.resultValue - prev.resultValue)} reps`;
+      case 'Calories':
+        return `+${r1(next.resultValue - prev.resultValue)} cal`;
+      default:
+        return undefined; // Rounds+Reps: a "+N" in raw reps reads ambiguously
+    }
+  };
+
+  const buildCelebration = (pool: string, next: PRLog, prev: PRLog | undefined, goalTarget?: string): Celebration => ({
+    id: Date.now(),
+    isPR: true,
+    goalTarget,
+    itemName: item?.name ?? '',
+    context: poolContext(pool, next),
+    value: poolValue(pool, next),
+    improvement: prev ? improvementText(pool, next, prev) : undefined,
+    previous: prev ? poolValue(pool, prev) : undefined,
+  });
 
   const handleSaveGoal = async (input: CreateGoalInput | { id: string; updates: UpdateGoalInput }) => {
     if ('id' in input) {
@@ -909,11 +996,7 @@ export const ItemDetail = () => {
                                     {getScoreTypeResult(log, group.scoreType)}
                                   </span>
                                   <RxTag variant={log.variant} />
-                                  {isPR && (
-                                    <span className="text-[10px] font-extrabold tracking-[0.06em] rounded-xs bg-[var(--color-primary)]/20 text-[var(--color-primary-text)] px-1.5 py-0.5">
-                                      PR
-                                    </span>
-                                  )}
+                                  {isPR && <PRBadge />}
                                 </div>
                                 <p className="t-caption num">
                                   {formatDate(log.date)}{log.notes && ` — ${log.notes}`}
@@ -996,11 +1079,7 @@ export const ItemDetail = () => {
                                   {getDisplayResult()}
                                 </span>
                                 {group.type !== 'variant' && <RxTag variant={log.variant} />}
-                                {isPR && (
-                                  <span className="text-[10px] font-extrabold tracking-[0.06em] rounded-xs bg-[var(--color-primary)]/20 text-[var(--color-primary-text)] px-1.5 py-0.5">
-                                    PR
-                                  </span>
-                                )}
+                                {isPR && <PRBadge />}
                               </div>
                               <p className="t-caption num">
                                 {formatDate(log.date)}{log.notes && ` — ${log.notes}`}
@@ -1034,11 +1113,7 @@ export const ItemDetail = () => {
                         {formatLogResult(log)}
                       </span>
                       <RxTag variant={log.variant} />
-                      {isPR && (
-                        <span className="text-[10px] font-extrabold tracking-[0.06em] rounded-xs bg-[var(--color-primary)]/20 text-[var(--color-primary-text)] px-1.5 py-0.5">
-                          PR
-                        </span>
-                      )}
+                      {isPR && <PRBadge />}
                     </div>
                     <p className="t-caption num">
                       {formatDate(log.date)}{log.notes && ` — ${log.notes}`}
@@ -1071,6 +1146,8 @@ export const ItemDetail = () => {
       {showModal && (
         <LogResultModal item={item} onClose={() => setShowModal(false)} onSuccess={handleModalSuccess} />
       )}
+
+      <PRCelebration celebration={celebration} onDone={clearCelebration} />
 
       {/* Delete Confirmation Dialog */}
       {deleteLogId && (

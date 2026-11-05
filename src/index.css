@@ -337,6 +337,82 @@ a:hover { text-decoration: underline; }
   .timer-round { font-size: clamp(20px, 6.5vh, 32px); }
 }
 
+/* ─── PR celebration ──────────────────────────────────────────────────────
+   Non-modal moment after a new PR / goal (components/PRCelebration.tsx).
+   One burst of red rings + sparks behind the card, value scales in, then a
+   thin red bar runs down the auto-dismiss time. Above sheets (z 50/60). */
+.pr-layer {
+  position: fixed; inset: 0; z-index: 70;
+  display: flex; align-items: center; justify-content: center;
+  padding: var(--space-4) var(--space-4) 18vh;
+  background: rgba(0,0,0,0.55);
+  animation: backdrop-in 0.2s ease-out both;
+  cursor: pointer;
+  transition: opacity 0.18s ease-in;
+}
+.pr-leaving { opacity: 0; }
+.pr-card {
+  position: relative;
+  width: 100%; max-width: 20rem;
+  padding: var(--space-6, 24px) var(--space-5, 20px) var(--space-5, 20px);
+  text-align: center;
+  color: var(--color-text);
+  background:
+    radial-gradient(120% 70% at 50% 0%, rgba(225,49,27,0.16), transparent 70%),
+    var(--color-surface-elevated);
+  border: 1px solid rgba(235,74,54,0.35);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,0,0,0.4);
+  overflow: hidden;
+  animation: pr-card-in 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.pr-card-goal {
+  background:
+    radial-gradient(120% 70% at 50% 0%, rgba(52,199,89,0.14), transparent 70%),
+    var(--color-surface-elevated);
+  border-color: rgba(52,199,89,0.3);
+}
+/* Burst origin sits on the value line. */
+.pr-burst { position: absolute; left: 50%; top: 62%; width: 0; height: 0; pointer-events: none; }
+.pr-ring {
+  position: absolute; left: -60px; top: -60px; width: 120px; height: 120px;
+  border-radius: 9999px;
+  border: 2px solid var(--color-primary-text);
+  opacity: 0;
+  animation: pr-ring 0.9s cubic-bezier(0.2, 0.7, 0.3, 1) 0.1s both;
+}
+.pr-ring-2 { border-color: rgba(255,255,255,0.5); animation-delay: 0.26s; }
+.pr-card-goal .pr-ring { border-color: rgba(255,255,255,0.6); }
+.pr-card-goal .pr-ring-2 { border-color: var(--color-success); }
+.pr-spark {
+  position: absolute; left: -1.5px; top: -7px; width: 3px; height: 14px;
+  border-radius: 2px;
+  background: var(--color-primary-text);
+  opacity: 0;
+  transform: rotate(var(--a)) translateY(-28px);
+  animation: pr-spark 0.7s cubic-bezier(0.15, 0.7, 0.3, 1) 0.12s both;
+}
+.pr-spark-light { background: #FFFFFF; }
+.pr-card-goal .pr-spark { background: var(--color-success); }
+.pr-card-goal .pr-spark-light { background: #FFFFFF; }
+.pr-value { display: inline-block; animation: pr-value-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.08s both; }
+.pr-delta { animation: card-enter 0.3s ease-out 0.38s both; }
+.pr-timer {
+  position: absolute; left: 0; bottom: 0; height: 2px; width: 100%;
+  background: var(--color-primary);
+  transform-origin: left center;
+  animation: pr-timer linear both;
+}
+.pr-card-goal .pr-timer { background: var(--color-success); }
+@keyframes pr-card-in { from { opacity: 0; transform: scale(0.88) translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes pr-value-in { 0% { opacity: 0; transform: scale(0.55); } 60% { opacity: 1; } 100% { opacity: 1; transform: scale(1); } }
+@keyframes pr-ring { 0% { opacity: 0.9; transform: scale(0.25); } 100% { opacity: 0; transform: scale(2.6); } }
+@keyframes pr-spark {
+  0%   { opacity: 1; transform: rotate(var(--a)) translateY(-28px) scaleY(1.2); }
+  100% { opacity: 0; transform: rotate(var(--a)) translateY(calc(-1 * var(--d, 72px))) scaleY(0.3); }
+}
+@keyframes pr-timer { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
 /* ─── Gym-floor texture (apply to page backgrounds) ─────────────────────── */
 .mat-texture {
   background-image: repeating-linear-gradient(
@@ -409,4 +485,8 @@ a:hover { text-decoration: underline; }
   .timer-flash { display: none; }
   .timer-beat { animation: none !important; }
   .timer-stage { transition: none; }
+  /* PR celebration: no burst or scale, just a fade. */
+  .pr-burst, .pr-timer { display: none; }
+  .pr-card, .pr-value, .pr-delta { animation-name: backdrop-in !important; animation-duration: 0.2s !important; animation-delay: 0s !important; }
+  .pr-layer { transition-duration: 0.18s !important; }
 }
