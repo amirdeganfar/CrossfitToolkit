@@ -3,6 +3,15 @@ import type { Goal, GoalWithProgress, TrendStatus } from '../types/goal';
 import { formatSecondsToTime } from '../utils/resultParser';
 import { isLowerBetter as scoreTypeIsLowerBetter, getLogScoreType } from '../config/scoreTypes';
 import * as db from '../db';
+import { todayLocal, daysBetween, addDaysLocal } from '../utils/date';
+import {
+  convertWeight,
+  convertDistance,
+  formatWeight,
+  formatDistance,
+  type WeightUnit,
+  type DistanceUnit,
+} from '../utils/units';
 
 /**
  * Check if a score type is "lower is better" (e.g., Time)
@@ -18,17 +27,57 @@ const goalScoreType = (goal: Goal, item: CatalogItem): ScoreType =>
   goal.scoreTypeId ?? item.scoreType;
 
 /**
- * Restrict logs to the goal's score pool: matching effective score type and, for
- * constrained types, the same constraint. A no-op when the goal has no
- * scoreTypeId (single-mode / legacy goals).
+ * Whether a log counts toward a goal: same variant, rep scheme (Load), score
+ * pool (multi-mode items: effective score type + constraint) and distance
+ * (Time goals on distance items, e.g. a 5k goal ignores 400m runs).
+ * Legacy goals without the optional fields match as before.
  */
-const filterLogsToGoalPool = (logs: PRLog[], goal: Goal, item: CatalogItem): PRLog[] => {
-  if (!goal.scoreTypeId) return logs;
-  return logs.filter((log) => {
+const logMatchesGoal = (log: PRLog, goal: Goal, item: CatalogItem): boolean => {
+  if (log.catalogItemId !== goal.itemId) return false;
+  if (goal.variant && log.variant !== goal.variant) return false;
+  if (goal.reps !== undefined && goalScoreType(goal, item) === 'Load' && log.reps !== goal.reps) {
+    return false;
+  }
+  if (goal.scoreTypeId) {
     if (getLogScoreType(log, item) !== goal.scoreTypeId) return false;
     if (goal.timeCap !== undefined && log.timeCap !== goal.timeCap) return false;
     if (goal.targetReps !== undefined && log.targetReps !== goal.targetReps) return false;
-    return true;
+  }
+  if (goal.distance !== undefined && log.distance !== goal.distance) return false;
+  return true;
+};
+
+/**
+ * A log's numeric value expressed in the goal's stored unit, so it can be
+ * compared with `goal.targetValue` regardless of the units each was entered in.
+ */
+const logValueInGoalUnit = (log: PRLog, goal: Goal, scoreType: ScoreType): number => {
+  if (scoreType === 'Load' && goal.unit) {
+    return convertWeight(log.resultValue, log.unit, goal.unit);
+  }
+  if (scoreType === 'Distance' && goal.distanceUnit) {
+    return convertDistance(log.resultValue, log.distanceUnit, goal.distanceUnit);
+  }
+  return log.resultValue;
+};
+
+/** Matching logs with `resultValue` normalized to the goal's unit. */
+const getNormalizedGoalLogs = (logs: PRLog[], goal: Goal, item: CatalogItem): PRLog[] => {
+  const scoreType = goalScoreType(goal, item);
+  return logs
+    .filter((log) => logMatchesGoal(log, goal, item))
+    .map((log) => ({ ...log, resultValue: logValueInGoalUnit(log, goal, scoreType) }));
+};
+
+/** Best log by resultValue for the score type's direction. */
+const pickBest = (logs: PRLog[], scoreType: ScoreType): PRLog | undefined => {
+  if (logs.length === 0) return undefined;
+  const lowerBetter = isLowerBetter(scoreType);
+  return logs.reduce((best, current) => {
+    if (lowerBetter) {
+      return current.resultValue < best.resultValue ? current : best;
+    }
+    return current.resultValue > best.resultValue ? current : best;
   });
 };
 
@@ -78,16 +127,8 @@ export const isGoalAchieved = (
  * Calculate days remaining until target date
  */
 export const calculateDaysRemaining = (targetDate: string): number => {
-  // Parse as local midnight to avoid UTC offset shifting the date
-  const target = new Date(targetDate + 'T00:00:00');
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  target.setHours(0, 0, 0, 0);
-
-  const diffTime = target.getTime() - today.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-  return diffDays;
+  // Local calendar-day diff (DST-safe)
+  return daysBetween(todayLocal(), targetDate);
 };
 
 /**
@@ -148,13 +189,14 @@ export const calculateTrend = (
   const avgDaysPerLog = daySpan / (n - 1);
   const daysToTarget = logsNeeded * avgDaysPerLog;
 
-  const today = new Date();
-  const projectedDate = new Date(today.getTime() + daysToTarget * 24 * 60 * 60 * 1000);
-  const projectedDateStr = projectedDate.toISOString().split('T')[0];
+  // Projection too far out (or degenerate) to be meaningful
+  if (!Number.isFinite(daysToTarget) || Math.abs(daysToTarget) > 365 * 100) {
+    return { trend: 'behind' };
+  }
 
-  const targetDateObj = new Date(targetDate);
-  const daysAheadOrBehind =
-    (targetDateObj.getTime() - projectedDate.getTime()) / (1000 * 60 * 60 * 24);
+  // Work in local calendar days so both dates use the same basis.
+  const projectedDateStr = addDaysLocal(todayLocal(), Math.round(daysToTarget));
+  const daysAheadOrBehind = daysBetween(projectedDateStr, targetDate);
 
   let trend: TrendStatus;
   if (daysAheadOrBehind >= 7) {
@@ -201,74 +243,63 @@ export const formatValueAsResult = (
 };
 
 /**
- * Get the best PR value for a goal (considering variant/reps filters)
+ * Get the best PR for a goal (matching variant/reps/pool/distance).
+ * The returned log's `resultValue` is converted to the goal's unit.
  */
 export const getBestPRForGoal = async (
   goal: Goal,
   item: CatalogItem
 ): Promise<PRLog | undefined> => {
-  const logs = await db.getPRLogsForItem(goal.itemId);
-
-  // Filter by variant if specified
-  let filteredLogs = goal.variant
-    ? logs.filter((log) => log.variant === goal.variant)
-    : logs;
-
-  // Filter by reps if specified (for Load items)
-  if (goal.reps !== undefined && item.scoreType === 'Load') {
-    filteredLogs = filteredLogs.filter((log) => log.reps === goal.reps);
-  }
-
-  // Restrict to the goal's score pool (multi-mode items)
-  filteredLogs = filterLogsToGoalPool(filteredLogs, goal, item);
-
-  if (filteredLogs.length === 0) return undefined;
-
-  // Find best PR
-  const scoreType = goalScoreType(goal, item);
-  return filteredLogs.reduce((best, current) => {
-    if (isLowerBetter(scoreType)) {
-      return current.resultValue < best.resultValue ? current : best;
-    }
-    return current.resultValue > best.resultValue ? current : best;
-  });
+  const logs = getNormalizedGoalLogs(await db.getPRLogsForItem(goal.itemId), goal, item);
+  return pickBest(logs, goalScoreType(goal, item));
 };
 
 /**
- * Get PR logs for trend calculation (filtered by goal criteria)
+ * Get PR logs for trend calculation (filtered by goal criteria, values in goal unit)
  */
 export const getPRLogsForTrend = async (
   goal: Goal,
   item: CatalogItem
 ): Promise<PRLog[]> => {
-  const logs = await db.getPRLogsForItem(goal.itemId);
-
-  let filteredLogs = goal.variant
-    ? logs.filter((log) => log.variant === goal.variant)
-    : logs;
-
-  if (goal.reps !== undefined && item.scoreType === 'Load') {
-    filteredLogs = filteredLogs.filter((log) => log.reps === goal.reps);
-  }
-
-  return filterLogsToGoalPool(filteredLogs, goal, item);
+  return getNormalizedGoalLogs(await db.getPRLogsForItem(goal.itemId), goal, item);
 };
 
 /**
- * Enrich a goal with progress data
+ * Format a value stored in the goal's unit for display in the user's unit.
+ */
+const formatGoalValue = (
+  value: number,
+  goal: Goal,
+  scoreType: ScoreType,
+  weightUnit: WeightUnit,
+  distanceUnit: DistanceUnit
+): string => {
+  if (scoreType === 'Load') return formatWeight(value, goal.unit, weightUnit);
+  if (scoreType === 'Distance') return formatDistance(value, goal.distanceUnit, distanceUnit);
+  return formatValueAsResult(value, scoreType);
+};
+
+/**
+ * Enrich a goal with progress data.
+ * `weightUnit`/`distanceUnit` are the DISPLAY units for currentResult/targetResult.
  */
 export const enrichGoalWithProgress = async (
   goal: Goal,
   item: CatalogItem,
-  weightUnit: string = 'kg'
+  weightUnit: string = 'kg',
+  distanceUnit: string = 'm'
 ): Promise<GoalWithProgress> => {
-  const bestPR = await getBestPRForGoal(goal, item);
   const logs = await getPRLogsForTrend(goal, item);
   const scoreType = goalScoreType(goal, item);
-  const unit = scoreType === 'Load' ? weightUnit : undefined;
+  const bestPR = pickBest(logs, scoreType);
+  const displayWeight = weightUnit as WeightUnit;
+  const displayDistance = distanceUnit as DistanceUnit;
 
   const currentValue = bestPR?.resultValue ?? null;
-  const currentResult = bestPR?.result ?? null;
+  const currentResult =
+    currentValue === null
+      ? null
+      : formatGoalValue(currentValue, goal, scoreType, displayWeight, displayDistance);
   const progress = calculateProgress(currentValue, goal.targetValue, scoreType);
   const daysRemaining = calculateDaysRemaining(goal.targetDate);
   const { trend, projectedDate } = calculateTrend(
@@ -283,7 +314,7 @@ export const enrichGoalWithProgress = async (
     itemName: item.name,
     currentValue,
     currentResult,
-    targetResult: formatValueAsResult(goal.targetValue, scoreType, unit),
+    targetResult: formatGoalValue(goal.targetValue, goal, scoreType, displayWeight, displayDistance),
     progress,
     daysRemaining,
     trend,
@@ -303,25 +334,10 @@ export const checkGoalsOnNewPR = async (
   const achievedGoalIds: string[] = [];
 
   for (const goal of activeGoals) {
-    if (goal.itemId !== log.catalogItemId) continue;
+    if (!logMatchesGoal(log, goal, item)) continue;
 
-    // Check variant match
-    if (goal.variant && goal.variant !== log.variant) continue;
-
-    // Check reps match (for Load items)
-    if (goal.reps !== undefined && item.scoreType === 'Load' && goal.reps !== log.reps) {
-      continue;
-    }
-
-    // Check score pool match (for multi-mode items)
-    if (goal.scoreTypeId) {
-      if (getLogScoreType(log, item) !== goal.scoreTypeId) continue;
-      if (goal.timeCap !== undefined && log.timeCap !== goal.timeCap) continue;
-      if (goal.targetReps !== undefined && log.targetReps !== goal.targetReps) continue;
-    }
-
-    // Check if this PR achieves the goal
-    if (isGoalAchieved(log.resultValue, goal.targetValue, goalScoreType(goal, item))) {
+    const scoreType = goalScoreType(goal, item);
+    if (isGoalAchieved(logValueInGoalUnit(log, goal, scoreType), goal.targetValue, scoreType)) {
       achievedGoalIds.push(goal.id);
     }
   }

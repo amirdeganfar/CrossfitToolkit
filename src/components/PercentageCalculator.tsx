@@ -1,6 +1,8 @@
-import { useState, useMemo } from 'react';
+import { Stat } from './Stat';
+import { useState, useMemo, useRef, useEffect, useId } from 'react';
 import { ChevronDown, ChevronUp, Calculator } from 'lucide-react';
 import type { PRLog } from '../types/catalog';
+import { convertWeight } from '../utils/units';
 
 interface PercentageCalculatorProps {
   logs: PRLog[];
@@ -45,6 +47,32 @@ export const PercentageCalculator = ({ logs, weightUnit }: PercentageCalculatorP
   const [selectedPercentage, setSelectedPercentage] = useState(80);
   const [customPercentage, setCustomPercentage] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const baseLabelId = useId();
+  const listboxId = useId();
+  const customInputId = useId();
+
+  // Close the Base dropdown on outside click or Escape
+  useEffect(() => {
+    if (!showDropdown) return;
+    const onMouseDown = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setShowDropdown(false);
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowDropdown(false);
+    };
+    document.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onMouseDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [showDropdown]);
+
+  const toggleExpanded = () => {
+    setIsExpanded((prev) => !prev);
+    setShowDropdown(false);
+  };
 
   // Format date for display
   const formatDate = (timestamp: number): string => {
@@ -58,7 +86,8 @@ export const PercentageCalculator = ({ logs, weightUnit }: PercentageCalculatorP
   const calculatorOptions = useMemo((): CalculatorOption[] => {
     return logs.map((log) => {
       const reps = log.reps ?? 1;
-      const originalWeight = log.resultValue;
+      // Logs store the unit they were entered in — convert to the display unit.
+      const originalWeight = roundToHalf(convertWeight(log.resultValue, log.unit, weightUnit));
       const estimated1RM = roundToHalf(estimateOneRepMax(originalWeight, reps));
       const isActual1RM = reps <= 1;
 
@@ -121,15 +150,16 @@ export const PercentageCalculator = ({ logs, weightUnit }: PercentageCalculatorP
     return (
       <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
         <button
-          onClick={() => setIsExpanded(!isExpanded)}
+          type="button"
+          onClick={toggleExpanded}
           className="w-full flex items-center justify-between px-4 py-3 hover:bg-[var(--color-surface-elevated)] transition-colors"
           aria-expanded={isExpanded}
           aria-label="Toggle percentage calculator"
         >
           <div className="flex items-center gap-2">
             <Calculator className="w-4 h-4 text-[var(--color-text-muted)]" />
-            <span className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
-              % Calculator
+            <span className="t-section">
+              % calculator
             </span>
           </div>
           {isExpanded ? (
@@ -142,6 +172,7 @@ export const PercentageCalculator = ({ logs, weightUnit }: PercentageCalculatorP
         <div
           className={`calculator-content ${isExpanded ? 'expanded' : ''}`}
           aria-hidden={!isExpanded}
+          inert={!isExpanded}
         >
           <div className="px-4 py-6 text-center border-t border-[var(--color-border)]">
             <p className="text-[var(--color-text-muted)]">
@@ -157,15 +188,16 @@ export const PercentageCalculator = ({ logs, weightUnit }: PercentageCalculatorP
     <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden">
       {/* Header - always visible */}
       <button
-        onClick={() => setIsExpanded(!isExpanded)}
+        type="button"
+        onClick={toggleExpanded}
         className="w-full flex items-center justify-between px-4 py-3 hover:bg-[var(--color-surface-elevated)] transition-colors"
         aria-expanded={isExpanded}
         aria-label="Toggle percentage calculator"
       >
         <div className="flex items-center gap-2">
           <Calculator className="w-4 h-4 text-[var(--color-text-muted)]" />
-          <span className="font-display text-sm tracking-widest text-[var(--color-text-muted)]">
-            % CALCULATOR
+          <span className="t-section">
+            % calculator
           </span>
         </div>
         {isExpanded ? (
@@ -179,22 +211,26 @@ export const PercentageCalculator = ({ logs, weightUnit }: PercentageCalculatorP
       <div
         className={`calculator-content ${isExpanded ? 'expanded' : ''}`}
         aria-hidden={!isExpanded}
+        inert={!isExpanded}
       >
         <div className="px-4 py-4 space-y-4 border-t border-[var(--color-border)]">
           {/* Base selector */}
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-2">
+            <div id={baseLabelId} className="block text-sm font-medium text-[var(--color-text-muted)] mb-2">
               Base
-            </label>
+            </div>
             
             {/* Show dropdown only if multiple options */}
             {calculatorOptions.length > 1 ? (
-              <div className="relative">
+              <div className="relative" ref={dropdownRef}>
                 <button
+                  type="button"
                   onClick={() => setShowDropdown(!showDropdown)}
                   className="w-full flex items-center justify-between px-3 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border-strong)] rounded-sm text-[var(--color-text)] hover:border-[var(--color-text-muted)] transition-colors"
                   aria-haspopup="listbox"
                   aria-expanded={showDropdown}
+                  aria-controls={showDropdown ? listboxId : undefined}
+                  aria-labelledby={baseLabelId}
                 >
                   <div className="flex flex-col items-start">
                     <span className="font-medium">
@@ -211,22 +247,27 @@ export const PercentageCalculator = ({ logs, weightUnit }: PercentageCalculatorP
 
                 {/* Dropdown menu */}
                 {showDropdown && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-[var(--color-surface-elevated)] border border-[var(--color-border-strong)] rounded-lg shadow-xl z-10 max-h-56 overflow-y-auto">
+                  <div
+                    id={listboxId}
+                    role="listbox"
+                    aria-labelledby={baseLabelId}
+                    className="absolute top-full left-0 right-0 mt-1 bg-[var(--color-surface-elevated)] border border-[var(--color-border-strong)] rounded-md shadow-xl z-10 max-h-56 overflow-y-auto">
                     {calculatorOptions.map((option) => (
                       <button
                         key={option.id}
+                        type="button"
                         onClick={() => {
                           setSelectedOptionId(option.id);
                           setShowDropdown(false);
                         }}
                         className={`w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-[var(--color-surface)] transition-colors ${
-                          selectedOption?.id === option.id ? 'bg-[var(--color-primary)]/10' : ''
+                          selectedOption?.id === option.id ? 'bg-[var(--color-surface)]' : ''
                         }`}
                         role="option"
                         aria-selected={selectedOption?.id === option.id}
                       >
                         <div className="flex flex-col">
-                          <span className={`font-medium ${selectedOption?.id === option.id ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
+                          <span className={`font-medium ${selectedOption?.id === option.id ? 'text-[var(--color-text)] font-semibold' : 'text-[var(--color-text)]'}`}>
                             {option.label}
                           </span>
                           <span className="text-xs text-[var(--color-text-muted)]">
@@ -234,7 +275,7 @@ export const PercentageCalculator = ({ logs, weightUnit }: PercentageCalculatorP
                           </span>
                         </div>
                         {selectedOption?.id === option.id && (
-                          <div className="w-2 h-2 rounded-full bg-[var(--color-primary)]" />
+                          <div className="w-2 h-2 rounded-full bg-[var(--color-text)]" />
                         )}
                       </button>
                     ))}
@@ -258,17 +299,19 @@ export const PercentageCalculator = ({ logs, weightUnit }: PercentageCalculatorP
 
           {/* Percentage presets */}
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-2">
+            <label className="block label-eyebrow mb-2">
               Percentage
             </label>
             <div className="flex flex-wrap gap-2">
               {PERCENTAGE_PRESETS.map((pct) => (
                 <button
                   key={pct}
+                  type="button"
                   onClick={() => handlePresetClick(pct)}
-                  className={`px-3 py-1.5 rounded-sm font-display text-sm tracking-wider border transition-colors active:scale-95 ${
+                  aria-pressed={!customPercentage && selectedPercentage === pct}
+                  className={`px-3 min-h-[36px] rounded-sm text-sm font-semibold num border transition-colors ${
                     !customPercentage && selectedPercentage === pct
-                      ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white'
+                      ? 'chip-selected'
                       : 'bg-[var(--color-bg)] border-[var(--color-border-strong)] text-[var(--color-text-muted)] hover:border-[var(--color-text-muted)]'
                   }`}
                 >
@@ -280,18 +323,19 @@ export const PercentageCalculator = ({ logs, weightUnit }: PercentageCalculatorP
 
           {/* Custom percentage input */}
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-[var(--color-text-muted)]">
+            <label htmlFor={customInputId} className="text-sm font-medium text-[var(--color-text-muted)]">
               Custom:
             </label>
             <div className="relative flex-1 max-w-24">
               <input
+                id={customInputId}
                 type="number"
                 min="1"
                 max="100"
                 value={customPercentage}
                 onChange={(e) => handleCustomChange(e.target.value)}
                 placeholder="—"
-                className="field w-full px-3 py-1.5 text-center font-display"
+                className="field w-full px-3 py-1.5 text-center font-display num"
               />
             </div>
             <span className="text-sm text-[var(--color-text-muted)]">%</span>
@@ -304,10 +348,10 @@ export const PercentageCalculator = ({ logs, weightUnit }: PercentageCalculatorP
           <div className="text-center py-2">
             {calculatedWeight !== null && selectedOption ? (
               <>
-                <div className="font-display text-4xl text-[var(--color-primary)]">
-                  {calculatedWeight} {weightUnit}
+                <div>
+                  <Stat value={calculatedWeight} unit={weightUnit} size="hero" />
                 </div>
-                <div className="text-sm text-[var(--color-text-muted)] mt-1">
+                <div className="text-sm text-[var(--color-text-muted)] num mt-1">
                   {activePercentage}% of {selectedOption.baseWeight}{weightUnit}
                   {selectedOption.isEstimated && (
                     <span className="text-xs"> (est.)</span>

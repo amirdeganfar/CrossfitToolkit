@@ -3,6 +3,15 @@ import { MoreVertical, Trophy, Calendar } from 'lucide-react';
 import type { GoalWithProgress } from '../../types/goal';
 import { TrendIndicator } from './TrendIndicator';
 import { Barbell } from '../Barbell';
+import { parseLocalDate, daysBetween } from '../../utils/date';
+
+/** Goal dates are local `YYYY-MM-DD` (createdAt may be a full ISO timestamp). */
+const toDisplayDate = (s: string) =>
+  (/^d{4}-d{2}-d{2}$/.test(s) ? parseLocalDate(s) : new Date(s)).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 
 interface GoalCardProps {
   goal: GoalWithProgress;
@@ -42,45 +51,51 @@ export const GoalCard = ({
 
   const formatDaysRemaining = () => {
     if (goal.daysRemaining < 0) {
-      return `${Math.abs(goal.daysRemaining)} DAYS OVERDUE`;
+      return `${Math.abs(goal.daysRemaining)} days overdue`;
     }
     if (goal.daysRemaining === 0) {
-      return 'DUE TODAY';
+      return 'Due today';
     }
     if (goal.daysRemaining === 1) {
-      return '1 DAY LEFT';
+      return '1 day left';
     }
-    return `${goal.daysRemaining} DAYS LEFT`;
+    return `${goal.daysRemaining} days left`;
   };
 
   const formatProjectedDate = () => {
     if (!goal.projectedDate) return null;
 
-    const projected = new Date(goal.projectedDate + 'T00:00:00');
-    const target = new Date(goal.targetDate + 'T00:00:00');
-    const diffDays = Math.round(
-      (target.getTime() - projected.getTime()) / (1000 * 60 * 60 * 24)
-    );
+    const diffDays = daysBetween(goal.projectedDate, goal.targetDate);
 
     if (diffDays > 0) {
-      return `${diffDays} DAYS AHEAD`;
+      return `${diffDays} days ahead`;
     }
     if (diffDays < 0) {
-      return `${Math.abs(diffDays)} DAYS BEHIND`;
+      return `${Math.abs(diffDays)} days behind`;
     }
-    return 'ON SCHEDULE';
+    return 'On schedule';
   };
 
   return (
     <div
-      className={`border-l-2 ${isAchieved ? 'border-[var(--color-success)] opacity-70' : 'border-[var(--color-primary)]'} pl-3 ${
+      className={`card ${isAchieved ? 'opacity-70' : ''} ${
         onClick ? 'cursor-pointer' : ''
       }`}
     >
       {/* Main content - always visible */}
       <div
-        className="py-2"
+        className=""
         onClick={onClick ? () => onClick(goal) : handleToggleExpand}
+        onKeyDown={
+          onClick
+            ? (e) => {
+                if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+                  e.preventDefault();
+                  onClick(goal);
+                }
+              }
+            : undefined
+        }
         role={onClick ? 'button' : undefined}
         tabIndex={onClick ? 0 : undefined}
       >
@@ -97,10 +112,12 @@ export const GoalCard = ({
 
           {/* Menu button */}
           {(onEdit || onAchieve || onCancel || onDelete) && (
-            <div className="relative">
+            // Clicks inside the menu (button, backdrop, items) must not reach the card.
+            <div className="relative" onClick={(e) => e.stopPropagation()}>
               <button
+                type="button"
                 onClick={handleMenuClick}
-                className="p-1.5 -mr-1 hover:bg-[var(--color-surface-elevated)] transition-colors"
+                className="w-9 h-9 -mr-2 -mt-1 flex items-center justify-center rounded-full hover:bg-[var(--color-surface-elevated)] transition-colors"
                 aria-label="Goal actions"
                 aria-haspopup="menu"
                 aria-expanded={showMenu}
@@ -113,38 +130,47 @@ export const GoalCard = ({
                   <div
                     className="fixed inset-0 z-40"
                     onClick={() => setShowMenu(false)}
+                    aria-hidden="true"
                   />
-                  <div className="absolute right-0 z-50 mt-1 w-40 bg-[var(--color-surface-elevated)] border border-[var(--color-border-strong)] shadow-xl overflow-hidden">
+                  <div role="menu" className="absolute right-0 z-50 mt-1 w-44 rounded-md bg-[var(--color-surface-elevated)] border border-[var(--color-border-strong)] shadow-xl overflow-hidden">
                     {onEdit && (
                       <button
+                        type="button"
+                        role="menuitem"
                         onClick={() => handleAction(() => onEdit(goal))}
-                        className="w-full px-4 py-3 text-left font-display text-xs tracking-widest text-[var(--color-text)] hover:bg-[var(--color-surface)] transition-colors"
+                        className="w-full px-4 py-3 text-left text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-surface)] transition-colors"
                       >
-                        EDIT
+                        Edit
                       </button>
                     )}
                     {onAchieve && !isAchieved && (
                       <button
+                        type="button"
+                        role="menuitem"
                         onClick={() => handleAction(() => onAchieve(goal))}
-                        className="w-full px-4 py-3 text-left font-display text-xs tracking-widest text-[var(--color-success)] hover:bg-[var(--color-surface)] transition-colors"
+                        className="w-full px-4 py-3 text-left text-sm font-medium text-[var(--color-success)] hover:bg-[var(--color-surface)] transition-colors"
                       >
-                        MARK ACHIEVED
+                        Mark achieved
                       </button>
                     )}
                     {onCancel && !isAchieved && (
                       <button
+                        type="button"
+                        role="menuitem"
                         onClick={() => handleAction(() => onCancel(goal))}
-                        className="w-full px-4 py-3 text-left font-display text-xs tracking-widest text-[var(--color-warning)] hover:bg-[var(--color-surface)] transition-colors"
+                        className="w-full px-4 py-3 text-left text-sm font-medium text-[var(--color-warning)] hover:bg-[var(--color-surface)] transition-colors"
                       >
-                        CANCEL
+                        Cancel goal
                       </button>
                     )}
                     {onDelete && (
                       <button
+                        type="button"
+                        role="menuitem"
                         onClick={() => handleAction(() => onDelete(goal))}
-                        className="w-full px-4 py-3 text-left font-display text-xs tracking-widest text-[var(--color-danger)] hover:bg-[var(--color-surface)] transition-colors"
+                        className="w-full px-4 py-3 text-left text-sm font-medium text-[var(--color-danger)] hover:bg-[var(--color-surface)] transition-colors"
                       >
-                        DELETE
+                        Delete
                       </button>
                     )}
                   </div>
@@ -158,12 +184,12 @@ export const GoalCard = ({
         <div className="mb-2">
           <div className="flex items-baseline justify-between mb-1.5">
             <div className="flex items-baseline gap-2">
-              <span className="text-xs text-[var(--color-text-muted)]">{goal.currentResult || '—'}</span>
+              <span className="text-xs text-[var(--color-text-muted)] num">{goal.currentResult || '—'}</span>
               <span className="text-[var(--color-text-dim)]">→</span>
-              <span className="font-display text-sm text-[var(--color-text)]">{goal.targetResult}</span>
+              <span className="font-display text-sm text-[var(--color-text)] num">{goal.targetResult}</span>
             </div>
-            <span className={`font-display text-3xl ${goal.progress >= 100 ? 'text-[var(--color-success)]' : 'text-[var(--color-primary)]'}`}>
-              {Math.round(goal.progress)}%
+            <span className={`stat text-[28px] ${goal.progress >= 100 ? 'text-[var(--color-success)]' : 'text-[var(--color-text)]'}`}>
+              <span className="stat-value">{Math.round(goal.progress)}</span><span className="stat-unit">%</span>
             </span>
           </div>
           <Barbell current={goal.progress} goal={100} />
@@ -171,22 +197,23 @@ export const GoalCard = ({
 
         {/* Bottom row: days remaining + trend */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 font-display text-[10px] tracking-widest text-[var(--color-text-muted)]">
+          <div className="flex items-center gap-1.5 t-caption num">
             <Calendar size={10} />
-            <span>{isAchieved && goal.achievedAt ? `ACHIEVED ${goal.achievedAt}` : formatDaysRemaining()}</span>
+            <span>{isAchieved && goal.achievedAt ? `Achieved ${goal.achievedAt}` : formatDaysRemaining()}</span>
           </div>
           {!isAchieved && (
             <div className="flex items-center gap-2">
               <TrendIndicator trend={goal.trend} size="sm" />
               <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleToggleExpand();
                 }}
-                className="font-display text-[9px] tracking-widest text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors px-1"
+                className="text-xs font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors px-2 min-h-[32px]"
                 aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
               >
-                {isExpanded ? '▲ LESS' : '▼ MORE'}
+                {isExpanded ? 'Less' : 'More'}
               </button>
             </div>
           )}
@@ -196,18 +223,14 @@ export const GoalCard = ({
       {/* Expanded details */}
       <div className={`accordion-content ${isExpanded ? 'expanded' : ''}`}>
         <div>
-          <div className="pt-2 pb-3 border-t border-[var(--color-border)]">
+          <div className="mt-3 pt-3 border-t border-[var(--color-border)]">
             {goal.projectedDate && (
               <div className="mb-3">
-                <div className="font-display text-[10px] tracking-widest text-[var(--color-text-muted)] mb-0.5">PROJECTED ACHIEVEMENT</div>
-                <div className="font-display text-sm text-[var(--color-text)]">
-                  {new Date(goal.projectedDate).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })}
+                <div className="t-caption mb-0.5">Projected</div>
+                <div className="font-display text-sm text-[var(--color-text)] num">
+                  {toDisplayDate(goal.projectedDate)}
                 </div>
-                <div className="font-display text-xs text-[var(--color-text-muted)]">
+                <div className="t-caption num">
                   {formatProjectedDate()}
                 </div>
               </div>
@@ -215,35 +238,27 @@ export const GoalCard = ({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <div className="font-display text-[10px] tracking-widest text-[var(--color-text-muted)] mb-0.5">TARGET DATE</div>
-                <div className="font-display text-sm text-[var(--color-text)]">
-                  {new Date(goal.targetDate).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })}
+                <div className="t-caption mb-0.5">Target date</div>
+                <div className="font-display text-sm text-[var(--color-text)] num">
+                  {toDisplayDate(goal.targetDate)}
                 </div>
               </div>
               <div>
-                <div className="font-display text-[10px] tracking-widest text-[var(--color-text-muted)] mb-0.5">CREATED</div>
-                <div className="font-display text-sm text-[var(--color-text)]">
-                  {new Date(goal.createdAt).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })}
+                <div className="t-caption mb-0.5">Created</div>
+                <div className="font-display text-sm text-[var(--color-text)] num">
+                  {toDisplayDate(goal.createdAt)}
                 </div>
               </div>
               {goal.variant && (
                 <div>
-                  <div className="font-display text-[10px] tracking-widest text-[var(--color-text-muted)] mb-0.5">VARIANT</div>
-                  <div className="font-display text-sm text-[var(--color-text)]">{goal.variant}</div>
+                  <div className="t-caption mb-0.5">Variant</div>
+                  <div className="font-display text-sm text-[var(--color-text)] num">{goal.variant}</div>
                 </div>
               )}
               {goal.reps && (
                 <div>
-                  <div className="font-display text-[10px] tracking-widest text-[var(--color-text-muted)] mb-0.5">REPS</div>
-                  <div className="font-display text-sm text-[var(--color-text)]">
+                  <div className="t-caption mb-0.5">Reps</div>
+                  <div className="font-display text-sm text-[var(--color-text)] num">
                     {goal.reps === 1 ? '1RM' : `${goal.reps}RM`}
                   </div>
                 </div>
@@ -256,17 +271,17 @@ export const GoalCard = ({
                 {onAchieve && goal.progress >= 100 && (
                   <button
                     onClick={() => onAchieve(goal)}
-                    className="flex-1 py-2.5 px-3 bg-[var(--color-success)] hover:opacity-90 active:scale-[0.98] text-[var(--color-bg)] font-display text-sm tracking-widest transition-all"
+                    className="flex-1 py-2.5 px-3 bg-[var(--color-success)] hover:opacity-90 rounded-sm text-[var(--color-bg)] text-sm font-semibold transition-all"
                   >
-                    ACHIEVED
+                    Mark achieved
                   </button>
                 )}
                 {onEdit && (
                   <button
                     onClick={() => onEdit(goal)}
-                    className="flex-1 py-2.5 px-3 bg-transparent hover:bg-[var(--color-surface-elevated)] active:scale-[0.98] text-[var(--color-text)] font-display text-sm tracking-widest transition-all border border-[var(--color-border-strong)]"
+                    className="flex-1 py-2.5 px-3 bg-transparent hover:bg-[var(--color-surface-elevated)] rounded-sm text-[var(--color-text)] text-sm font-semibold transition-all border border-[var(--color-border-strong)]"
                   >
-                    EDIT
+                    Edit
                   </button>
                 )}
               </div>

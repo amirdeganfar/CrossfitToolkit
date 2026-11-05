@@ -1,13 +1,16 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search as SearchIcon, Loader2, Dumbbell, Timer, Activity, Repeat } from 'lucide-react';
+import { Search as SearchIcon, Dumbbell, Timer, Activity, Repeat } from 'lucide-react';
+import { EmptyState } from '../components/EmptyState';
+import { Skeleton, SkeletonRows } from '../components/Skeleton';
 import { useCatalogStore } from '../stores/catalogStore';
 import { useInitialize } from '../hooks/useInitialize';
 import { PlateBadge } from '../components/PlateBadge';
 import { categoryColorVar } from '../utils/categoryColors';
+import { getScoreTypeDef } from '../config/scoreTypes';
 import type { Category } from '../types/catalog';
 
-const CATEGORIES: (Category | 'All')[] = ['All', 'Benchmark', 'Lift', 'Monostructural', 'Skill'];
+const CATEGORIES: (Category | 'All')[] = ['All', 'Benchmark', 'Lift', 'Monostructural', 'Skill', 'Custom'];
 
 const GLYPH: Record<Category, typeof Dumbbell> = {
   Lift: Dumbbell,
@@ -46,7 +49,8 @@ export const Search = () => {
       );
     }
 
-    return items.sort((a, b) => {
+    // Copy before sorting — never mutate the store's array in place.
+    return [...items].sort((a, b) => {
       if (a.isFavorite && !b.isFavorite) return -1;
       if (!a.isFavorite && b.isFavorite) return 1;
       return a.name.localeCompare(b.name);
@@ -59,8 +63,13 @@ export const Search = () => {
 
   if (!isInitialized || isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 text-[var(--color-primary)] animate-spin" />
+      <div className="space-y-4" aria-busy="true">
+        <Skeleton className="h-8 w-20" />
+        <Skeleton className="h-12 w-full rounded-md" />
+        <div className="flex gap-2">
+          {[56, 88, 48, 120].map((w) => <Skeleton key={w} className="h-8 rounded-full" style={{ width: w }} />)}
+        </div>
+        <SkeletonRows count={6} label="Loading catalog" />
       </div>
     );
   }
@@ -68,7 +77,7 @@ export const Search = () => {
   return (
     <div className="space-y-4">
       {/* Title */}
-      <h1 className="font-display-black text-[30px] text-[var(--color-text)]">Catalog</h1>
+      <h1 className="t-title">Log</h1>
 
       {/* Search input — dark field */}
       <div className="relative">
@@ -78,9 +87,8 @@ export const Search = () => {
           placeholder="Search benchmarks, lifts, skills..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full rounded-2xl bg-[var(--color-input)] border border-[var(--color-input-border)] pl-10 pr-4 py-3 text-[15px] text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] hover:border-[var(--color-input-border-hover)] focus:outline-none focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_var(--color-focus-ring)] transition-colors"
+          className="field w-full !rounded-md pl-10 pr-4 py-3 text-[15px]"
           aria-label="Search catalog"
-          autoFocus
         />
       </div>
 
@@ -92,10 +100,10 @@ export const Search = () => {
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`flex-shrink-0 rounded-full px-4 py-1.5 text-[13px] font-semibold whitespace-nowrap transition-transform active:scale-95 border ${
+              className={`flex-shrink-0 rounded-full px-4 min-h-[36px] text-[13px] font-semibold whitespace-nowrap border ${
                 isActive
-                  ? 'bg-[var(--color-primary)] text-[var(--color-text)] border-transparent'
-                  : 'bg-transparent text-[var(--color-text-muted)] border-[var(--color-border-strong)]'
+                  ? 'chip-selected'
+                  : 'bg-transparent text-[var(--color-text-muted)] border-[var(--color-border-strong)] hover:text-[var(--color-text)]'
               }`}
               aria-label={`Filter by ${category}`}
               aria-pressed={isActive}
@@ -107,27 +115,27 @@ export const Search = () => {
       </div>
 
       {/* Results count */}
-      <div className="label-eyebrow">
-        {filteredItems.length} {filteredItems.length === 1 ? 'Item' : 'Items'}
+      <div className="t-caption num">
+        {filteredItems.length} {filteredItems.length === 1 ? 'item' : 'items'}
         {selectedCategory !== 'All' && ` · ${selectedCategory}`}
       </div>
 
       {/* Catalog list — plate cards */}
       {filteredItems.length > 0 ? (
-        <div>
+        <div className="space-y-2">
           {filteredItems.map((item) => {
             const Icon = GLYPH[item.category] ?? Dumbbell;
             return (
               <div
                 key={item.id}
-                className="relative flex items-center gap-[14px] w-full rounded-2xl mb-[10px] px-[14px] py-[13px] transition-transform active:scale-[0.98]"
+                className="relative flex items-center gap-3 w-full rounded-lg px-4 py-3 transition-[scale] duration-100 active:scale-[0.97]"
                 style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
               >
                 {/* full-card tap target for navigation (sibling to the favorite button, not a parent) */}
                 <button
                   type="button"
                   onClick={() => handleItemClick(item.id)}
-                  className="absolute inset-0 rounded-2xl"
+                  className="absolute inset-0 rounded-lg active:scale-100"
                   aria-label={`View ${item.name}`}
                 />
                 <div className="relative z-10">
@@ -143,7 +151,7 @@ export const Search = () => {
                   <div className="font-display text-base text-[var(--color-text)] truncate">{item.name}</div>
                   <div className="text-xs mt-0.5">
                     <span style={{ color: categoryColorVar(item.category) }}>{item.category}</span>
-                    <span style={{ color: 'var(--color-text-muted)' }}> · {item.scoreType}</span>
+                    <span style={{ color: 'var(--color-text-muted)' }}> · {getScoreTypeDef(item.scoreType).name}</span>
                   </div>
                 </div>
               </div>
@@ -151,17 +159,17 @@ export const Search = () => {
           })}
         </div>
       ) : (
-        <div className="py-12 text-center">
-          <Dumbbell className="w-10 h-10 mx-auto mb-3 text-[var(--color-border-strong)]" />
-          <p className="font-display text-lg text-[var(--color-text)] mb-1">No results</p>
-          <p className="text-[13px] text-[var(--color-text-muted)]">
-            {searchQuery
-              ? `No match for "${searchQuery}"${selectedCategory !== 'All' ? ` in ${selectedCategory}` : ''}`
+        <EmptyState
+          icon={SearchIcon}
+          message={
+            searchQuery
+              ? `Nothing matches "${searchQuery}"${selectedCategory !== 'All' ? ` in ${selectedCategory}` : ''}. Try a shorter search.`
               : selectedCategory !== 'All'
-                ? `No ${selectedCategory} items`
-                : 'Catalog empty'}
-          </p>
-        </div>
+                ? `No ${selectedCategory} items yet.`
+                : 'The catalog is empty.'
+          }
+          action={searchQuery || selectedCategory !== 'All' ? { label: 'Clear filters', onClick: () => { setSearchQuery(''); setSelectedCategory('All'); } } : undefined}
+        />
       )}
     </div>
   );

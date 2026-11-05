@@ -16,7 +16,7 @@ interface LoadedBarButtonProps {
 }
 
 export function LoadedBarButton({ children, onClick, variant = 'pill', type = 'button', disabled = false, className = '' }: LoadedBarButtonProps) {
-  const radius = variant === 'pill' ? 9999 : 14;
+  const radius = variant === 'pill' ? 9999 : 'var(--radius-md)';
   return (
     <button
       type={type}

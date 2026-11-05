@@ -23,9 +23,9 @@ export function Barbell({ current, goal, lowerIsBetter = false }: BarbellProps) 
       <div className="absolute left-0 h-[5px] rounded-full bg-white" style={{ width: `${pct}%` }} />
       {/* plate cluster at current load */}
       <div className="absolute flex items-center gap-[2px]" style={{ left: `${pct}%`, transform: 'translateX(-100%)' }}>
-        <span className="h-4 w-[5px] rounded-[2px]" style={{ background: 'var(--plate-green)', boxShadow: '0 0 8px #34C75999' }} />
-        <span className="h-[22px] w-[5px] rounded-[2px]" style={{ background: 'var(--plate-blue)', boxShadow: '0 0 8px #0A84FF99' }} />
-        <span className="h-7 w-[5px] rounded-[2px]" style={{ background: 'var(--plate-red)', boxShadow: '0 0 8px #FF3B3099' }} />
+        <span className="h-4 w-[5px] rounded-[2px]" style={{ background: 'var(--plate-green)', boxShadow: '0 0 8px color-mix(in srgb, var(--plate-green) 60%, transparent)' }} />
+        <span className="h-[22px] w-[5px] rounded-[2px]" style={{ background: 'var(--plate-blue)', boxShadow: '0 0 8px color-mix(in srgb, var(--plate-blue) 60%, transparent)' }} />
+        <span className="h-7 w-[5px] rounded-[2px]" style={{ background: 'var(--plate-red)', boxShadow: '0 0 8px color-mix(in srgb, var(--plate-red) 60%, transparent)' }} />
       </div>
       {/* goal marker */}
       <div className="absolute right-0 h-5 w-[2px]" style={{ background: 'var(--color-text-dim)' }} />

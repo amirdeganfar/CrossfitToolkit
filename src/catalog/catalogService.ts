@@ -18,11 +18,10 @@ import skills from './skills.json';
 // Type for the raw JSON data (without runtime fields)
 type CatalogItemData = Omit<CatalogItem, 'isBuiltin' | 'isFavorite' | 'createdAt'>;
 
-/**
- * Get all builtin catalog items
- * Future: fetch('/api/catalog')
- */
-export const getBuiltinCatalog = (): CatalogItem[] => {
+let cachedCatalog: CatalogItem[] | null = null;
+let cachedById: Map<string, CatalogItem> | null = null;
+
+const buildCatalog = (): CatalogItem[] => {
   const merged = [
     ...(girls as CatalogItemData[]),
     ...(heroes as CatalogItemData[]),
@@ -49,11 +48,24 @@ export const getBuiltinCatalog = (): CatalogItem[] => {
 };
 
 /**
+ * Get all builtin catalog items (built once, then cached).
+ * Returns shallow copies so callers can't mutate the cache.
+ * Future: fetch('/api/catalog')
+ */
+export const getBuiltinCatalog = (): CatalogItem[] => {
+  cachedCatalog ??= buildCatalog();
+  return cachedCatalog.map((item) => ({ ...item }));
+};
+
+/**
  * Get a builtin catalog item by ID
  * Future: fetch(`/api/catalog/${id}`)
  */
 export const getBuiltinCatalogItemById = (id: string): CatalogItem | undefined => {
-  return getBuiltinCatalog().find((item) => item.id === id);
+  cachedCatalog ??= buildCatalog();
+  cachedById ??= new Map(cachedCatalog.map((item) => [item.id, item]));
+  const item = cachedById.get(id);
+  return item ? { ...item } : undefined;
 };
 
 /**

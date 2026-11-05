@@ -3,7 +3,7 @@ import { useClockStore } from '../../stores/clockStore';
 import { initializeAudio } from '../../utils/audioUtils';
 
 /**
- * Timer control buttons — tactical yellow/dark style
+ * Timer control buttons — primary-accent/dark style
  */
 export const TimerControls = () => {
   const status = useClockStore((state) => state.status);
@@ -15,7 +15,7 @@ export const TimerControls = () => {
   const handleStart = () => { initializeAudio(); start(); };
   const handleResume = () => { initializeAudio(); resume(); };
 
-  const baseBtn = 'flex items-center justify-center gap-2 font-display text-lg tracking-widest transition-all active:scale-[0.97]';
+  const baseBtn = 'flex items-center justify-center gap-2 rounded-md text-[17px] font-bold transition-all active:scale-[0.97]';
 
   return (
     <div className="flex gap-3">
@@ -26,7 +26,7 @@ export const TimerControls = () => {
           className={`${baseBtn} flex-1 py-4 bg-[var(--color-primary)] text-[var(--color-text)] hover:opacity-90`}
         >
           <Play className="w-5 h-5" fill="currentColor" />
-          START
+          Start
         </button>
       )}
 
@@ -39,14 +39,14 @@ export const TimerControls = () => {
             className={`${baseBtn} flex-1 py-4 bg-[var(--color-warning)] text-[var(--color-bg)] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed`}
           >
             <Pause className="w-5 h-5" />
-            PAUSE
+            Pause
           </button>
           <button
             onClick={reset}
             className={`${baseBtn} px-6 py-4 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border-strong)] text-[var(--color-text)] border border-[var(--color-border-strong)]`}
           >
             <Square className="w-5 h-5" fill="currentColor" />
-            STOP
+            Stop
           </button>
         </>
       )}
@@ -59,14 +59,14 @@ export const TimerControls = () => {
             className={`${baseBtn} flex-1 py-4 bg-[var(--color-primary)] text-[var(--color-text)] hover:opacity-90`}
           >
             <Play className="w-5 h-5" fill="currentColor" />
-            RESUME
+            Resume
           </button>
           <button
             onClick={reset}
             className={`${baseBtn} px-6 py-4 bg-[var(--color-surface-elevated)] hover:bg-[var(--color-border-strong)] text-[var(--color-text)] border border-[var(--color-border-strong)]`}
           >
             <RotateCcw className="w-5 h-5" />
-            RESET
+            Reset
           </button>
         </>
       )}
@@ -78,7 +78,7 @@ export const TimerControls = () => {
           className={`${baseBtn} flex-1 py-4 bg-[var(--color-primary)] text-[var(--color-text)] hover:opacity-90`}
         >
           <RotateCcw className="w-5 h-5" />
-          NEW ROUND
+          New round
         </button>
       )}
     </div>

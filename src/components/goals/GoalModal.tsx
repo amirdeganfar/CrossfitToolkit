@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId, useRef } from 'react';
 import { X } from 'lucide-react';
 import type { CatalogItem, Variant, ScoreType } from '../../types/catalog';
 import type { Goal, CreateGoalInput, UpdateGoalInput } from '../../types/goal';
@@ -7,6 +7,11 @@ import { DatePicker } from '../DatePicker';
 import { TimeInput } from '../TimeInput';
 import { parseResultToValue, getResultPlaceholder } from '../../utils/resultParser';
 import { getScoreModes, getScoreTypeDef } from '../../config/scoreTypes';
+import { supportsDistance } from '../../utils/itemMetrics';
+import { toLocalDateString, parseLocalDate } from '../../utils/date';
+import { convertWeight, convertDistance, formatMeters } from '../../utils/units';
+import { useCatalogStore } from '../../stores/catalogStore';
+import { useModalA11y } from '../../hooks/useModalA11y';
 import * as db from '../../db';
 
 interface GoalModalProps {
@@ -27,36 +32,93 @@ const VARIANTS: { value: Variant; label: string }[] = [
 
 const REPS_OPTIONS = [1, 2, 3, 5, 10];
 
+/** Item's effective score type for a goal pool (multi-mode → chosen pool). */
+const resolveScoreType = (item: CatalogItem | null, scoreType: ScoreType): ScoreType =>
+  item && getScoreModes(item).length <= 1 ? item.scoreType : scoreType;
+
+/** Time goals on distance items (e.g. Run, Row) target a specific distance. */
+const needsDistance = (item: CatalogItem | null, scoreType: ScoreType): boolean =>
+  !!item && getScoreModes(item).length <= 1 && scoreType === 'Time' && supportsDistance(item);
+
+/** Stored goal target → editable display string in the current units. */
+const formatTargetForEdit = (
+  goal: Goal,
+  scoreType: ScoreType,
+  weightUnit: 'kg' | 'lb',
+  distanceUnit: 'm' | 'ft'
+): string => {
+  if (scoreType === 'Time' || scoreType === 'TimeForReps') {
+    const minutes = Math.floor(goal.targetValue / 60);
+    const seconds = Math.floor(goal.targetValue % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  }
+  if (scoreType === 'Load') {
+    return String(Math.round(convertWeight(goal.targetValue, goal.unit, weightUnit) * 10) / 10);
+  }
+  if (scoreType === 'Distance') {
+    return String(Math.round(convertDistance(goal.targetValue, goal.distanceUnit, distanceUnit)));
+  }
+  return String(goal.targetValue);
+};
+
+const defaultTargetDate = () => {
+  // Default to 3 months from now
+  const date = new Date();
+  date.setMonth(date.getMonth() + 3);
+  return date;
+};
+
 export const GoalModal = ({
   items,
   editGoal,
   preselectedItem,
   preselectedScoreType,
-  weightUnit = 'kg',
+  weightUnit: weightUnitProp,
   onSave,
   onClose,
 }: GoalModalProps) => {
-  const [selectedItem, setSelectedItem] = useState<CatalogItem | null>(
-    preselectedItem || null
-  );
-  const [targetValue, setTargetValue] = useState('');
-  const [targetDate, setTargetDate] = useState<Date>(() => {
-    // Default to 3 months from now
-    const date = new Date();
-    date.setMonth(date.getMonth() + 3);
-    return date;
-  });
-  const [variant, setVariant] = useState<Variant>(null);
-  const [reps, setReps] = useState<number>(1);
+  const settings = useCatalogStore((state) => state.settings);
+  const weightUnit: 'kg' | 'lb' = weightUnitProp === 'lb' || weightUnitProp === 'kg' ? weightUnitProp : settings.weightUnit;
+  const distanceUnit = settings.distanceUnit;
+
+  const editItem = editGoal ? items.find((i) => i.id === editGoal.itemId) ?? null : null;
+  const initialItem = editGoal ? editItem : preselectedItem || null;
   // For multi-mode items: which score pool the goal targets. Defaults to the
   // pool the modal was opened for, else the item's primary score type.
-  const [scoreType, setScoreType] = useState<ScoreType>(
-    preselectedScoreType ?? preselectedItem?.scoreType ?? 'Reps'
+  const initialScoreType: ScoreType =
+    (editGoal ? editGoal.scoreTypeId ?? editItem?.scoreType : undefined) ??
+    preselectedScoreType ??
+    initialItem?.scoreType ??
+    'Reps';
+
+  const [selectedItem, setSelectedItem] = useState<CatalogItem | null>(initialItem);
+  const [scoreType, setScoreType] = useState<ScoreType>(initialScoreType);
+  const [targetValue, setTargetValue] = useState(() =>
+    editGoal
+      ? formatTargetForEdit(editGoal, resolveScoreType(initialItem, initialScoreType), weightUnit, distanceUnit)
+      : ''
   );
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [targetDate, setTargetDate] = useState<Date>(() =>
+    editGoal ? parseLocalDate(editGoal.targetDate) : defaultTargetDate()
+  );
+  const [variant, setVariant] = useState<Variant>(() =>
+    editGoal ? editGoal.variant || null : initialItem?.category === 'Benchmark' ? 'Rx' : null
+  );
+  const [reps, setReps] = useState<number>(editGoal?.reps || 1);
+  const [distance, setDistance] = useState<string>(editGoal?.distance ? String(editGoal.distance) : '');
+  const [loggedDistances, setLoggedDistances] = useState<number[]>([]);
+  const [showAdvanced, setShowAdvanced] = useState(!!(editGoal?.variant || editGoal?.reps));
   const [currentBest, setCurrentBest] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useModalA11y(dialogRef, onClose);
+  const titleId = useId();
+  const itemFieldId = useId();
+  const targetFieldId = useId();
+  const distanceFieldId = useId();
+  const dateFieldId = useId();
 
   const isEditing = !!editGoal;
 
@@ -64,58 +126,45 @@ export const GoalModal = ({
   const isMultiMode = modes.length > 1;
   // The score type the goal targets — the chosen pool for multi-mode items,
   // otherwise the item's single score type.
-  const effectiveScoreType: ScoreType = selectedItem
-    ? isMultiMode
-      ? scoreType
-      : selectedItem.scoreType
-    : scoreType;
+  const effectiveScoreType = resolveScoreType(selectedItem, scoreType);
   const isTimeInput = effectiveScoreType === 'Time' || effectiveScoreType === 'TimeForReps';
+  const showDistanceInput = needsDistance(selectedItem, effectiveScoreType);
+  const distanceMeters = showDistanceInput ? parseFloat(distance) : NaN;
+  const goalDistance = Number.isFinite(distanceMeters) && distanceMeters > 0 ? distanceMeters : undefined;
 
-  // Load edit goal data
+  // Logged distances for distance items — offered as quick picks, and the
+  // first one becomes the default distance when creating a goal.
+  const itemId = selectedItem?.id;
   useEffect(() => {
-    if (editGoal) {
-      const item = items.find((i) => i.id === editGoal.itemId);
-      setSelectedItem(item || null);
+    if (!itemId || !showDistanceInput) return;
+    let cancelled = false;
+    db.getBestPRsByDistance(itemId)
+      .then((byDistance) => {
+        if (cancelled) return;
+        const distances = [...byDistance.keys()].sort((a, b) => a - b);
+        setLoggedDistances(distances);
+        if (distances.length > 0) setDistance((prev) => prev || String(distances[0]));
+      })
+      .catch((err) => console.error('[GoalModal] Error fetching distances:', err));
+    return () => {
+      cancelled = true;
+    };
+  }, [itemId, showDistanceInput]);
 
-      const goalScoreType = editGoal.scoreTypeId ?? item?.scoreType;
-      if (goalScoreType) setScoreType(goalScoreType);
-
-      // Convert target value back to display format
-      if (item && goalScoreType) {
-        if (goalScoreType === 'Time' || goalScoreType === 'TimeForReps') {
-          // Convert seconds to MM:SS
-          const minutes = Math.floor(editGoal.targetValue / 60);
-          const seconds = Math.floor(editGoal.targetValue % 60);
-          setTargetValue(`${minutes}:${seconds.toString().padStart(2, '0')}`);
-        } else {
-          setTargetValue(String(editGoal.targetValue));
-        }
-      }
-
-      setTargetDate(new Date(editGoal.targetDate + 'T00:00:00'));
-      setVariant(editGoal.variant || null);
-      setReps(editGoal.reps || 1);
-      setShowAdvanced(!!(editGoal.variant || editGoal.reps));
-    }
-  }, [editGoal, items]);
-
-  // When the selected item changes (creating a goal), default the pool to the
-  // pre-scoped score type if provided, else the item's primary score type.
+  // Fetch current best PR for the selected item / pool. Stale responses (item
+  // or pool changed while loading) are ignored.
   useEffect(() => {
-    if (!editGoal && selectedItem) {
-      setScoreType(preselectedScoreType ?? selectedItem.scoreType);
-    }
-  }, [selectedItem, editGoal, preselectedScoreType]);
+    if (!selectedItem) return;
+    let cancelled = false;
 
-  // Fetch current best PR when item changes
-  useEffect(() => {
     const fetchCurrentBest = async () => {
-      if (!selectedItem) {
-        setCurrentBest(null);
-        return;
-      }
-
       try {
+        if (showDistanceInput) {
+          const byDistance = await db.getBestPRsByDistance(selectedItem.id);
+          if (cancelled) return;
+          setCurrentBest(goalDistance !== undefined ? byDistance.get(goalDistance)?.result ?? null : null);
+          return;
+        }
         const opts = isMultiMode
           ? {
               scoreTypeId: effectiveScoreType,
@@ -124,31 +173,33 @@ export const GoalModal = ({
             }
           : undefined;
         const bestPR = await db.getBestPR(selectedItem.id, variant || undefined, opts);
-        if (bestPR) {
-          setCurrentBest(bestPR.result);
-        } else {
-          setCurrentBest(null);
-        }
+        if (!cancelled) setCurrentBest(bestPR ? bestPR.result : null);
       } catch (err) {
         console.error('[GoalModal] Error fetching best PR:', err);
-        setCurrentBest(null);
+        if (!cancelled) setCurrentBest(null);
       }
     };
 
     fetchCurrentBest();
-  }, [selectedItem, variant, scoreType]);
-
-  // Set default variant when item changes
-  useEffect(() => {
-    if (selectedItem?.category === 'Benchmark' && !editGoal) {
-      setVariant('Rx');
-    } else if (selectedItem?.category !== 'Benchmark') {
-      setVariant(null);
-    }
-  }, [selectedItem, editGoal]);
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedItem, variant, effectiveScoreType, isMultiMode, showDistanceInput, goalDistance]);
 
   const showVariantSelector = selectedItem?.category === 'Benchmark';
   const showRepsSelector = selectedItem?.scoreType === 'Load';
+
+  // Changing the item resets everything derived from it: pool, target, variant, distance.
+  const handleItemChange = (item: CatalogItem | null) => {
+    setSelectedItem(item);
+    setScoreType(preselectedScoreType ?? item?.scoreType ?? 'Reps');
+    setTargetValue('');
+    setVariant(item?.category === 'Benchmark' ? 'Rx' : null);
+    setDistance('');
+    setLoggedDistances([]);
+    setCurrentBest(null);
+    setError(null);
+  };
 
   // Switching pool changes the target format — clear the entered value.
   const handleScoreTypeChange = (next: ScoreType) => {
@@ -178,10 +229,14 @@ export const GoalModal = ({
       return;
     }
 
-    // Validate date is in the future
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    if (targetDate < today) {
+    if (showDistanceInput && goalDistance === undefined) {
+      setError('Please enter a distance');
+      return;
+    }
+
+    // Validate date is not in the past (compare local calendar dates)
+    const targetDateStr = toLocalDateString(targetDate);
+    if (targetDateStr < toLocalDateString(new Date())) {
       setError('Target date must be in the future');
       return;
     }
@@ -189,8 +244,6 @@ export const GoalModal = ({
     setIsSubmitting(true);
 
     try {
-      const targetDateStr = targetDate.toISOString().split('T')[0];
-
       // Bind the goal to a score pool for multi-mode items (constraint from the
       // item's default). Undefined for single-mode items — behavior unchanged.
       const poolScoreType = isMultiMode ? effectiveScoreType : undefined;
@@ -208,6 +261,10 @@ export const GoalModal = ({
           scoreTypeId: poolScoreType,
           timeCap: poolTimeCap,
           targetReps: poolTargetReps,
+          distance: goalDistance,
+          // Target was entered in the current display units.
+          unit: weightUnit,
+          distanceUnit,
         };
         await onSave({ id: editGoal.id, updates });
       } else {
@@ -220,6 +277,9 @@ export const GoalModal = ({
           scoreTypeId: poolScoreType,
           timeCap: poolTimeCap,
           targetReps: poolTargetReps,
+          distance: goalDistance,
+          unit: weightUnit,
+          distanceUnit,
         };
         await onSave(input);
       }
@@ -248,7 +308,7 @@ export const GoalModal = ({
       case 'RepsInTime':
         return 'Target Reps';
       case 'Distance':
-        return 'Target Distance (m)';
+        return `Target Distance (${distanceUnit})`;
       case 'Calories':
         return 'Target Calories';
       case 'Rounds+Reps':
@@ -259,28 +319,34 @@ export const GoalModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="sheet-root">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="sheet-backdrop"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-lg bg-[var(--color-surface)] border-t sm:border border-[var(--color-border)] sm:rounded-lg overflow-hidden animate-slide-up max-h-[90vh] overflow-y-auto">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className="sheet"
+      >
         {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-1 sm:hidden">
-          <div className="w-10 h-1 bg-[var(--color-border-strong)] rounded-full" />
-        </div>
+        <div className="sheet-handle" aria-hidden="true" />
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)]">
-          <h2 className="font-display text-xl text-[var(--color-text)]">
-            {isEditing ? 'EDIT GOAL' : 'SET GOAL'}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] sticky top-0 z-10 bg-[var(--color-surface)]">
+          <h2 id={titleId} className="t-section">
+            {isEditing ? 'Edit goal' : 'Set goal'}
           </h2>
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 rounded-sm hover:bg-[var(--color-surface-elevated)] active:scale-95 transition-all"
+            className="p-2 -mr-2 rounded-full hover:bg-[var(--color-surface-elevated)]"
             aria-label="Close modal"
           >
             <X className="w-5 h-5 text-[var(--color-text-muted)]" />
@@ -291,14 +357,16 @@ export const GoalModal = ({
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           {/* Item selector */}
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-1">
-              Select Item
+            <label id={itemFieldId} className="block label-eyebrow mb-1">
+              Item
             </label>
             <ItemSelector
               items={items}
               value={selectedItem}
-              onChange={setSelectedItem}
+              onChange={handleItemChange}
               disabled={isEditing}
+              clearable={!isEditing}
+              labelledBy={itemFieldId}
               placeholder="Search for an item..."
             />
           </div>
@@ -306,8 +374,8 @@ export const GoalModal = ({
           {/* Score-type picker — only for multi-mode items */}
           {selectedItem && isMultiMode && (
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-2">
-                Goal Type
+              <label className="block label-eyebrow mb-2">
+                Goal type
               </label>
               <div className="flex flex-wrap gap-2">
                 {modes.map((mode) => (
@@ -315,9 +383,10 @@ export const GoalModal = ({
                     key={mode}
                     type="button"
                     onClick={() => handleScoreTypeChange(mode)}
-                    className={`px-4 py-2.5 rounded-sm border font-display text-sm tracking-widest transition-colors active:scale-95 ${
+                    aria-pressed={effectiveScoreType === mode}
+                    className={`px-4 py-2.5 rounded-sm border text-sm font-semibold transition-colors ${
                       effectiveScoreType === mode
-                        ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-[var(--color-text)]'
+                        ? 'chip-selected'
                         : 'bg-[var(--color-input)] border-[var(--color-input-border)] text-[var(--color-text-muted)] hover:border-[var(--color-input-border-hover)]'
                     }`}
                   >
@@ -328,20 +397,61 @@ export const GoalModal = ({
             </div>
           )}
 
+          {/* Distance — Time goals on distance items target one distance */}
+          {selectedItem && showDistanceInput && (
+            <div>
+              <label htmlFor={distanceFieldId} className="block label-eyebrow mb-1">
+                Distance (m)
+              </label>
+              <input
+                id={distanceFieldId}
+                type="number"
+                min="1"
+                step="any"
+                inputMode="decimal"
+                value={distance}
+                onChange={(e) => setDistance(e.target.value)}
+                placeholder="e.g., 400"
+                className="field w-full px-3 py-2"
+              />
+              {loggedDistances.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {loggedDistances.map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => setDistance(String(d))}
+                      aria-pressed={goalDistance === d}
+                      className={`px-3 py-1.5 rounded-sm border text-[13px] font-semibold num transition-colors ${
+                        goalDistance === d
+                          ? 'chip-selected'
+                          : 'bg-[var(--color-input)] border-[var(--color-input-border)] text-[var(--color-text-muted)] hover:border-[var(--color-input-border-hover)]'
+                      }`}
+                    >
+                      {formatMeters(d, distanceUnit)}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Target value input */}
           {selectedItem && (
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-1">
+              <label htmlFor={targetFieldId} className="block label-eyebrow mb-1">
                 {getTargetLabel()}
               </label>
               {isTimeInput ? (
                 <TimeInput
+                  id={targetFieldId}
                   value={targetValue}
                   onChange={setTargetValue}
                   autoFocus={!isEditing}
                 />
               ) : (
                 <input
+                  id={targetFieldId}
                   type="text"
                   value={targetValue}
                   onChange={(e) => setTargetValue(e.target.value)}
@@ -360,13 +470,14 @@ export const GoalModal = ({
 
           {/* Target date */}
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-1">
-              Target Date
+            <label id={dateFieldId} className="block label-eyebrow mb-1">
+              Target date
             </label>
             <DatePicker
               value={targetDate}
               onChange={setTargetDate}
               minDate={new Date()}
+              labelledBy={dateFieldId}
             />
           </div>
 
@@ -376,7 +487,8 @@ export const GoalModal = ({
               <button
                 type="button"
                 onClick={() => setShowAdvanced(!showAdvanced)}
-                className="text-sm text-[var(--color-primary)] hover:underline"
+                aria-expanded={showAdvanced}
+                className="text-sm font-medium text-[var(--color-text-muted)] underline underline-offset-2 hover:text-[var(--color-text)]"
               >
                 {showAdvanced ? 'Hide advanced options' : 'Show advanced options'}
               </button>
@@ -389,7 +501,7 @@ export const GoalModal = ({
               {/* Variant selector */}
               {showVariantSelector && (
                 <div>
-                  <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-2">
+                  <label className="block label-eyebrow mb-2">
                     Variant
                   </label>
                   <div className="flex gap-2">
@@ -398,9 +510,10 @@ export const GoalModal = ({
                         key={v.value}
                         type="button"
                         onClick={() => setVariant(v.value)}
-                        className={`flex-1 px-4 py-2.5 rounded-sm border font-display text-sm tracking-widest transition-colors active:scale-95 ${
+                        aria-pressed={variant === v.value}
+                        className={`flex-1 px-4 py-2.5 rounded-sm border text-sm font-semibold transition-colors ${
                           variant === v.value
-                            ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white'
+                            ? 'chip-selected'
                             : 'bg-[var(--color-bg)] border-[var(--color-border-strong)] text-[var(--color-text-muted)] hover:border-[var(--color-text-muted)]'
                         }`}
                       >
@@ -414,8 +527,8 @@ export const GoalModal = ({
               {/* Reps selector */}
               {showRepsSelector && (
                 <div>
-                  <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-2">
-                    Rep Scheme
+                  <label className="block label-eyebrow mb-2">
+                    Rep scheme
                   </label>
                   <div className="flex gap-2 flex-wrap">
                     {REPS_OPTIONS.map((r) => (
@@ -423,9 +536,10 @@ export const GoalModal = ({
                         key={r}
                         type="button"
                         onClick={() => setReps(r)}
-                        className={`px-4 py-2.5 rounded-sm border font-display text-sm tracking-widest transition-colors active:scale-95 ${
+                        aria-pressed={reps === r}
+                        className={`px-4 py-2.5 rounded-sm border text-sm font-semibold transition-colors ${
                           reps === r
-                            ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white'
+                            ? 'chip-selected'
                             : 'bg-[var(--color-bg)] border-[var(--color-border-strong)] text-[var(--color-text-muted)] hover:border-[var(--color-text-muted)]'
                         }`}
                       >
@@ -440,7 +554,14 @@ export const GoalModal = ({
 
           {/* Error message */}
           {error && (
-            <div className="px-3 py-2 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+            <div
+              role="alert"
+              className="px-3 py-2 rounded-sm text-sm text-[var(--color-danger)] border"
+              style={{
+                background: 'color-mix(in srgb, var(--color-danger) 10%, transparent)',
+                borderColor: 'color-mix(in srgb, var(--color-danger) 30%, transparent)',
+              }}
+            >
               {error}
             </div>
           )}
@@ -449,9 +570,9 @@ export const GoalModal = ({
           <button
             type="submit"
             disabled={isSubmitting || !selectedItem || !targetValue.trim()}
-            className="w-full py-4 bg-[var(--color-primary)] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed rounded-sm text-white font-display tracking-widest text-base transition-all active:scale-[0.98]"
+            className="w-full py-4 bg-[var(--color-primary)] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed rounded-md text-white font-bold text-[17px]"
           >
-            {isSubmitting ? 'SAVING...' : isEditing ? 'UPDATE GOAL' : 'CREATE GOAL'}
+            {isSubmitting ? 'Saving…' : isEditing ? 'Update goal' : 'Create goal'}
           </button>
         </form>
       </div>

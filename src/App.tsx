@@ -57,6 +57,8 @@ const App = () => {
           <Route path="goals" element={<Navigate to="/progress" replace />} />
           <Route path="item/:id" element={<ItemDetail />} />
           <Route path="settings" element={<Settings />} />
+          {/* Unknown paths go home */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
     </BrowserRouter>

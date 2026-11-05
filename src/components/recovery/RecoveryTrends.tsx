@@ -3,13 +3,15 @@
  *
  * Small multiples (one mini bar chart per metric) of the last ~14 training
  * check-ins: energy, soreness, and sleep over time. Single-hue marks — recessive
- * grey bars with the latest reading in the yellow accent — labels never rely on
+ * grey bars with the latest reading in the primary accent — labels never rely on
  * color alone. Metrics live on different scales, so they are three separate
  * charts (never a dual axis).
  */
 
 import { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Activity } from 'lucide-react';
+import { Skeleton } from '../Skeleton';
+import { EmptyState } from '../EmptyState';
 import { getRecentCheckIns } from '../../services/checkInService';
 import { useCheckInStore } from '../../stores/checkInStore';
 import { ENERGY_LABELS, SORENESS_LABELS, SLEEP_LABELS } from '../../config/recoveryScoring.config';
@@ -56,7 +58,7 @@ const BarTrend = ({ title, points }: { title: string; points: MetricPoint[] }) =
               className="flex-1 rounded-t-[3px] min-h-[3px]"
               style={{
                 height: `${Math.max(p.frac * 100, 6)}%`,
-                background: isLatest ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                background: isLatest ? 'var(--color-text)' : 'var(--color-text-muted)',
                 opacity: isLatest ? 1 : 0.45,
               }}
               title={`${p.date}: ${p.label}`}
@@ -85,9 +87,9 @@ export const RecoveryTrends = () => {
   if (checkIns === null) {
     return (
       <section aria-label="Recovery trends">
-        <div className="label-eyebrow mb-3">Recovery trends</div>
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-5 h-5 animate-spin text-[var(--color-text-muted)]" />
+        <h2 className="t-section mb-3">Recovery trends</h2>
+        <div className="card space-y-4" aria-busy="true">
+          {[0, 1, 2].map((i) => <div key={i} className="space-y-2"><Skeleton className="h-3 w-20" /><Skeleton className="h-12 w-full" /></div>)}
         </div>
       </section>
     );
@@ -102,12 +104,8 @@ export const RecoveryTrends = () => {
   if (training.length < 2) {
     return (
       <section aria-label="Recovery trends">
-        <div className="label-eyebrow mb-3">Recovery trends</div>
-        <div className="rounded-2xl p-4" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-          <p className="text-sm text-[var(--color-text-muted)]">
-            Not enough check-ins yet — log a few training days to see energy, soreness, and sleep trends.
-          </p>
-        </div>
+        <h2 className="t-section mb-3">Recovery trends</h2>
+        <EmptyState icon={Activity} message="Log a few training-day check-ins to see energy, soreness and sleep trends." />
       </section>
     );
   }
@@ -136,10 +134,10 @@ export const RecoveryTrends = () => {
   return (
     <section aria-label="Recovery trends">
       <div className="flex items-baseline justify-between mb-3">
-        <span className="label-eyebrow">Recovery trends</span>
-        <span className="text-xs text-[var(--color-text-muted)]">Last {training.length} check-ins</span>
+        <h2 className="t-section">Recovery trends</h2>
+        <span className="t-caption num">Last {training.length} check-ins</span>
       </div>
-      <div className="rounded-2xl p-4 space-y-4" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+      <div className="card space-y-4">
         {specs.map((s) => (
           <BarTrend key={s.key} title={s.title} points={s.points} />
         ))}

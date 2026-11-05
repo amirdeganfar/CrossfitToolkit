@@ -20,20 +20,20 @@ const trendConfig: Record<
   ahead: {
     icon: TrendingUp,
     label: 'Ahead',
-    colorClass: 'text-green-500',
-    bgClass: 'bg-green-500/10',
+    colorClass: 'text-[var(--color-success)]',
+    bgClass: 'bg-[var(--color-success)]/10',
   },
   on_track: {
     icon: Minus,
     label: 'On Track',
-    colorClass: 'text-yellow-500',
-    bgClass: 'bg-yellow-500/10',
+    colorClass: 'text-[var(--color-warning)]',
+    bgClass: 'bg-[var(--color-warning)]/10',
   },
   behind: {
     icon: TrendingDown,
     label: 'Behind',
-    colorClass: 'text-red-500',
-    bgClass: 'bg-red-500/10',
+    colorClass: 'text-[var(--color-danger)]',
+    bgClass: 'bg-[var(--color-danger)]/10',
   },
   no_data: {
     icon: HelpCircle,
@@ -63,7 +63,7 @@ export const TrendIndicator = ({
     >
       <Icon size={iconSize} aria-hidden="true" />
       {showLabel && (
-        <span className={`${textClass} font-display tracking-wider`}>{config.label.toUpperCase()}</span>
+        <span className={`${textClass} font-semibold`}>{config.label}</span>
       )}
     </div>
   );

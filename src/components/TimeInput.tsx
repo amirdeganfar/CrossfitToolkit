@@ -6,13 +6,19 @@ interface TimeInputProps {
   placeholder?: string;
   autoFocus?: boolean;
   className?: string;
+  /** id for the first input (lets an external <label htmlFor> target it). */
+  id?: string;
 }
+
+/** Highest value a field may hold: seconds always, minutes when hours are shown. */
+const MAX_SEXAGESIMAL = 59;
 
 export const TimeInput = ({
   value,
   onChange,
   autoFocus = false,
   className = '',
+  id,
 }: TimeInputProps) => {
   // Parse initial value (only on mount)
   const parseValue = useCallback((val: string) => {
@@ -40,8 +46,18 @@ export const TimeInput = ({
     return parsed.hours !== '' && parsed.hours !== '0';
   });
   
-  // Only parse on initial mount, don't sync from external value during editing
   const [fields, setFields] = useState(() => parseValue(value));
+
+  // Sync from the prop when the parent changes it externally (e.g. cleared on
+  // mode switch). Values we emitted ourselves are recorded in `syncedValue`, so
+  // the user's in-progress typing (e.g. unpadded "4:3") is never clobbered.
+  const [syncedValue, setSyncedValue] = useState(value);
+  if (value !== syncedValue) {
+    setSyncedValue(value);
+    const parsed = parseValue(value);
+    setFields(parsed);
+    setShowHours(parsed.hours !== '' && parsed.hours !== '0');
+  }
 
   const hoursRef = useRef<HTMLInputElement>(null);
   const minutesRef = useRef<HTMLInputElement>(null);
@@ -50,20 +66,24 @@ export const TimeInput = ({
   // Build and emit the time string (without padding during input)
   const emitValue = useCallback((newFields: typeof fields) => {
     const { hours, minutes, seconds } = newFields;
+    const emit = (next: string) => {
+      setSyncedValue(next);
+      onChange(next);
+    };
     
     if (showHours && hours) {
       // HH:MM:SS format - only pad when both digits are entered
       const h = hours;
       const m = minutes.length === 2 ? minutes : minutes.padStart(2, '0');
       const s = seconds.length === 2 ? seconds : seconds.padStart(2, '0');
-      onChange(`${h}:${m}:${s}`);
+      emit(`${h}:${m}:${s}`);
     } else if (minutes || seconds) {
       // MM:SS format - only pad seconds when both digits are entered
       const m = minutes || '0';
       const s = seconds.length === 2 ? seconds : seconds.padStart(2, '0');
-      onChange(`${m}:${s}`);
+      emit(`${m}:${s}`);
     } else {
-      onChange('');
+      emit('');
     }
   }, [showHours, onChange]);
 
@@ -75,8 +95,13 @@ export const TimeInput = ({
     const cleaned = inputValue.replace(/\D/g, '');
     
     // Limit length
-    const maxLength = field === 'hours' ? 2 : 2;
-    const truncated = cleaned.slice(0, maxLength);
+    let truncated = cleaned.slice(0, 2);
+
+    // Clamp seconds (and minutes when hours are shown) to 0-59
+    const isSexagesimal = field === 'seconds' || (field === 'minutes' && showHours);
+    if (isSexagesimal && Number(truncated) > MAX_SEXAGESIMAL) {
+      truncated = String(MAX_SEXAGESIMAL);
+    }
 
     const newFields = { ...fields, [field]: truncated };
     setFields(newFields);
@@ -128,6 +153,15 @@ export const TimeInput = ({
       setFields(newFields);
       emitValue(newFields);
     } else {
+      // Minutes must be 0-59 once hours are shown: carry overflow into hours
+      const mins = Number(fields.minutes);
+      if (mins > MAX_SEXAGESIMAL) {
+        setFields({
+          ...fields,
+          hours: String(Math.floor(mins / 60)),
+          minutes: String(mins % 60).padStart(2, '0'),
+        });
+      }
       // Focus hours field when showing
       setTimeout(() => hoursRef.current?.focus(), 0);
     }
@@ -153,6 +187,7 @@ export const TimeInput = ({
               placeholder="HH"
               maxLength={2}
               className={inputBaseClass}
+              id={id}
               aria-label="Hours"
             />
             <span className="text-xl font-bold text-[var(--color-text-muted)]">:</span>
@@ -171,6 +206,7 @@ export const TimeInput = ({
           maxLength={2}
           className={inputBaseClass}
           autoFocus={autoFocus && !showHours}
+          id={showHours ? undefined : id}
           aria-label="Minutes"
         />
         
@@ -194,9 +230,9 @@ export const TimeInput = ({
           type="button"
           onClick={toggleHours}
           className={`
-            ml-2 px-3 py-2 font-display text-sm tracking-wider rounded-sm border transition-colors
+            ml-2 px-3 py-2 text-sm font-semibold rounded-sm border transition-colors
             ${showHours
-              ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-[var(--color-text)]'
+              ? 'chip-selected'
               : 'bg-[var(--color-input)] border-[var(--color-input-border)] text-[var(--color-text-muted)] hover:border-[var(--color-input-border-hover)]'
             }
           `}

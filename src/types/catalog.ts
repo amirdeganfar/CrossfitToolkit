@@ -87,6 +87,8 @@ export interface PRLog {
   calories?: number;       // For Monostructural Time on bike (e.g., 50 cal in 3:20)
   timeCap?: number;        // For RepsInTime (e.g., 15 rope climbs in 120s)
   targetReps?: number;     // For TimeForReps (e.g., 10 HSPU in 0:45)
+  unit?: 'kg' | 'lb';      // Weight unit `result`/`resultValue` was entered in (Load). Stamped at save time.
+  distanceUnit?: 'm' | 'ft'; // Unit of `resultValue` for Distance-scored results. (`distance` is always meters.)
   createdAt: number;
 }
 

@@ -12,12 +12,19 @@ interface GoalsState {
   achievedGoals: GoalWithProgress[];
 
   // UI State
+  /** True only during the FIRST load (initialize). Use for full-page spinners. */
   isLoading: boolean;
+  /** True while a background refresh/reload runs (keep showing current data). */
+  isRefreshing: boolean;
   isInitialized: boolean;
 
   // Actions
+  // NOTE: `weightUnit` params are kept for compatibility but ignored — display
+  // units are read from stored settings on every load.
   initialize: (catalogItems: CatalogItem[], weightUnit?: string) => Promise<void>;
   refreshGoals: (catalogItems: CatalogItem[], weightUnit?: string) => Promise<void>;
+  /** Reload all goals from the DB (import, clear-all, unit change). Defaults to the last catalog items. */
+  reload: (catalogItems?: CatalogItem[]) => Promise<void>;
   addGoal: (
     input: CreateGoalInput,
     catalogItems: CatalogItem[],
@@ -49,56 +56,54 @@ interface GoalsState {
     itemId: string,
     variant?: Goal['variant'],
     reps?: number,
-    pool?: { scoreTypeId?: ScoreType; timeCap?: number; targetReps?: number }
+    pool?: { scoreTypeId?: ScoreType; timeCap?: number; targetReps?: number; distance?: number }
   ) => Promise<Goal | undefined>;
 }
 
 /**
- * Enrich all goals with progress data and sort appropriately
+ * Enrich goals with progress data (display units from current settings).
  */
-const enrichAndSortActiveGoals = async (
+const enrichGoals = async (
   goals: Goal[],
   catalogItems: CatalogItem[],
-  weightUnit: string = 'kg'
+  weightUnit: string,
+  distanceUnit: string
 ): Promise<GoalWithProgress[]> => {
-  const enrichedGoals: GoalWithProgress[] = [];
-
-  for (const goal of goals) {
-    const item = catalogItems.find((i) => i.id === goal.itemId);
-    if (!item) continue;
-
-    const enriched = await goalService.enrichGoalWithProgress(goal, item, weightUnit);
-    enrichedGoals.push(enriched);
-  }
-
-  // Sort by days remaining (ascending - most urgent first)
-  return enrichedGoals.sort((a, b) => a.daysRemaining - b.daysRemaining);
+  const itemsById = new Map(catalogItems.map((i) => [i.id, i]));
+  const enriched = await Promise.all(
+    goals.map((goal) => {
+      const item = itemsById.get(goal.itemId);
+      return item ? goalService.enrichGoalWithProgress(goal, item, weightUnit, distanceUnit) : null;
+    })
+  );
+  return enriched.filter((g): g is GoalWithProgress => g !== null);
 };
 
 /**
- * Enrich achieved goals and sort by achieved date
+ * Load all goals from the DB and enrich/sort them.
+ * Display units always come from the stored settings, so results are right
+ * regardless of which unit the caller passes (or after a unit change).
  */
-const enrichAndSortAchievedGoals = async (
-  goals: Goal[],
-  catalogItems: CatalogItem[],
-  weightUnit: string = 'kg'
-): Promise<GoalWithProgress[]> => {
-  const enrichedGoals: GoalWithProgress[] = [];
+const loadGoals = async (catalogItems: CatalogItem[]) => {
+  const [goals, settings] = await Promise.all([db.getAllGoals(), db.getSettings()]);
+  const active = goals.filter((g) => g.status === 'active');
+  const achieved = goals.filter((g) => g.status === 'achieved');
 
-  for (const goal of goals) {
-    const item = catalogItems.find((i) => i.id === goal.itemId);
-    if (!item) continue;
+  const [activeGoals, achievedGoals] = await Promise.all([
+    enrichGoals(active, catalogItems, settings.weightUnit, settings.distanceUnit),
+    enrichGoals(achieved, catalogItems, settings.weightUnit, settings.distanceUnit),
+  ]);
 
-    const enriched = await goalService.enrichGoalWithProgress(goal, item, weightUnit);
-    enrichedGoals.push(enriched);
-  }
+  // Active: by days remaining (ascending - most urgent first)
+  activeGoals.sort((a, b) => a.daysRemaining - b.daysRemaining);
+  // Achieved: by achieved date (descending - most recent first). YYYY-MM-DD sorts lexically.
+  achievedGoals.sort((a, b) => (b.achievedAt ?? '').localeCompare(a.achievedAt ?? ''));
 
-  // Sort by achieved date (descending - most recent first)
-  return enrichedGoals.sort((a, b) => {
-    if (!a.achievedAt || !b.achievedAt) return 0;
-    return new Date(b.achievedAt).getTime() - new Date(a.achievedAt).getTime();
-  });
+  return { goals, activeGoals, achievedGoals };
 };
+
+/** Catalog items from the last load, so reload() can run without arguments. */
+let lastCatalogItems: CatalogItem[] = [];
 
 export const useGoalsStore = create<GoalsState>((set, get) => ({
   // Initial state
@@ -106,61 +111,42 @@ export const useGoalsStore = create<GoalsState>((set, get) => ({
   activeGoals: [],
   achievedGoals: [],
   isLoading: false,
+  isRefreshing: false,
   isInitialized: false,
 
-  // Initialize goals from database
-  initialize: async (catalogItems: CatalogItem[], weightUnit: string = 'kg') => {
+  // Initialize goals from database (first load only — shows isLoading)
+  initialize: async (catalogItems: CatalogItem[]) => {
     if (get().isInitialized) return;
+    lastCatalogItems = catalogItems;
 
     set({ isLoading: true });
 
     try {
-      const goals = await db.getAllGoals();
-      const active = goals.filter((g) => g.status === 'active');
-      const achieved = goals.filter((g) => g.status === 'achieved');
-
-      const [activeGoals, achievedGoals] = await Promise.all([
-        enrichAndSortActiveGoals(active, catalogItems, weightUnit),
-        enrichAndSortAchievedGoals(achieved, catalogItems, weightUnit),
-      ]);
-
-      set({
-        goals,
-        activeGoals,
-        achievedGoals,
-        isInitialized: true,
-        isLoading: false,
-      });
+      const loaded = await loadGoals(catalogItems);
+      set({ ...loaded, isInitialized: true, isLoading: false });
     } catch (error) {
       console.error('[GoalsStore] Failed to initialize:', error);
       set({ isLoading: false });
     }
   },
 
-  // Refresh goals from database
-  refreshGoals: async (catalogItems: CatalogItem[], weightUnit: string = 'kg') => {
-    set({ isLoading: true });
+  // Refresh goals from database (background — sets isRefreshing, not isLoading)
+  refreshGoals: async (catalogItems: CatalogItem[]) => {
+    lastCatalogItems = catalogItems;
+    set({ isRefreshing: true });
 
     try {
-      const goals = await db.getAllGoals();
-      const active = goals.filter((g) => g.status === 'active');
-      const achieved = goals.filter((g) => g.status === 'achieved');
-
-      const [activeGoals, achievedGoals] = await Promise.all([
-        enrichAndSortActiveGoals(active, catalogItems, weightUnit),
-        enrichAndSortAchievedGoals(achieved, catalogItems, weightUnit),
-      ]);
-
-      set({
-        goals,
-        activeGoals,
-        achievedGoals,
-        isLoading: false,
-      });
+      const loaded = await loadGoals(catalogItems);
+      set({ ...loaded, isInitialized: true, isRefreshing: false });
     } catch (error) {
       console.error('[GoalsStore] Failed to refresh:', error);
-      set({ isLoading: false });
+      set({ isRefreshing: false });
     }
+  },
+
+  // Reload from DB (after import / clear-all / unit change). Uses the last catalog items if omitted.
+  reload: async (catalogItems?: CatalogItem[]) => {
+    await get().refreshGoals(catalogItems ?? lastCatalogItems);
   },
 
   // Add a new goal
@@ -225,7 +211,7 @@ export const useGoalsStore = create<GoalsState>((set, get) => ({
     itemId: string,
     variant?: Goal['variant'],
     reps?: number,
-    pool?: { scoreTypeId?: ScoreType; timeCap?: number; targetReps?: number }
+    pool?: { scoreTypeId?: ScoreType; timeCap?: number; targetReps?: number; distance?: number }
   ) => {
     return db.getActiveGoalForItem(itemId, variant, reps, pool);
   },
@@ -245,11 +231,19 @@ export const useGoalsStore = create<GoalsState>((set, get) => ({
  */
 export const useActiveGoalForItem = (
   itemId: string,
-  pool?: { scoreTypeId?: ScoreType; timeCap?: number; targetReps?: number; primaryScoreType?: ScoreType }
+  pool?: {
+    scoreTypeId?: ScoreType;
+    timeCap?: number;
+    targetReps?: number;
+    primaryScoreType?: ScoreType;
+    /** Distance pool (meters) for Time goals on distance items */
+    distance?: number;
+  }
 ) => {
   return useGoalsStore((state) =>
     state.activeGoals.find((goal) => {
       if (goal.itemId !== itemId) return false;
+      if (pool?.distance !== undefined && goal.distance !== pool.distance) return false;
       if (!pool?.scoreTypeId) return true;
       const goalScoreType = goal.scoreTypeId ?? pool.primaryScoreType;
       if (goalScoreType !== pool.scoreTypeId) return false;

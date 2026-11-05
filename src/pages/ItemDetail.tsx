@@ -1,6 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Star, Plus, Trash2, Loader2, TrendingUp, TrendingDown, ChevronDown, ChevronRight, Dumbbell, Target } from 'lucide-react';
+import { ArrowLeft, Star, Plus, Trash2, TrendingUp, TrendingDown, ChevronDown, ChevronRight, Dumbbell, Target, SearchX, ClipboardList } from 'lucide-react';
+import { Skeleton, SkeletonRows } from '../components/Skeleton';
+import { EmptyState } from '../components/EmptyState';
+import { Stat } from '../components/Stat';
+import { haptics } from '../utils/haptics';
 import { useCatalogStore, useCatalogItem } from '../stores/catalogStore';
 import { useGoalsStore, useActiveGoalForItem, useActiveGoalsForItem } from '../stores/goalsStore';
 import { useInitialize } from '../hooks/useInitialize';
@@ -20,6 +24,7 @@ import {
   isLowerBetter as scoreIsLowerBetter,
   formatSecondsToTime,
 } from '../config/scoreTypes';
+import { convertWeight, formatWeight, formatDistance as formatDistanceUnit } from '../utils/units';
 import * as db from '../db';
 import type { PRLog, CatalogItem, ScoreType } from '../types/catalog';
 import type { CreateGoalInput, UpdateGoalInput, GoalWithProgress } from '../types/goal';
@@ -159,7 +164,9 @@ const groupLogsByReps = (logs: PRLog[]): LogGroup[] => {
   const result: LogGroup[] = [];
   Array.from(repsGroups.keys()).sort((a, b) => a - b).forEach(reps => {
     const groupLogs = repsGroups.get(reps)!;
-    const bestLog = groupLogs.reduce((best, curr) => curr.resultValue > best.resultValue ? curr : best);
+    // Compare in one unit — logs may have been saved in kg or lb.
+    const inKg = (log: PRLog) => convertWeight(log.resultValue, log.unit, 'kg');
+    const bestLog = groupLogs.reduce((best, curr) => inKg(curr) > inKg(best) ? curr : best);
     const sorted = [...groupLogs].sort((a, b) => {
       if (a.id === bestLog.id) return -1;
       if (b.id === bestLog.id) return 1;
@@ -203,6 +210,32 @@ const groupLogsByVariant = (logs: PRLog[], isLowerBetter: boolean): LogGroup[] =
   return result;
 };
 
+interface LogsAndBests {
+  logs: PRLog[];
+  bestLog: PRLog | null;
+  bestByDistance: Map<number, PRLog>;
+  bestByCalories: Map<number, PRLog>;
+}
+
+// Load an item's logs and per-pool bests. For dual-metric / distance items there
+// is no single meaningful "best" across pools, so bestLog is null there.
+const loadLogsAndBests = async (itemId: string, isDual: boolean, isDistanceOnly: boolean): Promise<LogsAndBests> => {
+  const logs = await db.getPRLogsForItem(itemId);
+  if (isDual) {
+    const [bestByDistance, bestByCalories] = await Promise.all([
+      db.getBestPRsByDistance(itemId),
+      db.getBestPRsByCalories(itemId),
+    ]);
+    return { logs, bestLog: null, bestByDistance, bestByCalories };
+  }
+  if (isDistanceOnly) {
+    const bestByDistance = await db.getBestPRsByDistance(itemId);
+    return { logs, bestLog: null, bestByDistance, bestByCalories: new Map() };
+  }
+  const best = await db.getBestPR(itemId);
+  return { logs, bestLog: best ?? null, bestByDistance: new Map(), bestByCalories: new Map() };
+};
+
 export const ItemDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -236,63 +269,52 @@ export const ItemDetail = () => {
   const [goalModalScoreType, setGoalModalScoreType] = useState<ScoreType | null>(null);
   const [deleteLogId, setDeleteLogId] = useState<string | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
+  // Goal display units come from stored settings; the catalog store reloads
+  // goals itself when the unit changes.
   useEffect(() => {
     if (isInitialized && !goalsIsInitialized && catalogItems.length > 0) {
-      goalsInitialize(catalogItems, settings.weightUnit);
+      goalsInitialize(catalogItems);
     }
-  }, [isInitialized, goalsIsInitialized, catalogItems, settings.weightUnit, goalsInitialize]);
+  }, [isInitialized, goalsIsInitialized, catalogItems, goalsInitialize]);
 
   const isDual = isDualMetricItem(item);
   const isDistanceOnly = isDistanceOnlyItem(item);
+  const hasItem = item != null;
 
-  const fetchLogsAndBests = useCallback(async (itemId: string, currentItem: CatalogItem | null) => {
-    const itemLogs = await db.getPRLogsForItem(itemId);
-    setLogs(itemLogs);
+  const applyLogsAndBests = (data: LogsAndBests) => {
+    setLogs(data.logs);
+    setBestLog(data.bestLog);
+    setBestByDistance(data.bestByDistance);
+    setBestByCalories(data.bestByCalories);
+  };
 
-    if (isDualMetricItem(currentItem)) {
-      const bestsByDist = await db.getBestPRsByDistance(itemId);
-      const bestsByCal = await db.getBestPRsByCalories(itemId);
-      setBestByDistance(bestsByDist);
-      setBestByCalories(bestsByCal);
-      const allBests = [...Array.from(bestsByDist.values()), ...Array.from(bestsByCal.values())];
-      if (allBests.length > 0) {
-        setBestLog(allBests.reduce((best, curr) => curr.resultValue < best.resultValue ? curr : best));
-      } else {
-        setBestLog(null);
-      }
-    } else if (isDistanceOnlyItem(currentItem)) {
-      const bestsByDist = await db.getBestPRsByDistance(itemId);
-      setBestByDistance(bestsByDist);
-      setBestByCalories(new Map());
-      if (bestsByDist.size > 0) {
-        const allBests = Array.from(bestsByDist.values());
-        setBestLog(allBests.reduce((best, curr) => curr.resultValue < best.resultValue ? curr : best));
-      } else {
-        setBestLog(null);
-      }
-    } else {
-      setBestByDistance(new Map());
-      setBestByCalories(new Map());
-      const best = await db.getBestPR(itemId);
-      setBestLog(best ?? null);
-    }
-  }, []);
-
+  // Depend on the item id (not the item object, which changes on favorite toggle)
+  // and ignore responses for a previous item.
   useEffect(() => {
+    if (!id || !isInitialized || !hasItem) return;
+    let cancelled = false;
     const fetchLogs = async () => {
-      if (!id || !isInitialized || !item) return;
       setIsLoading(true);
       try {
-        await fetchLogsAndBests(id, item);
+        const data = await loadLogsAndBests(id, isDual, isDistanceOnly);
+        if (cancelled) return;
+        setLogs(data.logs);
+        setBestLog(data.bestLog);
+        setBestByDistance(data.bestByDistance);
+        setBestByCalories(data.bestByCalories);
       } catch (error) {
         console.error('[ItemDetail] Error fetching logs:', error);
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
     fetchLogs();
-  }, [id, isInitialized, item, fetchLogsAndBests]);
+    return () => {
+      cancelled = true;
+    };
+  }, [id, isInitialized, hasItem, isDual, isDistanceOnly]);
 
   const handleBack = () => navigate(-1);
 
@@ -302,46 +324,80 @@ export const ItemDetail = () => {
 
   const refreshLogs = async () => {
     if (!id || !item) return;
-    await fetchLogsAndBests(id, item);
+    applyLogsAndBests(await loadLogsAndBests(id, isDual, isDistanceOnly));
   };
 
   const handleDeleteLog = (logId: string) => setDeleteLogId(logId);
 
   const confirmDeleteLog = async () => {
-    if (deleteLogId) {
+    if (!deleteLogId) return;
+    setDeleteError(null);
+    try {
       await deletePRLog(deleteLogId);
       await refreshLogs();
+      if (goalsIsInitialized) {
+        await goalsRefresh(catalogItems);
+      }
+    } catch (error) {
+      console.error('[ItemDetail] Error deleting log:', error);
+      setDeleteError('Failed to delete log. Please try again.');
+    } finally {
       setDeleteLogId(null);
     }
   };
 
+  // Ids of every current "best" log, across all pools — used only to detect a
+  // new PR after a save so we can fire a celebratory haptic.
+  const bestIdsOf = (data: LogsAndBests): Set<string> => {
+    const ids = new Set<string>();
+    if (data.bestLog) ids.add(data.bestLog.id);
+    data.bestByDistance.forEach((l) => ids.add(l.id));
+    data.bestByCalories.forEach((l) => ids.add(l.id));
+    if (useScoreTypeGrouping && item) groupLogsByScoreType(data.logs, item).forEach((g) => ids.add(g.bestLog.id));
+    return ids;
+  };
+
   const handleModalSuccess = async () => {
-    await refreshLogs();
+    if (!id || !item) return;
+    const hadLogs = logs.length > 0;
+    const before = bestIdsOf({ logs, bestLog, bestByDistance, bestByCalories });
+    const data = await loadLogsAndBests(id, isDual, isDistanceOnly);
+    applyLogsAndBests(data);
+    if (hadLogs && [...bestIdsOf(data)].some((logId) => !before.has(logId))) haptics.pr();
     if (goalsIsInitialized) {
-      await goalsRefresh(catalogItems, settings.weightUnit);
+      const achievedBefore = useGoalsStore.getState().achievedGoals.length;
+      await goalsRefresh(catalogItems);
+      if (useGoalsStore.getState().achievedGoals.length > achievedBefore) haptics.goal();
     }
   };
 
   const handleSaveGoal = async (input: CreateGoalInput | { id: string; updates: UpdateGoalInput }) => {
     if ('id' in input) {
-      await goalsUpdateGoal(input.id, input.updates, catalogItems, settings.weightUnit);
+      await goalsUpdateGoal(input.id, input.updates, catalogItems);
     } else {
-      await goalsAddGoal(input, catalogItems, settings.weightUnit);
+      await goalsAddGoal(input, catalogItems);
     }
   };
 
   const formatDate = (timestamp: number): string =>
     new Date(timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-  const getResultWithUnit = (result: string, scoreType: ScoreType | undefined = item?.scoreType): string => {
+  // Display a log's result in the current settings units. Load/Distance values are
+  // converted from the unit stored on the log, so a suffix is printed exactly once.
+  const formatLogResult = (log: PRLog, scoreType: ScoreType | undefined = item?.scoreType): string => {
+    const { result } = log;
     if (!item || !scoreType) return result;
+    if (scoreType === 'Load') {
+      // Keep any "1RM @ " / "5 reps @ " prefix, re-render the weight.
+      const at = result.lastIndexOf('@ ');
+      const prefix = at >= 0 ? result.slice(0, at + 2) : '';
+      return `${prefix}${formatWeight(log.resultValue, log.unit, settings.weightUnit)}`;
+    }
     if (result.includes('@') || result.includes(' in ') || result.includes('RM')) return result;
-    // The stored result is already unit-suffixed at save time (via the registry's
-    // format). Only append the unit when it isn't already present — avoids
-    // "22 reps reps" / "50 cal cal".
+    // Other results are already suffixed at save time — only append when missing
+    // (avoids "22 reps reps" / "50 cal cal").
     switch (scoreType) {
-      case 'Load':     return result.includes(settings.weightUnit) ? result : `${result} ${settings.weightUnit}`;
-      case 'Distance': return result.includes(settings.distanceUnit) ? result : `${result} ${settings.distanceUnit}`;
+      case 'Distance': return formatDistanceUnit(log.resultValue, log.distanceUnit, settings.distanceUnit);
       case 'Reps':     return result.includes('reps') ? result : `${result} reps`;
       case 'Calories': return result.includes('cal') ? result : `${result} cal`;
       case 'RepsInTime': return result.includes('reps') ? result : `${result} reps`;
@@ -357,7 +413,7 @@ export const ItemDetail = () => {
     if (scoreType === 'TimeForReps') {
       return log.result.includes(' in ') ? log.result.split(' in ')[1] : log.result;
     }
-    return getResultWithUnit(log.result, scoreType);
+    return formatLogResult(log, scoreType);
   };
 
   const isLowerBetter = item ? scoreIsLowerBetter(item.scoreType) : false;
@@ -425,52 +481,102 @@ export const ItemDetail = () => {
 
   const getCategoryColor = (category: CatalogItem['category']) => categoryColorHex(category);
 
+  // Active goal progress (single-pool view) — shared by the single-best, dual-metric
+  // and distance layouts so goals show for every item type.
+  const activeGoalBlock = activeGoal ? (
+    <div className="mt-3 pt-3 border-t border-[var(--color-border)]">
+      <div className="flex items-center justify-between mb-1.5">
+        <div className="flex items-center gap-1.5 text-[13px] text-[var(--color-text-muted)] num">
+          <Target size={12} className="text-[var(--color-text-muted)]" />
+          <span>Goal: {activeGoal.targetResult}</span>
+        </div>
+        <button onClick={() => openGoalModal(activeGoal, null)} className="text-[13px] font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
+          Edit
+        </button>
+      </div>
+      {activeGoal.currentValue != null ? (
+        <Barbell current={activeGoal.currentValue} goal={activeGoal.targetValue} lowerIsBetter={isLowerBetter} />
+      ) : (
+        <GoalProgress progress={activeGoal.progress} size="sm" />
+      )}
+      <p className="t-caption num mt-1">
+        {activeGoal.daysRemaining >= 0 ? `${activeGoal.daysRemaining}d left` : 'Overdue'}
+      </p>
+    </div>
+  ) : null;
+
+  const backBtn = 'w-10 h-10 -ml-2 flex items-center justify-center rounded-full hover:bg-[var(--color-surface-elevated)]';
+
+  const pbSkeleton = (
+    <div className="space-y-3" aria-hidden="true">
+      <Skeleton className="h-14 w-40" />
+      <Skeleton className="h-3 w-24" />
+    </div>
+  );
+  const historySkeleton = <SkeletonRows count={3} withBadge={false} label="Loading history" />;
+
+  // Hero PB: "1RM @ 100kg" → small "1RM" caption over a big "100kg".
+  const heroFull = bestLog ? formatLogResult(bestLog) : '';
+  const heroAt = heroFull.lastIndexOf('@ ');
+  const heroPrefix = heroAt >= 0 ? heroFull.slice(0, heroAt).trim() : '';
+  const heroValue = heroAt >= 0 ? heroFull.slice(heroAt + 2) : heroFull;
+
   if (!isInitialized || isInitializing) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 text-[var(--color-primary)] animate-spin" />
+      <div className="space-y-6" aria-busy="true">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-10 w-10 rounded-full" />
+          <div className="space-y-2 flex-1">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-7 w-44" />
+          </div>
+        </div>
+        {pbSkeleton}
+        {historySkeleton}
       </div>
     );
   }
 
   if (!item) {
     return (
-      <div className="space-y-4">
-        <div className="flex items-center gap-3">
-          <button onClick={handleBack} className="p-2 -ml-1 hover:bg-[var(--color-surface-elevated)] transition-colors" aria-label="Go back">
+      <div className="space-y-6">
+        <div className="flex items-center gap-2">
+          <button onClick={handleBack} className={backBtn} aria-label="Go back">
             <ArrowLeft className="w-5 h-5 text-[var(--color-text-muted)]" />
           </button>
-          <h1 className="font-display text-2xl text-[var(--color-text)]">NOT FOUND</h1>
+          <h1 className="t-title">Not found</h1>
         </div>
-        <div className="flex items-center justify-center h-48 border border-[var(--color-border)]">
-          <p className="font-display text-sm tracking-widest text-[var(--color-text-muted)]">ITEM NOT FOUND</p>
-        </div>
+        <EmptyState
+          icon={SearchX}
+          message="This item isn't in your catalog anymore."
+          action={{ label: 'Browse the catalog', onClick: () => navigate('/search') }}
+        />
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 pb-28">
+    <div className="space-y-6 pb-28">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button onClick={handleBack} className="p-2 -ml-1 hover:bg-[var(--color-surface-elevated)] transition-colors" aria-label="Go back">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <button onClick={handleBack} className={backBtn} aria-label="Go back">
             <ArrowLeft className="w-5 h-5 text-[var(--color-text-muted)]" />
           </button>
-          <div>
+          <div className="min-w-0">
             <p
-              className="font-display text-[10px] tracking-[0.2em] mb-0.5"
+              className="text-[12px] font-semibold mb-0.5"
               style={{ color: getCategoryColor(item.category) }}
             >
-              {item.category.toUpperCase()} · {scoreModes.length > 1 ? 'MULTI' : getScoreTypeDef(item.scoreType).name.toUpperCase()}
+              {item.category} <span className="text-[var(--color-text-muted)]">· {scoreModes.length > 1 ? 'Multi-score' : getScoreTypeDef(item.scoreType).name}</span>
             </p>
-            <h1 className="font-display text-3xl text-[var(--color-text)] leading-tight">{item.name}</h1>
+            <h1 className="t-title">{item.name}</h1>
           </div>
         </div>
         <button
           onClick={handleFavoriteClick}
-          className={`p-2 transition-colors ${
-            item.isFavorite ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-primary)]'
+          className={`${backBtn} shrink-0 ${
+            item.isFavorite ? 'text-[var(--color-warning)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
           }`}
           aria-label={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
         >
@@ -486,13 +592,13 @@ export const ItemDetail = () => {
               {item.description && (
                 <div className="flex items-center gap-2 mb-1.5">
                   <Dumbbell className="w-3.5 h-3.5 text-[var(--color-text-muted)] shrink-0" />
-                  <span className="font-display text-sm text-[var(--color-text)] tracking-wider">{item.description}</span>
+                  <span className="text-[15px] font-semibold text-[var(--color-text)] num">{item.description}</span>
                 </div>
               )}
               <ul className={`space-y-1 ${item.description ? 'pl-5' : 'pl-0'}`}>
                 {item.movements.map((movement, idx) => (
                   <li key={idx} className="text-xs text-[var(--color-text-muted)] flex items-start gap-2">
-                    <ChevronRight className="w-3 h-3 text-[var(--color-primary)] shrink-0 mt-0.5" />
+                    <ChevronRight className="w-3 h-3 text-[var(--color-text-dim)] shrink-0 mt-0.5" />
                     <span>{movement}</span>
                   </li>
                 ))}
@@ -511,12 +617,12 @@ export const ItemDetail = () => {
               <div className="border-l-2 border-[var(--color-border-strong)] pl-3 py-1">
                 <div className="flex items-center gap-2 mb-1.5">
                   <Dumbbell className="w-3.5 h-3.5 text-[var(--color-text-muted)] shrink-0" />
-                  <span className="font-display text-sm text-[var(--color-text)] tracking-wider">{format}</span>
+                  <span className="text-[15px] font-semibold text-[var(--color-text)] num">{format}</span>
                 </div>
                 <ul className="space-y-1 pl-5">
                   {movements.map((movement, idx) => (
                     <li key={idx} className="text-xs text-[var(--color-text-muted)] flex items-start gap-2">
-                      <ChevronRight className="w-3 h-3 text-[var(--color-primary)] shrink-0 mt-0.5" />
+                      <ChevronRight className="w-3 h-3 text-[var(--color-text-dim)] shrink-0 mt-0.5" />
                       <span>{movement}</span>
                     </li>
                   ))}
@@ -534,32 +640,30 @@ export const ItemDetail = () => {
         return null;
       })()}
 
-      {/* Best PR — no card, just floating number with rule */}
-      <div className="py-4 border-b border-[var(--color-border)]">
-        <div className="flex items-center justify-between mb-1">
+      {/* Personal best — hero stat card */}
+      <div className="card">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             {isLowerBetter ? (
               <TrendingDown className="w-3.5 h-3.5 text-[var(--color-success)]" />
             ) : (
               <TrendingUp className="w-3.5 h-3.5 text-[var(--color-success)]" />
             )}
-            <span className="font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)]">PERSONAL BEST</span>
+            <h2 className="t-section">Personal best</h2>
           </div>
-          {!activeGoal && !useScoreTypeGrouping && bestLog && (
+          {!activeGoal && !useScoreTypeGrouping && logs.length > 0 && (
             <button
               onClick={() => openGoalModal(null, null)}
-              className="flex items-center gap-1 font-display text-xs tracking-widest text-[var(--color-primary)] hover:underline"
+              className="flex items-center gap-1 text-[13px] font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
             >
               <Target size={11} />
-              SET GOAL
+              Set goal
             </button>
           )}
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center h-16">
-            <Loader2 className="w-5 h-5 text-[var(--color-text-muted)] animate-spin" />
-          </div>
+          pbSkeleton
         ) : useScoreTypeGrouping ? (
           scoreTypeGroups.length > 0 ? (
             <div className="space-y-4">
@@ -574,24 +678,22 @@ export const ItemDetail = () => {
                         ) : (
                           <TrendingUp className="w-3 h-3 text-[var(--color-success)]" />
                         )}
-                        <span className="font-display text-xs tracking-wider text-[var(--color-text-muted)]">{group.label}</span>
+                        <span className="text-[13px] font-medium text-[var(--color-text-muted)] num">{group.label}</span>
                       </div>
                       <div className="text-right">
-                        <span className="font-display text-2xl text-[var(--color-primary)]">
-                          {getScoreTypeResult(group.bestLog, group.scoreType)}
-                        </span>
-                        <p className="font-display text-xs text-[var(--color-text-muted)]">{formatDate(group.bestLog.date)}</p>
+                        <Stat text={getScoreTypeResult(group.bestLog, group.scoreType)} size="lg" tone="primary" />
+                        <p className="t-caption num mt-1">{formatDate(group.bestLog.date)}</p>
                       </div>
                     </div>
                     {groupGoal ? (
                       <div className="pl-5">
                         <div className="flex items-center justify-between mb-1.5">
-                          <div className="flex items-center gap-1.5 font-display text-xs tracking-widest text-[var(--color-text-muted)]">
-                            <Target size={11} className="text-[var(--color-primary)]" />
-                            <span>GOAL: {groupGoal.targetResult}</span>
+                          <div className="flex items-center gap-1.5 text-[13px] text-[var(--color-text-muted)] num">
+                            <Target size={12} className="text-[var(--color-text-muted)]" />
+                            <span>Goal: {groupGoal.targetResult}</span>
                           </div>
-                          <button onClick={() => openGoalModal(groupGoal, group.scoreType)} className="font-display text-xs tracking-widest text-[var(--color-primary)] hover:underline">
-                            EDIT
+                          <button onClick={() => openGoalModal(groupGoal, group.scoreType)} className="text-[13px] font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
+                            Edit
                           </button>
                         </div>
                         {groupGoal.currentValue != null ? (
@@ -599,17 +701,17 @@ export const ItemDetail = () => {
                         ) : (
                           <GoalProgress progress={groupGoal.progress} size="sm" />
                         )}
-                        <p className="font-display text-xs text-[var(--color-text-muted)] tracking-widest mt-1">
-                          {groupGoal.daysRemaining >= 0 ? `${groupGoal.daysRemaining} DAYS REMAINING` : 'OVERDUE'}
+                        <p className="t-caption num mt-1">
+                          {groupGoal.daysRemaining >= 0 ? `${groupGoal.daysRemaining}d left` : 'Overdue'}
                         </p>
                       </div>
                     ) : (
                       <button
                         onClick={() => openGoalModal(null, group.scoreType)}
-                        className="pl-5 flex items-center gap-1.5 font-display text-xs tracking-widest text-[var(--color-primary)] hover:underline"
+                        className="pl-5 flex items-center gap-1.5 text-[13px] font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                       >
                         <Target size={11} />
-                        SET GOAL
+                        Set goal
                       </button>
                     )}
                   </div>
@@ -618,10 +720,10 @@ export const ItemDetail = () => {
             </div>
           ) : (
             <div>
-              <p className="font-display text-sm tracking-widest text-[var(--color-text-muted)]">NO RESULTS YET</p>
-              <button onClick={() => openGoalModal(null, null)} className="mt-2 flex items-center gap-1.5 font-display text-sm tracking-wider text-[var(--color-primary)] hover:underline">
+              <p className="t-body text-[var(--color-text-muted)]">No results yet</p>
+              <button onClick={() => openGoalModal(null, null)} className="mt-2 flex items-center gap-1.5 min-h-[36px] text-sm font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
                 <Target size={13} />
-                SET A GOAL
+                Set a goal
               </button>
             </div>
           )
@@ -629,18 +731,16 @@ export const ItemDetail = () => {
           <div className="space-y-3">
             {sortedDistances.length > 0 && (
               <div className="space-y-2">
-                <p className="font-display text-[10px] tracking-widest text-[var(--color-text-muted)]">BY DISTANCE</p>
+                <p className="t-caption">By distance</p>
                 {sortedDistances.map((distanceMeters) => {
                   const pr = bestByDistance.get(distanceMeters);
                   if (!pr) return null;
                   return (
                     <div key={distanceMeters} className="flex items-baseline justify-between">
-                      <span className="font-display text-xs tracking-wider text-[var(--color-text-muted)]">{formatDistance(distanceMeters)}</span>
+                      <span className="text-[13px] font-medium text-[var(--color-text-muted)] num">{formatDistance(distanceMeters)}</span>
                       <div className="text-right">
-                        <span className="font-display text-2xl text-[var(--color-primary)]">
-                          {pr.result.includes(' in ') ? pr.result.split(' in ')[1] : pr.result}
-                        </span>
-                        <p className="font-display text-xs text-[var(--color-text-muted)]">{formatDate(pr.date)}</p>
+                        <Stat text={pr.result.includes(' in ') ? pr.result.split(' in ')[1] : pr.result} size="lg" tone="primary" />
+                        <p className="t-caption num mt-1">{formatDate(pr.date)}</p>
                       </div>
                     </div>
                   );
@@ -649,7 +749,7 @@ export const ItemDetail = () => {
             )}
             {sortedCalorieTimes.length > 0 && (
               <div className="space-y-2">
-                <p className="font-display text-[10px] tracking-widest text-[var(--color-text-muted)]">BY TIME</p>
+                <p className="t-caption">By time</p>
                 {sortedCalorieTimes.map((timeSeconds) => {
                   const pr = bestByCalories.get(timeSeconds);
                   if (!pr) return null;
@@ -658,16 +758,17 @@ export const ItemDetail = () => {
                   const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
                   return (
                     <div key={timeSeconds} className="flex items-baseline justify-between">
-                      <span className="font-display text-xs tracking-wider text-[var(--color-text-muted)]">{timeStr}</span>
+                      <span className="text-[13px] font-medium text-[var(--color-text-muted)] num">{timeStr}</span>
                       <div className="text-right">
-                        <span className="font-display text-2xl text-[var(--color-primary)]">{pr.calories} cal</span>
-                        <p className="font-display text-xs text-[var(--color-text-muted)]">{formatDate(pr.date)}</p>
+                        <Stat value={pr.calories} unit="cal" size="lg" tone="primary" />
+                        <p className="t-caption num mt-1">{formatDate(pr.date)}</p>
                       </div>
                     </div>
                   );
                 })}
               </div>
             )}
+            {activeGoalBlock}
           </div>
         ) : isDistanceOnly && sortedDistances.length > 0 ? (
           <div className="space-y-3">
@@ -676,59 +777,38 @@ export const ItemDetail = () => {
               if (!pr) return null;
               return (
                 <div key={distanceMeters} className="flex items-baseline justify-between">
-                  <span className="font-display text-xs tracking-wider text-[var(--color-text-muted)]">{formatDistance(distanceMeters)}</span>
+                  <span className="text-[13px] font-medium text-[var(--color-text-muted)] num">{formatDistance(distanceMeters)}</span>
                   <div className="text-right">
-                    <span className="font-display text-2xl text-[var(--color-primary)]">
-                      {pr.result.includes(' in ') ? pr.result.split(' in ')[1] : pr.result}
-                    </span>
-                    <p className="font-display text-xs text-[var(--color-text-muted)]">{formatDate(pr.date)}</p>
+                    <Stat text={pr.result.includes(' in ') ? pr.result.split(' in ')[1] : pr.result} size="lg" tone="primary" />
+                    <p className="t-caption num mt-1">{formatDate(pr.date)}</p>
                   </div>
                 </div>
               );
             })}
+            {activeGoalBlock}
           </div>
         ) : bestLog ? (
           <div>
-            <div className="flex items-baseline gap-3">
-              <span className="font-display text-6xl text-[var(--color-primary)]">
-                {getResultWithUnit(bestLog.result)}
-              </span>
+            {heroPrefix && <p className="t-caption num mb-1">{heroPrefix}</p>}
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <Stat text={heroValue} size="hero" tone="primary" />
               <RxTag variant={bestLog.variant} />
             </div>
-            <p className="font-display text-xs text-[var(--color-text-muted)] tracking-widest mt-1">
+            <p className="t-caption num mt-1">
               {formatDate(bestLog.date)}
             </p>
-            {activeGoal && (
-              <div className="mt-3 pt-3 border-t border-[var(--color-border)]">
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center gap-1.5 font-display text-xs tracking-widest text-[var(--color-text-muted)]">
-                    <Target size={11} className="text-[var(--color-primary)]" />
-                    <span>GOAL: {activeGoal.targetResult}</span>
-                  </div>
-                  <button onClick={() => openGoalModal(activeGoal ?? null, null)} className="font-display text-xs tracking-widest text-[var(--color-primary)] hover:underline">
-                    EDIT
-                  </button>
-                </div>
-                {activeGoal.currentValue != null ? (
-                  <Barbell current={activeGoal.currentValue} goal={activeGoal.targetValue} lowerIsBetter={isLowerBetter} />
-                ) : (
-                  <GoalProgress progress={activeGoal.progress} size="sm" />
-                )}
-                <p className="font-display text-xs text-[var(--color-text-muted)] tracking-widest mt-1">
-                  {activeGoal.daysRemaining >= 0 ? `${activeGoal.daysRemaining} DAYS REMAINING` : 'OVERDUE'}
-                </p>
-              </div>
-            )}
+            {activeGoalBlock}
           </div>
         ) : (
           <div>
-            <p className="font-display text-sm tracking-widest text-[var(--color-text-muted)]">NO RESULTS YET</p>
+            <p className="t-body text-[var(--color-text-muted)]">No results yet</p>
             {!activeGoal && (
-              <button onClick={() => openGoalModal(null, null)} className="mt-2 flex items-center gap-1.5 font-display text-sm tracking-wider text-[var(--color-primary)] hover:underline">
+              <button onClick={() => openGoalModal(null, null)} className="mt-2 flex items-center gap-1.5 min-h-[36px] text-sm font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
                 <Target size={13} />
-                SET A GOAL
+                Set a goal
               </button>
             )}
+            {activeGoalBlock}
           </div>
         )}
       </div>
@@ -740,15 +820,18 @@ export const ItemDetail = () => {
 
       {/* History section */}
       <section>
+        {deleteError && (
+          <div className="mb-2 px-1 py-2 border-l-2 border-[var(--color-danger)]">
+            <p className="text-[13px] font-medium text-[var(--color-danger)]">{deleteError}</p>
+          </div>
+        )}
         <div className="flex items-center justify-between mb-2 pb-1 border-b border-[var(--color-border)]">
-          <span className="font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)]">HISTORY</span>
-          <span className="font-display text-xs text-[var(--color-text-muted)]">{logs.length} LOGS</span>
+          <h2 className="t-section">History</h2>
+          <span className="t-caption num">{logs.length} {logs.length === 1 ? 'log' : 'logs'}</span>
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center h-32 border border-[var(--color-border)]">
-            <Loader2 className="w-5 h-5 text-[var(--color-text-muted)] animate-spin" />
-          </div>
+          historySkeleton
         ) : useScoreTypeGrouping ? (
           scoreTypeGroups.length > 0 ? (
             <div className="divide-y divide-[var(--color-border)]">
@@ -760,15 +843,16 @@ export const ItemDetail = () => {
                   <div key={groupKey}>
                     <button
                       onClick={() => toggleGroup(groupKey)}
-                      className="w-full flex items-center justify-between py-3 hover:bg-[var(--color-surface)] transition-colors"
+                      className="w-[calc(100%+1rem)] flex items-center justify-between py-3 px-2 -mx-2 rounded-md hover:bg-[var(--color-surface)] transition-colors"
+                      aria-expanded={isExpanded}
                     >
                       <div className="flex items-center gap-3">
                         <ChevronDown className={`w-3.5 h-3.5 text-[var(--color-text-muted)] transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
-                        <span className="font-display text-sm text-[var(--color-text)] tracking-wider">{group.label}</span>
+                        <span className="text-[15px] font-semibold text-[var(--color-text)] num">{group.label}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="font-display text-base text-[var(--color-primary)]">{getScoreTypeResult(group.bestLog, group.scoreType)}</span>
-                        <span className="font-display text-xs text-[var(--color-text-muted)] border border-[var(--color-border)] px-1.5 py-0.5">{group.logs.length}</span>
+                        <span className="font-display text-base font-semibold text-[var(--color-text)] num">{getScoreTypeResult(group.bestLog, group.scoreType)}</span>
+                        <span className="text-xs font-semibold text-[var(--color-text-muted)] bg-[var(--color-surface-elevated)] rounded-full px-2 py-0.5 num">{group.logs.length}</span>
                       </div>
                     </button>
 
@@ -779,23 +863,23 @@ export const ItemDetail = () => {
                           return (
                             <div
                               key={log.id}
-                              className={`flex items-center justify-between py-2 pl-10 pr-3 group bg-[var(--color-bg)] ${
+                              className={`flex items-center justify-between py-2.5 pl-8 pr-1 group ${
                                 logIndex !== group.logs.length - 1 ? 'border-b border-[var(--color-border)]/50' : ''
                               }`}
                             >
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
-                                  <span className={`font-display text-sm ${isPR ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
+                                  <span className={`font-display text-[15px] font-semibold num ${isPR ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
                                     {getScoreTypeResult(log, group.scoreType)}
                                   </span>
                                   <RxTag variant={log.variant} />
                                   {isPR && (
-                                    <span className="font-display text-[10px] tracking-widest bg-[var(--color-primary)]/20 text-[var(--color-primary)] px-1.5 py-0.5">
+                                    <span className="text-[10px] font-extrabold tracking-[0.06em] rounded-xs bg-[var(--color-primary)]/20 text-[var(--color-primary)] px-1.5 py-0.5">
                                       PR
                                     </span>
                                   )}
                                 </div>
-                                <p className="font-display text-xs text-[var(--color-text-muted)] tracking-widest">
+                                <p className="t-caption num">
                                   {formatDate(log.date)}{log.notes && ` — ${log.notes}`}
                                 </p>
                               </div>
@@ -816,11 +900,7 @@ export const ItemDetail = () => {
               })}
             </div>
           ) : (
-            <div className="py-8 border-t border-[var(--color-border)]">
-              <p className="font-display text-sm tracking-widest text-[var(--color-text-muted)]">
-                NO RESULTS LOGGED YET
-              </p>
-            </div>
+            <EmptyState icon={ClipboardList} message="No results logged yet. Tap Log a result to add your first." />
           )
         ) : useGroupedHistory ? (
           <div className="divide-y divide-[var(--color-border)]">
@@ -832,8 +912,8 @@ export const ItemDetail = () => {
                 switch (group.type) {
                   case 'distance': return group.bestLog.result.includes(' in ') ? group.bestLog.result.split(' in ')[1] : group.bestLog.result;
                   case 'calories': return `${group.bestLog.calories} cal`;
-                  case 'reps':     return `${group.bestLog.resultValue} ${settings.weightUnit}`;
-                  case 'variant':  return getResultWithUnit(group.bestLog.result);
+                  case 'reps':     return formatWeight(group.bestLog.resultValue, group.bestLog.unit, settings.weightUnit);
+                  case 'variant':  return formatLogResult(group.bestLog);
                 }
               };
 
@@ -841,15 +921,16 @@ export const ItemDetail = () => {
                 <div key={groupKey}>
                   <button
                     onClick={() => toggleGroup(groupKey)}
-                    className="w-full flex items-center justify-between py-3 hover:bg-[var(--color-surface)] transition-colors"
+                    className="w-[calc(100%+1rem)] flex items-center justify-between py-3 px-2 -mx-2 rounded-md hover:bg-[var(--color-surface)] transition-colors"
+                      aria-expanded={isExpanded}
                   >
                     <div className="flex items-center gap-3">
                       <ChevronDown className={`w-3.5 h-3.5 text-[var(--color-text-muted)] transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
-                      <span className="font-display text-sm text-[var(--color-text)] tracking-wider">{group.label}</span>
+                      <span className="text-[15px] font-semibold text-[var(--color-text)] num">{group.label}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="font-display text-base text-[var(--color-primary)]">{getPrDisplayValue()}</span>
-                      <span className="font-display text-xs text-[var(--color-text-muted)] border border-[var(--color-border)] px-1.5 py-0.5">{group.logs.length}</span>
+                      <span className="font-display text-base font-semibold text-[var(--color-text)] num">{getPrDisplayValue()}</span>
+                      <span className="text-xs font-semibold text-[var(--color-text-muted)] bg-[var(--color-surface-elevated)] rounded-full px-2 py-0.5 num">{group.logs.length}</span>
                     </div>
                   </button>
 
@@ -861,31 +942,31 @@ export const ItemDetail = () => {
                           switch (group.type) {
                             case 'distance': return log.result.includes(' in ') ? log.result.split(' in ')[1] : log.result;
                             case 'calories': return `${log.calories} cal`;
-                            case 'reps':     return `${log.resultValue} ${settings.weightUnit}`;
-                            case 'variant':  return getResultWithUnit(log.result);
+                            case 'reps':     return formatWeight(log.resultValue, log.unit, settings.weightUnit);
+                            case 'variant':  return formatLogResult(log);
                           }
                         };
 
                         return (
                           <div
                             key={log.id}
-                            className={`flex items-center justify-between py-2 pl-10 pr-3 group bg-[var(--color-bg)] ${
+                            className={`flex items-center justify-between py-2.5 pl-8 pr-1 group ${
                               logIndex !== group.logs.length - 1 ? 'border-b border-[var(--color-border)]/50' : ''
                             }`}
                           >
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
-                                <span className={`font-display text-sm ${isPR ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
+                                <span className={`font-display text-[15px] font-semibold num ${isPR ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
                                   {getDisplayResult()}
                                 </span>
                                 {group.type !== 'variant' && <RxTag variant={log.variant} />}
                                 {isPR && (
-                                  <span className="font-display text-[10px] tracking-widest bg-[var(--color-primary)]/20 text-[var(--color-primary)] px-1.5 py-0.5">
+                                  <span className="text-[10px] font-extrabold tracking-[0.06em] rounded-xs bg-[var(--color-primary)]/20 text-[var(--color-primary)] px-1.5 py-0.5">
                                     PR
                                   </span>
                                 )}
                               </div>
-                              <p className="font-display text-xs text-[var(--color-text-muted)] tracking-widest">
+                              <p className="t-caption num">
                                 {formatDate(log.date)}{log.notes && ` — ${log.notes}`}
                               </p>
                             </div>
@@ -913,17 +994,17 @@ export const ItemDetail = () => {
                 <div key={log.id} className="flex items-center justify-between py-3 group">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className={`font-display text-sm ${isPR ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
-                        {getResultWithUnit(log.result)}
+                      <span className={`font-display text-[15px] font-semibold num ${isPR ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
+                        {formatLogResult(log)}
                       </span>
                       <RxTag variant={log.variant} />
                       {isPR && (
-                        <span className="font-display text-[10px] tracking-widest bg-[var(--color-primary)]/20 text-[var(--color-primary)] px-1.5 py-0.5">
+                        <span className="text-[10px] font-extrabold tracking-[0.06em] rounded-xs bg-[var(--color-primary)]/20 text-[var(--color-primary)] px-1.5 py-0.5">
                           PR
                         </span>
                       )}
                     </div>
-                    <p className="font-display text-xs text-[var(--color-text-muted)] tracking-widest">
+                    <p className="t-caption num">
                       {formatDate(log.date)}{log.notes && ` — ${log.notes}`}
                     </p>
                   </div>
@@ -939,11 +1020,7 @@ export const ItemDetail = () => {
             })}
           </div>
         ) : (
-          <div className="py-8 border-t border-[var(--color-border)]">
-            <p className="font-display text-sm tracking-widest text-[var(--color-text-muted)]">
-              NO RESULTS LOGGED YET
-            </p>
-          </div>
+            <EmptyState icon={ClipboardList} message="No results logged yet. Tap Log a result to add your first." />
         )}
       </section>
 

@@ -42,9 +42,9 @@ export function PlateStepper({ value, step = 2.5, unit = 'kg', min = 0, onChange
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M5 12h14" /></svg>
       </PlateKey>
       <div className="text-center">
-        <div className="timer-digits text-[44px] text-white" style={{ letterSpacing: '-1.5px' }}>{rounded}</div>
+        <div className="timer-digits num text-[44px] text-white" style={{ letterSpacing: '-1.5px' }}>{rounded}</div>
         <div className="mt-0.5 text-xs" style={{ color: 'var(--color-text-muted)', letterSpacing: '0.06em' }}>
-          {unit.toUpperCase()} · +{step} STEP
+          {unit} · +{step} step
         </div>
       </div>
       <PlateKey color="var(--plate-red)" glow="#FF3B3080" label={`Add ${step} ${unit}`} onClick={() => onChange?.(rounded + step)}>

@@ -6,12 +6,14 @@
  * All store logic is unchanged from the original.
  */
 
+import { Skeleton } from '../Skeleton';
+import { LoadedBarButton } from '../LoadedBarButton';
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { Loader2, Check, Moon, Dumbbell, Edit2, Calendar } from 'lucide-react';
 import { EmojiSelector } from './EmojiSelector';
 import { DatePicker } from '../DatePicker';
 import { useCheckInStore } from '../../stores/checkInStore';
-import { getTodayDate, formatDateToISO } from '../../services/checkInService';
+import { toLocalDateString, parseLocalDate, addDaysLocal } from '../../utils/date';
 import {
   ENERGY_LABELS,
   SORENESS_LABELS,
@@ -46,12 +48,12 @@ const SleepSelector = ({ value, onChange, disabled = false }: SleepSelectorProps
             disabled={disabled}
             onClick={() => onChange(hours)}
             onKeyDown={(e) => handleKeyDown(e, hours)}
-            className={`flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-150 ease-out border ${
+            className={`flex items-center justify-center rounded-md px-4 py-2.5 text-sm font-semibold transition-all duration-150 ease-out border ${
               isSelected
                 ? 'text-[var(--color-text)] border-transparent'
                 : 'bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text)] hover:border-[var(--color-border-strong)]'
             } ${disabled ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'} focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2 focus:ring-offset-[var(--color-bg)]`}
-            style={isSelected ? { background: 'var(--color-primary)' } : undefined}
+            style={isSelected ? { background: 'var(--color-text)', color: 'var(--color-bg)' } : undefined}
           >
             {SLEEP_LABELS[hours]}
           </button>
@@ -61,21 +63,11 @@ const SleepSelector = ({ value, onChange, disabled = false }: SleepSelectorProps
   );
 };
 
-// ── Knurled loaded-bar button ────────────────────────────────────────────────
+// ── Primary CTA — the shared solid accent button ────────────────────────────
 const LoadedBar = ({ children, onClick, disabled }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean }) => (
-  <button
-    onClick={onClick}
-    disabled={disabled}
-    className="relative w-full h-[54px] rounded-full overflow-hidden flex items-center justify-center transition-transform active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
-    style={{ background: 'var(--color-primary)' }}
-  >
-    <span className="absolute inset-0" style={{ backgroundImage: 'repeating-linear-gradient(90deg, rgba(0,0,0,0.13) 0 1px, transparent 1px 6px)' }} />
-    <span className="absolute inset-y-0 left-0 w-[14px]" style={{ background: 'var(--color-bg)' }} />
-    <span className="absolute inset-y-0 right-0 w-[14px]" style={{ background: 'var(--color-bg)' }} />
-    <span className="relative flex items-center gap-2 text-[17px] font-bold" style={{ color: 'var(--color-text)', letterSpacing: '-0.2px' }}>
-      {children}
-    </span>
-  </button>
+  <LoadedBarButton onClick={onClick} disabled={disabled}>
+    {children}
+  </LoadedBarButton>
 );
 
 // ── Main component ───────────────────────────────────────────────────────────
@@ -96,16 +88,18 @@ export const QuickCheckIn = ({ onSaved, hideDatePicker = false }: QuickCheckInPr
   const saveTrainingCheckIn = useCheckInStore((s) => s.saveTrainingCheckIn);
   const saveRestDay = useCheckInStore((s) => s.saveRestDay);
 
+  // Store-owned "today" (local date) — refreshed past midnight / on tab focus.
+  const today = useCheckInStore((s) => s.today);
+
   const [showCalendar, setShowCalendar] = useState(false);
 
-  const today = useMemo(() => getTodayDate(), []);
   const isToday = selectedDate === today;
   const isOtherDate = !isToday;
   const isTodayActive = isToday && !showCalendar;
   const isPickDateActive = showCalendar || isOtherDate;
-  const minDate = useMemo(() => { const d = new Date(); d.setDate(d.getDate() - 30); return d; }, []);
-  const maxDate = useMemo(() => new Date(), []);
-  const selectedDateObj = useMemo(() => new Date(selectedDate + 'T00:00:00'), [selectedDate]);
+  const minDate = useMemo(() => parseLocalDate(addDaysLocal(today, -30)), [today]);
+  const maxDate = useMemo(() => parseLocalDate(today), [today]);
+  const selectedDateObj = useMemo(() => parseLocalDate(selectedDate), [selectedDate]);
 
   const [mode, setMode] = useState<'prompt' | 'training' | 'summary'>(() => (selectedCheckIn ? 'summary' : 'prompt'));
   const [energy, setEnergy] = useState<MetricValue | undefined>(selectedCheckIn?.energy);
@@ -120,22 +114,19 @@ export const QuickCheckIn = ({ onSaved, hideDatePicker = false }: QuickCheckInPr
     }
   }, [hideDatePicker, selectedDate, today, setSelectedDate]);
 
-  useEffect(() => {
-    if (selectedCheckIn) {
-      setMode('summary');
-      setEnergy(selectedCheckIn.energy);
-      setSoreness(selectedCheckIn.soreness);
-      setSleepHours(selectedCheckIn.sleepHours);
-    } else {
-      setMode('prompt');
-      setEnergy(undefined);
-      setSoreness(undefined);
-      setSleepHours(undefined);
-    }
-  }, [selectedCheckIn]);
+  // Reset the form when the store's check-in changes (adjust state during
+  // render instead of in an effect — avoids a cascading re-render).
+  const [prevCheckIn, setPrevCheckIn] = useState(selectedCheckIn);
+  if (selectedCheckIn !== prevCheckIn) {
+    setPrevCheckIn(selectedCheckIn);
+    setMode(selectedCheckIn ? 'summary' : 'prompt');
+    setEnergy(selectedCheckIn?.energy);
+    setSoreness(selectedCheckIn?.soreness);
+    setSleepHours(selectedCheckIn?.sleepHours);
+  }
 
   const handleTodayClick = useCallback(() => { setSelectedDate(today); setShowCalendar(false); }, [today, setSelectedDate]);
-  const handleCalendarDateChange = useCallback((date: Date) => { setSelectedDate(formatDateToISO(date)); setShowCalendar(false); }, [setSelectedDate]);
+  const handleCalendarDateChange = useCallback((date: Date) => { setSelectedDate(toLocalDateString(date)); setShowCalendar(false); }, [setSelectedDate]);
   const handleOtherClick = useCallback(() => { setShowCalendar((p) => !p); }, []);
   const handleEdit = useCallback(() => { setMode('prompt'); }, []);
   const handleTrainingClick = useCallback(() => {
@@ -153,23 +144,23 @@ export const QuickCheckIn = ({ onSaved, hideDatePicker = false }: QuickCheckInPr
   }, [energy, soreness, sleepHours, saveTrainingCheckIn, onSaved]);
 
   const isFormValid = energy !== undefined && soreness !== undefined && sleepHours !== undefined;
-  const formatOtherDate = (dateStr: string) => new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const formatOtherDate = (dateStr: string) => parseLocalDate(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
   // Segmented date control (shared)
   const dateSelector = (
     <div className="mb-4">
-      <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--color-surface)' }} role="tablist" aria-label="Select date">
+      <div className="flex gap-1 p-1 rounded-md" style={{ background: 'var(--color-surface)' }} role="tablist" aria-label="Select date">
         <button
           type="button" role="tab" aria-selected={isTodayActive} onClick={handleTodayClick} disabled={isLoading}
-          className={`flex-1 rounded-lg py-2 text-[13px] font-semibold transition-all disabled:opacity-50 ${isTodayActive ? 'text-[var(--color-text)]' : 'text-[var(--color-text-muted)]'}`}
-          style={isTodayActive ? { background: 'var(--color-primary)' } : undefined}
+          className={`flex-1 rounded-sm py-2 text-[13px] font-semibold transition-all disabled:opacity-50 ${isTodayActive ? 'text-[var(--color-text)]' : 'text-[var(--color-text-muted)]'}`}
+          style={isTodayActive ? { background: 'var(--color-text)', color: 'var(--color-bg)' } : undefined}
         >
           Today
         </button>
         <button
           type="button" role="tab" aria-selected={isPickDateActive} onClick={handleOtherClick} disabled={isLoading}
-          className={`flex-1 rounded-lg py-2 text-[13px] font-semibold transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 ${isPickDateActive ? 'text-[var(--color-text)]' : 'text-[var(--color-text-muted)]'}`}
-          style={isPickDateActive ? { background: 'var(--color-primary)' } : undefined}
+          className={`flex-1 rounded-sm py-2 text-[13px] font-semibold transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 ${isPickDateActive ? 'text-[var(--color-text)]' : 'text-[var(--color-text-muted)]'}`}
+          style={isPickDateActive ? { background: 'var(--color-text)', color: 'var(--color-bg)' } : undefined}
         >
           <Calendar className="w-3.5 h-3.5" />
           {isOtherDate ? formatOtherDate(selectedDate) : 'Pick date'}
@@ -192,7 +183,7 @@ export const QuickCheckIn = ({ onSaved, hideDatePicker = false }: QuickCheckInPr
       <section aria-label="Quick check-in">
         <div className="label-eyebrow mb-3">Quick check-in</div>
         {dateSelectorNode}
-        <div className="flex items-center justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-[var(--color-text-muted)]" /></div>
+        <div className="space-y-3" aria-busy="true"><Skeleton className="h-20 w-full rounded-lg" /><Skeleton className="h-20 w-full rounded-lg" /><Skeleton className="h-20 w-full rounded-lg" /></div>
       </section>
     );
   }
@@ -207,14 +198,14 @@ export const QuickCheckIn = ({ onSaved, hideDatePicker = false }: QuickCheckInPr
             <Check className="w-3.5 h-3.5 text-[var(--color-success)]" />
             <span className="label-eyebrow">{isToday ? "Today's check-in" : 'Daily check-in'}</span>
           </div>
-          <button onClick={handleEdit} className="flex items-center gap-1.5 text-[13px] font-semibold text-[var(--color-primary)] px-2 py-1" aria-label="Edit check-in">
+          <button onClick={handleEdit} className="flex items-center gap-1.5 text-[13px] font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text)] px-2 min-h-[36px]" aria-label="Edit check-in">
             <Edit2 className="w-3 h-3" /> Edit
           </button>
         </div>
         {dateSelectorNode}
         {isRestDay ? (
-          <div className="flex items-center gap-2 rounded-2xl p-4" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-            <Moon className="w-5 h-5 text-[var(--color-primary)]" />
+          <div className="flex items-center gap-2 rounded-lg p-4" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+            <Moon className="w-5 h-5 text-[var(--color-info)]" />
             <span className="font-display text-sm">Rest day</span>
           </div>
         ) : (
@@ -224,7 +215,7 @@ export const QuickCheckIn = ({ onSaved, hideDatePicker = false }: QuickCheckInPr
               { v: selectedCheckIn.soreness!, label: 'Soreness', word: SORENESS_LABELS[selectedCheckIn.soreness!], tone: 'var(--color-warning)' },
               { v: 0, label: 'Sleep', word: SLEEP_LABELS[selectedCheckIn.sleepHours!], tone: 'var(--color-text)' },
             ].map((m) => (
-              <div key={m.label} className="rounded-2xl p-3" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+              <div key={m.label} className="rounded-lg p-3" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
                 <div className="font-display-black text-xl" style={{ color: m.tone }}>{m.word}</div>
                 <div className="label-eyebrow mt-1">{m.label}</div>
               </div>
@@ -263,7 +254,7 @@ export const QuickCheckIn = ({ onSaved, hideDatePicker = false }: QuickCheckInPr
             style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border-strong)' }}
             aria-label="Log rest day"
           >
-            {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Moon className="w-[18px] h-[18px] text-[var(--color-primary)]" /> Rest day</>}
+            {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Moon className="w-[18px] h-[18px] text-[var(--color-info)]" /> Rest day</>}
           </button>
         </div>
       </section>
@@ -282,17 +273,17 @@ export const QuickCheckIn = ({ onSaved, hideDatePicker = false }: QuickCheckInPr
       <div className="space-y-3">
         {dateSelectorNode}
 
-        <div className="rounded-2xl p-4" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+        <div className="rounded-lg p-4" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
           <div className="label-eyebrow mb-3">Energy level</div>
           <EmojiSelector value={energy} onChange={setEnergy} emojis={{}} labels={ENERGY_LABELS} ariaLabel="Select energy level" disabled={isSaving} />
         </div>
 
-        <div className="rounded-2xl p-4" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+        <div className="rounded-lg p-4" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
           <div className="label-eyebrow mb-3">Muscle soreness</div>
           <EmojiSelector value={soreness} onChange={setSoreness} emojis={{}} labels={SORENESS_LABELS} ariaLabel="Select soreness level" disabled={isSaving} />
         </div>
 
-        <div className="rounded-2xl p-4" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+        <div className="rounded-lg p-4" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
           <div className="label-eyebrow mb-3">Sleep last night</div>
           <SleepSelector value={sleepHours} onChange={setSleepHours} disabled={isSaving} />
         </div>

@@ -4,6 +4,81 @@ import { ArrowLeft, Download, Upload, Check, AlertCircle, Loader2, HelpCircle, C
 import { useCatalogStore } from '../stores/catalogStore';
 import { useClockStore } from '../stores/clockStore';
 import { useInitialize } from '../hooks/useInitialize';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+import { Skeleton } from '../components/Skeleton';
+import { todayLocal } from '../utils/date';
+
+// Reusable section header
+const SectionHeader = ({ label }: { label: string }) => (
+  <div className="flex items-center gap-2 pb-1 border-b border-[var(--color-border)] mb-0">
+    <h2 className="t-section">{label}</h2>
+  </div>
+);
+
+// Reusable stepper
+const Stepper = ({
+  value,
+  label,
+  onMinus,
+  onPlus,
+  disableMinus,
+  disablePlus,
+}: {
+  value: string;
+  label: string;
+  onMinus: () => void;
+  onPlus: () => void;
+  disableMinus: boolean;
+  disablePlus: boolean;
+}) => (
+  <div className="flex items-center justify-between py-3 border-b border-[var(--color-border)]">
+    <span className="text-sm text-[var(--color-text)]">{label}</span>
+    <div className="flex items-center gap-3">
+      <button
+        onClick={onMinus}
+        disabled={disableMinus}
+        className="w-10 h-10 flex items-center justify-center rounded-full bg-transparent border border-[var(--color-border-strong)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[var(--color-input-border-hover)] disabled:opacity-40 disabled:cursor-not-allowed active:scale-90 transition-all"
+      >
+        <Minus className="w-3.5 h-3.5" />
+      </button>
+      <span className="font-display text-xl font-semibold text-[var(--color-text)] num min-w-[48px] text-center">{value}</span>
+      <button
+        onClick={onPlus}
+        disabled={disablePlus}
+        className="w-10 h-10 flex items-center justify-center rounded-full bg-transparent border border-[var(--color-border-strong)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[var(--color-input-border-hover)] disabled:opacity-40 disabled:cursor-not-allowed active:scale-90 transition-all"
+      >
+        <Plus className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  </div>
+);
+
+// Reusable tab toggle
+const TabToggle = ({
+  options,
+  active,
+  onChange,
+}: {
+  options: { value: string; label: string }[];
+  active: string;
+  onChange: (v: string) => void;
+}) => (
+  <div className="flex border-b border-[var(--color-border)] -mb-px">
+    {options.map((opt) => (
+      <button
+        key={opt.value}
+        onClick={() => onChange(opt.value)}
+        className={`px-5 py-2 text-sm font-semibold transition-colors border-b-2 -mb-px ${
+          active === opt.value
+            ? 'border-[var(--color-text)] text-[var(--color-text)]'
+            : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
+        }`}
+      >
+        {opt.label}
+      </button>
+    ))}
+  </div>
+);
 
 export const Settings = () => {
   const navigate = useNavigate();
@@ -14,6 +89,7 @@ export const Settings = () => {
   const updateSettings = useCatalogStore((state) => state.updateSettings);
   const exportData = useCatalogStore((state) => state.exportData);
   const importData = useCatalogStore((state) => state.importData);
+  const clearAllData = useCatalogStore((state) => state.clearAllData);
 
   const countdownSeconds = useClockStore((state) => state.countdownSeconds);
   const setCountdownSeconds = useClockStore((state) => state.setCountdownSeconds);
@@ -23,6 +99,8 @@ export const Settings = () => {
   const [exportStatus, setExportStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [importStatus, setImportStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [importError, setImportError] = useState<string | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [clearError, setClearError] = useState<string | null>(null);
 
   const handleBack = () => navigate(-1);
 
@@ -51,7 +129,7 @@ export const Settings = () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `crossfit-toolkit-backup-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `crossfit-toolkit-backup-${todayLocal()}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -93,103 +171,28 @@ export const Settings = () => {
   };
 
   const handleClearData = async () => {
-    if (window.confirm('Are you sure you want to clear ALL data? This cannot be undone. You may want to export a backup first.')) {
-      if (window.confirm('This will delete all your PRs, favorites, and custom items. Are you absolutely sure?')) {
-        try {
-          await importData(JSON.stringify({
-            version: 1,
-            exportedAt: new Date().toISOString(),
-            catalogItems: [],
-            prLogs: [],
-            settings: { weightUnit: 'kg', distanceUnit: 'm' },
-          }));
-          window.location.reload();
-        } catch (error) {
-          console.error('[Settings] Clear data error:', error);
-        }
-      }
+    setShowClearConfirm(false);
+    setClearError(null);
+    try {
+      await clearAllData();
+      // Settings (incl. hasSeenOnboarding) were reset, so start over at onboarding.
+      navigate('/onboarding', { replace: true });
+    } catch (error) {
+      console.error('[Settings] Clear data error:', error);
+      setClearError(error instanceof Error ? error.message : 'Failed to clear data');
     }
   };
 
   if (!isInitialized || isInitializing) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 text-[var(--color-primary)] animate-spin" />
+      <div className="space-y-6" aria-busy="true">
+        <Skeleton className="h-8 w-36" />
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="space-y-3"><Skeleton className="h-5 w-24" /><Skeleton className="h-12 w-full rounded-md" /></div>
+        ))}
       </div>
     );
   }
-
-  // Reusable section header
-  const SectionHeader = ({ label }: { label: string }) => (
-    <div className="flex items-center gap-2 pb-1 border-b border-[var(--color-border)] mb-0">
-      <span className="font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)]">{label}</span>
-    </div>
-  );
-
-  // Reusable stepper
-  const Stepper = ({
-    value,
-    label,
-    onMinus,
-    onPlus,
-    disableMinus,
-    disablePlus,
-  }: {
-    value: string;
-    label: string;
-    onMinus: () => void;
-    onPlus: () => void;
-    disableMinus: boolean;
-    disablePlus: boolean;
-  }) => (
-    <div className="flex items-center justify-between py-3 border-b border-[var(--color-border)]">
-      <span className="text-sm text-[var(--color-text)]">{label}</span>
-      <div className="flex items-center gap-3">
-        <button
-          onClick={onMinus}
-          disabled={disableMinus}
-          className="w-9 h-9 flex items-center justify-center bg-transparent border border-[var(--color-border-strong)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[var(--color-primary)] disabled:opacity-40 disabled:cursor-not-allowed active:scale-90 transition-all rounded-none"
-        >
-          <Minus className="w-3.5 h-3.5" />
-        </button>
-        <span className="font-display text-xl text-[var(--color-primary)] min-w-[48px] text-center">{value}</span>
-        <button
-          onClick={onPlus}
-          disabled={disablePlus}
-          className="w-9 h-9 flex items-center justify-center bg-transparent border border-[var(--color-border-strong)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[var(--color-primary)] disabled:opacity-40 disabled:cursor-not-allowed active:scale-90 transition-all rounded-none"
-        >
-          <Plus className="w-3.5 h-3.5" />
-        </button>
-      </div>
-    </div>
-  );
-
-  // Reusable tab toggle
-  const TabToggle = ({
-    options,
-    active,
-    onChange,
-  }: {
-    options: { value: string; label: string }[];
-    active: string;
-    onChange: (v: string) => void;
-  }) => (
-    <div className="flex border-b border-[var(--color-border)] -mb-px">
-      {options.map((opt) => (
-        <button
-          key={opt.value}
-          onClick={() => onChange(opt.value)}
-          className={`px-5 py-2 font-display text-sm tracking-widest transition-colors border-b-2 -mb-px ${
-            active === opt.value
-              ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
-              : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
-          }`}
-        >
-          {opt.label}
-        </button>
-      ))}
-    </div>
-  );
 
   return (
     <div className="space-y-6">
@@ -197,17 +200,17 @@ export const Settings = () => {
       <div className="flex items-center gap-3">
         <button
           onClick={handleBack}
-          className="p-2 -ml-1 hover:bg-[var(--color-surface-elevated)] transition-colors"
+          className="w-10 h-10 -ml-2 flex items-center justify-center rounded-full hover:bg-[var(--color-surface-elevated)] transition-colors"
           aria-label="Go back"
         >
           <ArrowLeft className="w-5 h-5 text-[var(--color-text-muted)]" />
         </button>
-        <h1 className="font-display text-2xl text-[var(--color-text)] tracking-[0.1em]">SETTINGS</h1>
+        <h1 className="t-title">Settings</h1>
       </div>
 
       {/* Units section */}
       <section className="space-y-3">
-        <SectionHeader label="UNITS" />
+        <SectionHeader label="Units" />
 
         <div className="py-2 border-b border-[var(--color-border)]">
           <div className="flex items-center justify-between mb-2">
@@ -236,7 +239,7 @@ export const Settings = () => {
       <section className="space-y-3">
         <div className="flex items-center gap-2 pb-1 border-b border-[var(--color-border)]">
           <Timer className="w-3.5 h-3.5 text-[var(--color-text-muted)]" />
-          <span className="font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)]">TIMER</span>
+          <h2 className="t-section">Timer</h2>
         </div>
 
         <Stepper
@@ -255,13 +258,16 @@ export const Settings = () => {
           </div>
           <button
             onClick={toggleSound}
-            className={`relative w-12 h-7 transition-colors ${
-              soundEnabled ? 'bg-[var(--color-primary)]' : 'bg-[var(--color-surface-elevated)] border border-[var(--color-border-strong)]'
+            role="switch"
+            aria-checked={soundEnabled}
+            aria-label="Sound"
+            className={`relative w-12 h-7 rounded-full transition-colors ${
+              soundEnabled ? 'bg-[var(--color-success)]' : 'bg-[var(--color-surface-elevated)] border border-[var(--color-border-strong)]'
             }`}
           >
             <span
-              className={`absolute top-1 w-5 h-5 transition-transform ${
-                soundEnabled ? 'left-6 bg-[var(--color-bg)]' : 'left-1 bg-[var(--color-text-muted)]'
+              className={`absolute top-1 w-5 h-5 rounded-full transition-[left] ${
+                soundEnabled ? 'left-6 bg-white' : 'left-1 bg-[var(--color-text-muted)]'
               }`}
             />
           </button>
@@ -272,7 +278,7 @@ export const Settings = () => {
       <section className="space-y-3">
         <div className="flex items-center gap-2 pb-1 border-b border-[var(--color-border)]">
           <Moon className="w-3.5 h-3.5 text-[var(--color-text-muted)]" />
-          <span className="font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)]">RECOVERY</span>
+          <h2 className="t-section">Recovery</h2>
         </div>
 
         <Stepper
@@ -287,7 +293,7 @@ export const Settings = () => {
 
       {/* Data section */}
       <section className="space-y-1">
-        <SectionHeader label="DATA" />
+        <SectionHeader label="Data" />
 
         <button
           onClick={handleExport}
@@ -296,7 +302,7 @@ export const Settings = () => {
           <div className="flex items-center gap-3">
             <Download className="w-4 h-4 text-[var(--color-text-muted)]" />
             <div>
-              <span className="font-display text-sm tracking-wider text-[var(--color-text)]">EXPORT DATA</span>
+              <span className="text-[15px] font-semibold text-[var(--color-text)]">Export data</span>
               <p className="text-xs text-[var(--color-text-muted)]">Download all your data as JSON</p>
             </div>
           </div>
@@ -312,7 +318,7 @@ export const Settings = () => {
           <div className="flex items-center gap-3">
             <Upload className="w-4 h-4 text-[var(--color-text-muted)]" />
             <div>
-              <span className="font-display text-sm tracking-wider text-[var(--color-text)]">IMPORT DATA</span>
+              <span className="text-[15px] font-semibold text-[var(--color-text)]">Import data</span>
               <p className="text-xs text-[var(--color-text-muted)]">Restore from a JSON backup</p>
             </div>
           </div>
@@ -330,7 +336,7 @@ export const Settings = () => {
 
         {importError && (
           <div className="px-1 py-2 border-l-2 border-[var(--color-danger)]">
-            <p className="text-xs text-[var(--color-danger)] font-display tracking-wider">{importError}</p>
+            <p className="text-[13px] font-medium text-[var(--color-danger)]">{importError}</p>
           </div>
         )}
       </section>
@@ -338,24 +344,41 @@ export const Settings = () => {
       {/* Danger zone */}
       <section className="space-y-1">
         <div className="flex items-center gap-2 pb-1 border-b border-[var(--color-danger)]/40">
-          <span className="font-display text-xs tracking-[0.2em] text-[var(--color-danger)]">DANGER ZONE</span>
+          <h2 className="t-section text-[var(--color-danger)]">Danger zone</h2>
         </div>
 
         <button
-          onClick={handleClearData}
+          onClick={() => setShowClearConfirm(true)}
           className="w-full py-3 flex items-center gap-3 hover:bg-[var(--color-danger)]/5 transition-colors text-left px-1"
         >
           <AlertCircle className="w-4 h-4 text-[var(--color-danger)]" />
           <div>
-            <span className="font-display tracking-wider text-sm text-[var(--color-danger)]">CLEAR ALL DATA</span>
-            <p className="text-xs text-[var(--color-text-muted)]">Permanently delete all PRs, favorites, and settings</p>
+            <span className="text-[15px] font-semibold text-[var(--color-danger)]">Clear all data</span>
+            <p className="text-xs text-[var(--color-text-muted)]">Permanently delete all PRs, goals, check-ins, favorites, and settings</p>
           </div>
         </button>
+
+        {clearError && (
+          <div className="px-1 py-2 border-l-2 border-[var(--color-danger)]">
+            <p className="text-[13px] font-medium text-[var(--color-danger)]">{clearError}</p>
+          </div>
+        )}
       </section>
+
+      {showClearConfirm && (
+        <ConfirmDialog
+          title="Clear all data?"
+          message="This permanently deletes all PRs, goals, check-ins, favorites, custom items, and settings. This cannot be undone. You may want to export a backup first."
+          confirmLabel="Clear everything"
+          onConfirm={handleClearData}
+          onCancel={() => setShowClearConfirm(false)}
+          isDestructive
+        />
+      )}
 
       {/* Help section */}
       <section className="space-y-1">
-        <SectionHeader label="HELP" />
+        <SectionHeader label="Help" />
 
         <button
           onClick={() => navigate('/onboarding')}
@@ -364,7 +387,7 @@ export const Settings = () => {
           <div className="flex items-center gap-3">
             <HelpCircle className="w-4 h-4 text-[var(--color-text-muted)]" />
             <div>
-              <span className="font-display text-sm tracking-wider text-[var(--color-text)]">VIEW TUTORIAL</span>
+              <span className="text-[15px] font-semibold text-[var(--color-text)]">View tutorial</span>
               <p className="text-xs text-[var(--color-text-muted)]">Learn how to use the app and install it</p>
             </div>
           </div>
@@ -374,19 +397,19 @@ export const Settings = () => {
 
       {/* About section */}
       <section className="space-y-1">
-        <SectionHeader label="ABOUT" />
+        <SectionHeader label="About" />
         <div className="py-3 space-y-2 border-b border-[var(--color-border)]">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-[var(--color-text-muted)] font-display tracking-widest">VERSION</span>
-            <span className="font-display text-sm text-[var(--color-text)]">1.0.0</span>
+            <span className="t-caption text-[13px]">Version</span>
+            <span className="font-display text-sm text-[var(--color-text)] num">1.0.0</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-[var(--color-text-muted)] font-display tracking-widest">STORAGE</span>
-            <span className="font-display text-sm text-[var(--color-text)]">INDEXEDDB</span>
+            <span className="t-caption text-[13px]">Storage</span>
+            <span className="font-display text-sm text-[var(--color-text)]">IndexedDB</span>
           </div>
         </div>
-        <p className="text-xs text-[var(--color-text-dim)] font-display tracking-widest text-center pt-2">
-          BUILT FOR CROSSFIT ATHLETES
+        <p className="t-caption text-center pt-2">
+          Built for CrossFit athletes
         </p>
       </section>
     </div>

@@ -112,11 +112,11 @@ export const buildReasons = (
     return reasons;
   }
 
-  // Energy (only if low: 1-2)
-  if (checkIn.energy && checkIn.energy <= 2) {
+  // Energy (whenever it adds points, so every point has a matching reason)
+  if (checkIn.energy) {
     const points = calculateEnergyPoints(checkIn.energy);
     const message = getEnergyMessage(checkIn.energy);
-    if (message) {
+    if (points > 0 && message) {
       reasons.push({
         metric: 'energy',
         points,
@@ -125,11 +125,11 @@ export const buildReasons = (
     }
   }
 
-  // Soreness (only if high: 4-5)
-  if (checkIn.soreness && checkIn.soreness >= 4) {
+  // Soreness (whenever it adds points)
+  if (checkIn.soreness) {
     const points = calculateSorenessPoints(checkIn.soreness);
     const message = getSorenessMessage(checkIn.soreness);
-    if (message) {
+    if (points > 0 && message) {
       reasons.push({
         metric: 'soreness',
         points,

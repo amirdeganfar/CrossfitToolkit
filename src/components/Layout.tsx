@@ -11,10 +11,12 @@ export const Layout = () => {
   const handleClockClick = () => navigate('/clock');
   const handleProgressClick = () => navigate('/progress');
 
-  const isActive = (path: string) => location.pathname === path;
+  // Item detail pages belong to the Log tab.
+  const isActive = (path: string) =>
+    location.pathname === path || (path === '/search' && location.pathname.startsWith('/item/'));
 
   const navBtn = (active: boolean) =>
-    `flex flex-col items-center gap-1 px-4 py-2 transition-colors active:scale-95 ${
+    `flex flex-col items-center gap-1 px-4 py-2 min-w-[64px] rounded-md transition-colors active:scale-95 ${
       active ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-dim)] hover:text-[var(--color-text-muted)]'
     }`;
 
@@ -31,7 +33,7 @@ export const Layout = () => {
             aria-label="Go to home"
             onKeyDown={(e) => e.key === 'Enter' && handleHomeClick()}
           >
-            <span className="text-[var(--color-primary)]">CF</span> Toolkit
+            CF <span className="text-[var(--color-text-muted)] font-display">Toolkit</span>
           </h1>
           <button
             onClick={handleSettingsClick}
@@ -48,7 +50,7 @@ export const Layout = () => {
         <Outlet />
       </main>
 
-      {/* Bottom navigation — Blackout tab bar (yellow active). Always visible across viewports. */}
+      {/* Bottom navigation — Blackout tab bar (primary-colored active). Always visible across viewports. */}
       <nav className="sticky bottom-0 z-40 bg-[var(--color-bg)]/95 backdrop-blur border-t border-[var(--color-border-strong)] px-2 pb-safe">
         <div className="flex items-center justify-around max-w-lg mx-auto">
           <button onClick={handleHomeClick} className={navBtn(isActive('/'))} aria-label="Home" aria-current={isActive('/') ? 'page' : undefined}>

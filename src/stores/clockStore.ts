@@ -127,7 +127,9 @@ const saveCountdownSeconds = (seconds: number): void => {
 const loadCountdownSeconds = (): number => {
   try {
     const data = localStorage.getItem(COUNTDOWN_STORAGE_KEY);
-    return data ? parseInt(data, 10) : 10; // Default: 10 seconds
+    const value = data ? parseInt(data, 10) : NaN;
+    // Default 10s; ignore corrupt values and clamp to the allowed 3-30 range.
+    return Number.isFinite(value) ? Math.max(3, Math.min(30, value)) : 10;
   } catch (error) {
     console.warn('[ClockStore] Failed to load countdown:', error);
     return 10;
@@ -419,88 +421,119 @@ const handleCountdownTick = (state: ClockState, elapsed: number): void => {
       timeRemaining: getInitialTime(config),
       elapsedTime: 0,
     });
+    // Carry the countdown overshoot into the workout (throttled tabs catch up).
+    const overshoot = -newTime;
+    if (overshoot > 0) handleRunningTick(useClockStore.getState(), overshoot);
   } else {
     useClockStore.setState({ timeRemaining: newTime });
   }
 };
 
 /**
- * Handle running/rest tick
+ * Handle running/rest tick.
+ *
+ * Driven by wall-clock `elapsed` since the last tick: when the tab was
+ * throttled or the screen locked, a single tick may cover several intervals,
+ * so we keep advancing (carrying the overshoot) until the time is consumed.
  */
 const handleRunningTick = (state: ClockState, elapsed: number): void => {
   const config = state.config;
-  
+
   // For Time mode counts up
   if (config.mode === 'forTime') {
     const newElapsed = state.elapsedTime + elapsed;
-    
-    // Check for time cap
+
+    // Check for time cap — show the cap time, not 0:00
     if (config.totalTime > 0 && newElapsed >= config.totalTime) {
-      handleTimerComplete();
+      handleTimerComplete({ timeRemaining: config.totalTime, elapsedTime: config.totalTime });
       return;
     }
-    
-    useClockStore.setState({ 
+
+    useClockStore.setState({
       elapsedTime: newElapsed,
       timeRemaining: newElapsed,
     });
     return;
   }
-  
+
   // All other modes count down
   const newTime = state.timeRemaining - elapsed;
-  const newElapsed = state.elapsedTime + elapsed;
-  
+
   // Warning beeps in last 3 seconds
   const prevSecond = Math.ceil(state.timeRemaining);
   const newSecond = Math.ceil(newTime);
-  
+
   if (state.soundEnabled && prevSecond !== newSecond && newSecond > 0 && newSecond <= 3) {
     playBeep('warning');
   }
-  
-  if (newTime <= 0) {
-    // Time's up for this interval/phase
-    handleIntervalComplete(state);
-  } else {
-    useClockStore.setState({ 
+
+  if (newTime > 0) {
+    useClockStore.setState({
       timeRemaining: newTime,
-      elapsedTime: newElapsed,
+      elapsedTime: state.elapsedTime + elapsed,
     });
+    return;
+  }
+
+  // Time's up for this interval/phase. Advance, then consume the overshoot.
+  let overshoot = -newTime;
+  useClockStore.setState({ elapsedTime: state.elapsedTime + elapsed });
+  // Guard against zero-length intervals looping forever.
+  for (let i = 0; i < 10000; i++) {
+    const current = useClockStore.getState();
+    const completed = handleIntervalComplete(current);
+    if (completed) return;
+
+    const next = useClockStore.getState();
+    if (overshoot < next.timeRemaining) {
+      useClockStore.setState({ timeRemaining: next.timeRemaining - overshoot });
+      return;
+    }
+    overshoot -= next.timeRemaining;
   }
 };
 
 /**
- * Handle interval/phase completion
+ * Handle interval/phase completion: moves to the next interval (setting
+ * `timeRemaining` to its full duration) or completes the timer.
+ * @returns true when the whole workout is complete.
  */
-const handleIntervalComplete = (state: ClockState): void => {
+const handleIntervalComplete = (state: ClockState): boolean => {
   const config = state.config;
-  
+
   switch (config.mode) {
     case 'amrap':
       // AMRAP complete
       handleTimerComplete();
-      break;
-      
+      return true;
+
     case 'emom':
       // Check if all rounds complete
       if (state.currentRound >= config.rounds) {
         handleTimerComplete();
-      } else {
-        // Start next round
-        if (state.soundEnabled) {
-          playBeep('interval');
-        }
-        useClockStore.setState({
-          currentRound: state.currentRound + 1,
-          timeRemaining: config.intervalTime,
-        });
+        return true;
       }
-      break;
-      
+      // Start next round
+      if (state.soundEnabled) {
+        playBeep('interval');
+      }
+      useClockStore.setState({
+        currentRound: state.currentRound + 1,
+        timeRemaining: config.intervalTime,
+      });
+      return false;
+
     case 'tabata':
-    case 'custom':
+    case 'custom': {
+      const isLastRound = state.currentRound >= config.rounds;
+      const hasMoreSets = config.mode === 'custom' && state.currentSet < config.sets;
+
       if (state.phase === 'work') {
+        // Final work interval of the final set: done — no trailing rest.
+        if (isLastRound && !hasMoreSets) {
+          handleTimerComplete();
+          return true;
+        }
         // Work phase complete, start rest
         if (state.soundEnabled) {
           playBeep('interval');
@@ -510,56 +543,64 @@ const handleIntervalComplete = (state: ClockState): void => {
           status: 'rest',
           timeRemaining: config.restTime,
         });
-      } else {
-        // Rest phase complete
-        if (state.currentRound >= config.rounds) {
-          // Check sets for custom mode
-          if (config.mode === 'custom' && state.currentSet < config.sets) {
-            // Start next set
-            if (state.soundEnabled) {
-              playBeep('go');
-            }
-            useClockStore.setState({
-              currentSet: state.currentSet + 1,
-              currentRound: 1,
-              phase: 'work',
-              status: 'running',
-              timeRemaining: config.workTime,
-            });
-          } else {
-            handleTimerComplete();
-          }
-        } else {
-          // Start next round
+        return false;
+      }
+
+      // Rest phase complete
+      if (isLastRound) {
+        if (hasMoreSets) {
+          // Start next set
           if (state.soundEnabled) {
-            playBeep('interval');
+            playBeep('go');
           }
           useClockStore.setState({
-            currentRound: state.currentRound + 1,
+            currentSet: state.currentSet + 1,
+            currentRound: 1,
             phase: 'work',
             status: 'running',
             timeRemaining: config.workTime,
           });
+          return false;
         }
+        handleTimerComplete();
+        return true;
       }
-      break;
+
+      // Start next round
+      if (state.soundEnabled) {
+        playBeep('interval');
+      }
+      useClockStore.setState({
+        currentRound: state.currentRound + 1,
+        phase: 'work',
+        status: 'running',
+        timeRemaining: config.workTime,
+      });
+      return false;
+    }
+
+    default:
+      return false;
   }
 };
 
 /**
- * Handle timer completion
+ * Handle timer completion. `final` overrides the displayed values (e.g. a For
+ * Time cap shows the cap time instead of 0:00).
  */
-const handleTimerComplete = (): void => {
+const handleTimerComplete = (
+  final: { timeRemaining: number; elapsedTime?: number } = { timeRemaining: 0 }
+): void => {
   stopTicking();
   const state = useClockStore.getState();
-  
+
   if (state.soundEnabled) {
     playCompletionSound();
   }
-  
+
   useClockStore.setState({
     status: 'complete',
-    timeRemaining: 0,
+    ...final,
   });
 };
 

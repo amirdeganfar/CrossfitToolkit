@@ -110,7 +110,7 @@ export const Onboarding = () => {
 
   // Desktop notice
   const desktopNotice = (
-    <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
+    <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
       <div className="flex items-start gap-3">
         <div className="w-10 h-10 rounded-full bg-amber-400/20 flex items-center justify-center flex-shrink-0">
           <Monitor className="w-5 h-5 text-amber-400" />
@@ -133,7 +133,7 @@ export const Onboarding = () => {
           <div className="space-y-4">
             {iOSInstructions}
             <p className="text-center text-xs text-[var(--color-text-muted)]">
-              Using a different device? Swipe down to see other options.
+              Using a different device? Tap below to see other options.
             </p>
             <details className="group">
               <summary className="text-center text-sm text-[var(--color-primary)] cursor-pointer">
@@ -162,12 +162,12 @@ export const Onboarding = () => {
         return (
           <div className="space-y-4">
             {desktopNotice}
-            <div className="bg-[var(--color-surface-elevated)] rounded-xl p-6 text-center">
+            <div className="bg-[var(--color-surface-elevated)] rounded-lg p-6 text-center">
               <p className="text-sm text-[var(--color-text-muted)] mb-4">
                 Scan this QR code with your phone:
               </p>
               <div className="flex justify-center mb-4">
-                <div className="bg-white p-3 rounded-xl">
+                <div className="bg-white p-3 rounded-lg">
                   <QRCodeSVG
                     value={window.location.origin}
                     size={160}
@@ -253,7 +253,7 @@ export const Onboarding = () => {
             </div>
           </div>
 
-          <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 rounded-full bg-amber-400/20 flex items-center justify-center flex-shrink-0">
                 <span className="text-amber-400 text-lg">⚠️</span>

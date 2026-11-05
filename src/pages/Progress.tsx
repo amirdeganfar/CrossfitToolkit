@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Plus, ChevronDown, Trophy, Loader2 } from 'lucide-react';
+import { Plus, ChevronDown, Trophy, Target } from 'lucide-react';
+import { EmptyState } from '../components/EmptyState';
+import { Skeleton, SkeletonRows } from '../components/Skeleton';
+import { haptics } from '../utils/haptics';
 import { useCatalogStore } from '../stores/catalogStore';
 import { useCheckInStore } from '../stores/checkInStore';
 import { useGoalsStore, useSortedActiveGoals, useSortedAchievedGoals } from '../stores/goalsStore';
@@ -41,9 +44,9 @@ export const Progress = () => {
 
   useEffect(() => {
     if (isStoreInitialized && !goalsIsInitialized && catalogItems.length > 0) {
-      goalsInitialize(catalogItems, settings.weightUnit);
+      goalsInitialize(catalogItems);
     }
-  }, [isStoreInitialized, goalsIsInitialized, catalogItems, settings.weightUnit, goalsInitialize]);
+  }, [isStoreInitialized, goalsIsInitialized, catalogItems, goalsInitialize]);
 
   useEffect(() => {
     if (isStoreInitialized && !checkInIsInitialized) {
@@ -55,9 +58,9 @@ export const Progress = () => {
     input: CreateGoalInput | { id: string; updates: UpdateGoalInput }
   ) => {
     if ('id' in input) {
-      await goalsUpdateGoal(input.id, input.updates, catalogItems, settings.weightUnit);
+      await goalsUpdateGoal(input.id, input.updates, catalogItems);
     } else {
-      await goalsAddGoal(input, catalogItems, settings.weightUnit);
+      await goalsAddGoal(input, catalogItems);
     }
   };
 
@@ -75,13 +78,14 @@ export const Progress = () => {
     const { type, goal } = confirmAction;
     switch (type) {
       case 'achieve':
-        await goalsAchieveGoal(goal.id, catalogItems, settings.weightUnit);
+        await goalsAchieveGoal(goal.id, catalogItems);
+        haptics.goal();
         break;
       case 'cancel':
-        await goalsCancelGoal(goal.id, catalogItems, settings.weightUnit);
+        await goalsCancelGoal(goal.id, catalogItems);
         break;
       case 'delete':
-        await goalsDeleteGoal(goal.id, catalogItems, settings.weightUnit);
+        await goalsDeleteGoal(goal.id, catalogItems);
         break;
     }
     setConfirmAction(null);
@@ -94,39 +98,38 @@ export const Progress = () => {
 
   if (!isStoreInitialized || goalsIsLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-[var(--color-primary)]" />
+      <div className="space-y-6" aria-busy="true">
+        <Skeleton className="h-8 w-32" />
+        <Skeleton className="h-40 w-full rounded-lg" />
+        <section className="space-y-3">
+          <Skeleton className="h-5 w-28" />
+          <SkeletonRows count={2} withBadge={false} label="Loading goals" />
+        </section>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display-black text-[30px] text-[var(--color-text)] leading-[1.05]">Progress</h1>
+      <h1 className="t-title">Progress</h1>
 
       {/* Recovery trends — review surface for daily check-in history */}
       <RecoveryTrends />
 
       {/* Active goals */}
       <section>
-        <div className="flex items-center gap-2 mb-3 pb-1 border-b border-[var(--color-border)]">
-          <span className="label-eyebrow">Active goals</span>
-          <span className="text-xs text-[var(--color-text-dim)]">({activeGoals.length})</span>
-        </div>
+        <h2 className="t-section mb-3">
+          Active goals <span className="t-caption num">({activeGoals.length})</span>
+        </h2>
 
         {activeGoals.length === 0 ? (
-          <div className="py-8 text-center border-l-2 border-[var(--color-primary)] pl-4">
-            <p className="font-display text-xl text-[var(--color-text)] mb-1">No active goals</p>
-            <p className="text-xs text-[var(--color-text-muted)] mb-4">Set a goal to track your progress</p>
-            <button
-              onClick={() => setShowModal(true)}
-              className="px-6 py-3 bg-[var(--color-primary)] text-[var(--color-text)] hover:opacity-90 active:scale-95 font-semibold text-sm rounded-full transition-all"
-            >
-              Set first goal
-            </button>
-          </div>
+          <EmptyState
+            icon={Target}
+            message="No active goals. Set one to track progress toward it."
+            action={{ label: 'Set a goal', onClick: () => setShowModal(true) }}
+          />
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {activeGoals.map((goal) => (
               <GoalCard
                 key={goal.id}
@@ -146,11 +149,12 @@ export const Progress = () => {
         <section>
           <button
             onClick={() => setShowAchieved(!showAchieved)}
-            className="flex items-center gap-2 mb-3 w-full text-left pb-1 border-b border-[var(--color-border)]"
+            className="flex items-center gap-2 mb-3 w-full text-left min-h-[44px]"
+            aria-expanded={showAchieved}
           >
-            <Trophy size={14} className="text-[var(--color-warning)]" />
-            <span className="label-eyebrow">Achieved</span>
-            <span className="text-xs text-[var(--color-text-dim)]">({achievedGoals.length})</span>
+            <Trophy size={16} className="text-[var(--color-warning)]" />
+            <span className="t-section">Achieved</span>
+            <span className="t-caption num">({achievedGoals.length})</span>
             <ChevronDown
               size={14}
               className={`ml-auto text-[var(--color-text-muted)] transition-transform ${showAchieved ? 'rotate-180' : ''}`}
@@ -158,7 +162,7 @@ export const Progress = () => {
           </button>
 
           <div className={`accordion-content ${showAchieved ? 'expanded' : ''}`}>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {achievedGoals.map((goal) => (
                 <GoalCard key={goal.id} goal={goal} isAchieved onDelete={handleDeleteGoal} />
               ))}

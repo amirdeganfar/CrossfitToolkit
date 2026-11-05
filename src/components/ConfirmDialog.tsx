@@ -1,3 +1,6 @@
+import { useId, useRef } from 'react';
+import { useModalA11y } from '../hooks/useModalA11y';
+
 interface ConfirmDialogProps {
   title: string;
   message: string;
@@ -17,45 +20,53 @@ export const ConfirmDialog = ({
   onCancel,
   isDestructive = false,
 }: ConfirmDialogProps) => {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
+  const messageId = useId();
+  useModalA11y(dialogRef, onCancel);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="sheet-root">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/75 backdrop-blur-sm"
-        onClick={onCancel}
-        aria-hidden="true"
-      />
+      <div className="sheet-backdrop" onClick={onCancel} aria-hidden="true" />
 
       {/* Sheet */}
-      <div className="relative w-full max-w-sm mx-4 bg-[var(--color-bg)] border border-[var(--color-border-strong)] border-t-2 border-t-[var(--color-primary)] animate-slide-up">
-        {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-1 sm:hidden">
-          <div className="w-8 h-0.5 bg-[var(--color-border-strong)]" />
-        </div>
+      <div
+        ref={dialogRef}
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={messageId}
+        tabIndex={-1}
+        className="sheet sheet-sm"
+      >
+        <div className="sheet-handle" aria-hidden="true" />
 
         {/* Content */}
-        <div className="px-5 py-4 space-y-2">
-          <h2 className="font-display text-xl tracking-[0.1em] text-[var(--color-text)]">{title.toUpperCase()}</h2>
-          <p className="text-sm text-[var(--color-text-muted)]">{message}</p>
+        <div className="px-4 pt-3 pb-4 space-y-2">
+          <h2 id={titleId} className="t-section">{title}</h2>
+          <p id={messageId} className="t-body text-[var(--color-text-muted)]">{message}</p>
         </div>
 
         {/* Actions */}
-        <div className="flex gap-2 px-5 pb-6 pt-2">
+        <div className="flex gap-2 px-4 pb-6 pt-2">
           <button
+            type="button"
             onClick={onCancel}
-            className="flex-1 py-3.5 px-4 bg-transparent border border-[var(--color-border-strong)] hover:bg-[var(--color-surface-elevated)] active:scale-[0.98] font-display tracking-widest text-sm text-[var(--color-text)] transition-all"
+            className="flex-1 min-h-[48px] px-4 rounded-md bg-transparent border border-[var(--color-border-strong)] hover:bg-[var(--color-surface-elevated)] font-semibold text-[15px] text-[var(--color-text)]"
           >
-            {cancelLabel.toUpperCase()}
+            {cancelLabel}
           </button>
           <button
+            type="button"
             onClick={onConfirm}
-            className={`flex-1 py-3.5 px-4 font-display tracking-widest text-sm transition-all active:scale-[0.98] ${
+            className={`flex-1 min-h-[48px] px-4 rounded-md font-semibold text-[15px] hover:opacity-90 ${
               isDestructive
-                ? 'bg-[var(--color-danger)] hover:opacity-90 text-white'
-                : 'bg-[var(--color-primary)] hover:opacity-90 text-[var(--color-text)]'
+                ? 'bg-[var(--color-danger)] text-white'
+                : 'bg-[var(--color-primary)] text-[var(--color-text)]'
             }`}
           >
-            {confirmLabel.toUpperCase()}
+            {confirmLabel}
           </button>
         </div>
       </div>

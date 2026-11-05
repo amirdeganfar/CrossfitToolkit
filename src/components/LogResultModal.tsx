@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import type { CatalogItem, Variant, ScoreType } from '../types/catalog';
 import { useCatalogStore } from '../stores/catalogStore';
@@ -9,6 +9,8 @@ import { DatePicker } from './DatePicker';
 import { TimeInput } from './TimeInput';
 import { PlateStepper } from './PlateStepper';
 import { LoadedBarButton } from './LoadedBarButton';
+import { useModalA11y } from '../hooks/useModalA11y';
+import { haptics } from '../utils/haptics';
 
 interface LogResultModalProps {
   item: CatalogItem;
@@ -44,6 +46,18 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useModalA11y(dialogRef, onClose);
+  const titleId = useId();
+  const repsId = useId();
+  const distanceId = useId();
+  const caloriesId = useId();
+  const timeCapId = useId();
+  const targetRepsId = useId();
+  const resultId = useId();
+  const dateLabelId = useId();
+  const notesId = useId();
 
   const showReps = scoreType === 'Load';
   const isRepsInTime = scoreType === 'RepsInTime';
@@ -165,6 +179,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
         targetReps: targetRepsValue,
       });
 
+      haptics.success();
       onSuccess();
       onClose();
     } catch (err) {
@@ -184,32 +199,34 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
   };
 
   // Filled field class (visible on near-black — see .field in index.css)
-  const inputClass = 'field w-full px-3 py-2.5 font-display tracking-wider text-sm';
+  const inputClass = 'field w-full px-3 py-2.5 text-[15px] num';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="sheet-root">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
-        aria-hidden="true"
-      />
+      <div className="sheet-backdrop" onClick={onClose} aria-hidden="true" />
 
       {/* Sheet */}
-      <div className="relative w-full max-w-lg bg-[var(--color-bg)] border-t-2 border-t-[var(--color-primary)] border-x border-[var(--color-border-strong)] sm:border-2 sm:border-[var(--color-border-strong)] sm:border-t-[var(--color-primary)] overflow-hidden animate-slide-up">
-        {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-8 h-0.5 bg-[var(--color-border-strong)] mx-auto mb-3" />
-        </div>
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className="sheet"
+      >
+        <div className="sheet-handle" aria-hidden="true" />
 
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--color-border)]">
-          <div>
-            <h2 className="font-display text-xl text-[var(--color-text)]">Log · {item.name}</h2>
+          <div className="min-w-0">
+            <p className="t-caption">Log result</p>
+            <h2 id={titleId} className="t-section truncate">{item.name}</h2>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 hover:bg-[var(--color-surface-elevated)] active:scale-95 transition-all"
+            className="p-2 -mr-2 rounded-full hover:bg-[var(--color-surface-elevated)]"
             aria-label="Close modal"
           >
             <X className="w-5 h-5 text-[var(--color-text-muted)]" />
@@ -221,7 +238,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
           {/* Score-type selector — only when the item supports multiple modes */}
           {isMultiMode && (
             <div>
-              <label className="block font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)] mb-2">LOG AS</label>
+              <label className="block label-eyebrow mb-2">Log as</label>
               <div className="flex border-b border-[var(--color-border)] overflow-x-auto">
                 {modes.map((mode) => {
                   const active = scoreType === mode;
@@ -230,14 +247,14 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
                       key={mode}
                       type="button"
                       onClick={() => handleScoreTypeChange(mode)}
-                      className={`flex-1 whitespace-nowrap py-2.5 px-2 font-display text-xs tracking-widest transition-colors border-b-2 -mb-px ${
+                      className={`flex-1 whitespace-nowrap py-2.5 px-2 text-[13px] font-semibold transition-colors border-b-2 -mb-px ${
                         active
-                          ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
+                          ? 'border-[var(--color-text)] text-[var(--color-text)]'
                           : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
                       }`}
                       aria-pressed={active}
                     >
-                      {SCORE_TYPES[mode].name.toUpperCase()}
+                      {SCORE_TYPES[mode].name}
                     </button>
                   );
                 })}
@@ -248,8 +265,9 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
           {/* Reps input for Load type */}
           {showReps && (
             <div>
-              <label className="block font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)] mb-2">REPS</label>
+              <label htmlFor={repsId} className="block label-eyebrow mb-2">Reps</label>
               <input
+                id={repsId}
                 type="number"
                 min="1"
                 value={reps}
@@ -257,27 +275,28 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
                 placeholder="1"
                 className={inputClass}
               />
-              <p className="mt-1 font-display text-xs text-[var(--color-text-muted)] tracking-widest">USE 1 FOR 1RM</p>
+              <p className="mt-1 t-caption">Use 1 for 1RM</p>
             </div>
           )}
 
           {/* Metric type toggle for dual-metric items */}
           {isDual && (
             <div>
-              <label className="block font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)] mb-2">MEASURE BY</label>
+              <label className="block label-eyebrow mb-2">Measure by</label>
               <div className="flex border-b border-[var(--color-border)]">
                 {(['distance', 'calories'] as const).map((type) => (
                   <button
                     key={type}
                     type="button"
                     onClick={() => setMetricType(type)}
-                    className={`flex-1 py-2 font-display text-sm tracking-widest transition-colors border-b-2 -mb-px ${
+                    aria-pressed={metricType === type}
+                    className={`flex-1 py-2 text-[14px] font-semibold capitalize transition-colors border-b-2 -mb-px ${
                       metricType === type
-                        ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
+                        ? 'border-[var(--color-text)] text-[var(--color-text)]'
                         : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
                     }`}
                   >
-                    {type.toUpperCase()}
+                    {type}
                   </button>
                 ))}
               </div>
@@ -287,9 +306,10 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
           {/* Distance input */}
           {showDistance && (
             <div>
-              <label className="block font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)] mb-2">DISTANCE</label>
+              <label htmlFor={distanceId} className="block label-eyebrow mb-2">Distance</label>
               <div className="flex gap-3 items-end">
                 <input
+                  id={distanceId}
                   type="number"
                   min="0"
                   step="any"
@@ -304,13 +324,14 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
                       key={unit}
                       type="button"
                       onClick={() => setDistanceUnit(unit)}
-                      className={`px-2 py-2 font-display text-xs tracking-widest transition-colors border-b-2 -mb-px ${
+                      aria-pressed={distanceUnit === unit}
+                      className={`px-2 py-2 text-[13px] font-semibold transition-colors border-b-2 -mb-px ${
                         distanceUnit === unit
-                          ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
+                          ? 'border-[var(--color-text)] text-[var(--color-text)]'
                           : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
                       }`}
                     >
-                      {unit.toUpperCase()}
+                      {unit}
                     </button>
                   ))}
                 </div>
@@ -321,9 +342,10 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
           {/* Calories input */}
           {showCalories && (
             <div>
-              <label className="block font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)] mb-2">CALORIES</label>
+              <label htmlFor={caloriesId} className="block label-eyebrow mb-2">Calories</label>
               <div className="flex gap-3 items-end">
                 <input
+                  id={caloriesId}
                   type="number"
                   min="1"
                   step="1"
@@ -332,7 +354,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
                   placeholder="e.g., 50"
                   className={`flex-1 ${inputClass}`}
                 />
-                <span className="font-display text-xs tracking-widest text-[var(--color-text-muted)] pb-2.5">CAL</span>
+                <span className="t-caption pb-2.5">cal</span>
               </div>
             </div>
           )}
@@ -340,16 +362,17 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
           {/* Time cap for RepsInTime items (how long you had to rack up reps) */}
           {isRepsInTime && (
             <div>
-              <label className="block font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)] mb-2">TIME CAP</label>
-              <TimeInput value={timeCap} onChange={setTimeCap} />
+              <label htmlFor={timeCapId} className="block label-eyebrow mb-2">Time cap</label>
+              <TimeInput id={timeCapId} value={timeCap} onChange={setTimeCap} />
             </div>
           )}
 
           {/* Target reps for TimeForReps items (rep count you raced to complete) */}
           {isTimeForReps && (
             <div>
-              <label className="block font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)] mb-2">TARGET REPS</label>
+              <label htmlFor={targetRepsId} className="block label-eyebrow mb-2">Target reps</label>
               <input
+                id={targetRepsId}
                 type="number"
                 min="1"
                 value={targetReps}
@@ -362,26 +385,40 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
 
           {/* Result input */}
           <div>
-            <label className="block font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)] mb-2">
-              {getResultLabel(scoreType).toUpperCase()} {getUnitLabel() && scoreType === 'Load' && `(${getUnitLabel().toUpperCase()})`}
+            <label htmlFor={resultId} className="block label-eyebrow mb-2">
+              {getResultLabel(scoreType)} {getUnitLabel() && scoreType === 'Load' && `(${getUnitLabel()})`}
             </label>
             {scoreType === 'Time' || isTimeForReps ? (
               <TimeInput
+                id={resultId}
                 value={result}
                 onChange={setResult}
                 autoFocus
               />
             ) : scoreType === 'Load' ? (
-              <div className="py-2">
+              <div className="py-2 space-y-3">
                 <PlateStepper
                   value={parseFloat(result) || 0}
                   step={settings.weightUnit === 'lb' ? 5 : 2.5}
                   unit={settings.weightUnit}
                   onChange={(v) => setResult(String(v))}
                 />
+                {/* Type a weight directly (the stepper is for fine-tuning) */}
+                <input
+                  id={resultId}
+                  type="number"
+                  min="0"
+                  step="any"
+                  inputMode="decimal"
+                  value={result}
+                  onChange={(e) => setResult(e.target.value)}
+                  placeholder={`Type weight (${settings.weightUnit})`}
+                  className={`${inputClass} text-center`}
+                />
               </div>
             ) : (
               <input
+                id={resultId}
                 type="text"
                 value={result}
                 onChange={(e) => setResult(e.target.value)}
@@ -406,10 +443,10 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
                       key={v.value}
                       type="button"
                       onClick={() => setVariant(v.value)}
-                      className="flex-1 py-2.5 rounded-xl text-[13px] font-extrabold tracking-[0.06em] transition-transform active:scale-95"
+                      className="flex-1 py-2.5 rounded-md text-[13px] font-extrabold tracking-[0.06em]"
                       style={
                         active
-                          ? { background: 'var(--color-primary)', color: 'var(--color-text)' }
+                          ? { background: 'var(--color-text)', color: 'var(--color-bg)' }
                           : v.value === 'Scaled'
                             ? { color: 'var(--color-text-muted)', border: '1.5px dashed rgba(255,255,255,0.25)' }
                             : { color: '#fff', border: '1.5px solid rgba(255,255,255,0.25)' }
@@ -426,20 +463,22 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
 
           {/* Date picker */}
           <div>
-            <label className="block font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)] mb-2">DATE</label>
+            <label id={dateLabelId} className="block label-eyebrow mb-2">Date</label>
             <DatePicker
               value={date}
               onChange={setDate}
               maxDate={new Date()}
+              labelledBy={dateLabelId}
             />
           </div>
 
           {/* Notes */}
           <div>
-            <label className="block font-display text-xs tracking-[0.2em] text-[var(--color-text-muted)] mb-2">
-              NOTES <span className="normal-case opacity-50 font-display text-[10px]">(optional)</span>
+            <label htmlFor={notesId} className="block label-eyebrow mb-2">
+              Notes <span className="font-normal text-[var(--color-text-dim)]">(optional)</span>
             </label>
             <textarea
+              id={notesId}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="How did it feel?"
@@ -450,8 +489,8 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
 
           {/* Error message */}
           {error && (
-            <div className="border-l-2 border-[var(--color-danger)] pl-3 py-1">
-              <p className="font-display text-xs tracking-widest text-[var(--color-danger)]">{error.toUpperCase()}</p>
+            <div role="alert" className="border-l-2 border-[var(--color-danger)] pl-3 py-1">
+              <p className="text-[13px] font-medium text-[var(--color-danger)]">{error}</p>
             </div>
           )}
 

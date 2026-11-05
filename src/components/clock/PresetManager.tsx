@@ -1,6 +1,9 @@
-import { useState } from 'react';
-import { Save, FolderOpen, Trash2, X } from 'lucide-react';
+import { useId, useRef, useState } from 'react';
+import { Save, FolderOpen, Trash2, X, Timer } from 'lucide-react';
+import { EmptyState } from '../EmptyState';
 import { useClockStore, formatTime, type TimerPreset } from '../../stores/clockStore';
+import { useModalA11y } from '../../hooks/useModalA11y';
+import { ConfirmDialog } from '../ConfirmDialog';
 
 interface PresetManagerProps {
   isOpen: boolean;
@@ -20,6 +23,11 @@ export const PresetManager = ({ isOpen, onClose }: PresetManagerProps) => {
 
   const [presetName, setPresetName] = useState('');
   const [showSaveForm, setShowSaveForm] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<TimerPreset | null>(null);
+
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
+  useModalA11y(dialogRef, onClose, isOpen);
 
   if (!isOpen) return null;
 
@@ -36,8 +44,9 @@ export const PresetManager = ({ isOpen, onClose }: PresetManagerProps) => {
     onClose();
   };
 
-  const handleDelete = (id: string) => {
-    deletePreset(id);
+  const confirmDelete = () => {
+    if (pendingDelete) deletePreset(pendingDelete.id);
+    setPendingDelete(null);
   };
 
   const getModeLabel = (mode: string): string => {
@@ -70,54 +79,52 @@ export const PresetManager = ({ isOpen, onClose }: PresetManagerProps) => {
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
-      onClick={onClose}
-    >
+    <div className="sheet-root" onClick={onClose}>
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="sheet-backdrop" aria-hidden="true" />
 
       {/* Modal */}
       <div
-        className="
-          relative w-full max-w-md max-h-[80vh] overflow-hidden
-          bg-[var(--color-surface)] rounded-t-2xl sm:rounded-lg
-          border-t border-[var(--color-border-strong)] sm:border
-        "
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className="sheet"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-1 sm:hidden">
-          <div className="w-10 h-1 bg-[var(--color-border-strong)] rounded-full" />
-        </div>
+        <div className="sheet-handle" aria-hidden="true" />
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)]">
-          <h2 className="font-display text-xl text-[var(--color-text)]">TIMER PRESETS</h2>
+        <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--color-border)]">
+          <h2 id={titleId} className="t-section">Timer presets</h2>
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 rounded-sm hover:bg-[var(--color-surface-elevated)] active:scale-95 transition-all"
+            aria-label="Close presets"
+            className="p-2 -mr-2 rounded-full hover:bg-[var(--color-surface-elevated)]"
           >
             <X className="w-5 h-5 text-[var(--color-text-muted)]" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-4 space-y-4 overflow-y-auto max-h-[60vh]">
+        <div className="p-4 space-y-4">
           {/* Save new preset */}
           {status === 'idle' && (
             <div className="space-y-3">
               {!showSaveForm ? (
                 <button
+                  type="button"
                   onClick={() => setShowSaveForm(true)}
                   className="
                     w-full flex items-center justify-center gap-2 py-3 px-4
                     bg-[var(--color-primary)] hover:opacity-90
-                    text-white font-display tracking-widest text-sm rounded-sm
+                    text-white font-semibold text-sm rounded-sm
                     transition-all active:scale-[0.97]
                   "
                 >
                   <Save className="w-4 h-4" />
-                  SAVE CURRENT SETUP
+                  Save current setup
                 </button>
               ) : (
                 <div className="flex gap-2">
@@ -126,51 +133,51 @@ export const PresetManager = ({ isOpen, onClose }: PresetManagerProps) => {
                     value={presetName}
                     onChange={(e) => setPresetName(e.target.value)}
                     placeholder="Preset name..."
+                    aria-label="Preset name"
                     className="
-                      flex-1 px-3 py-2.5 rounded-sm
-                      bg-[var(--color-bg)] border border-[var(--color-border-strong)]
-                      text-[var(--color-text)] placeholder-[var(--color-text-muted)]
-                      focus:outline-none focus:border-[var(--color-primary)]
+                      field flex-1 px-3 py-2.5
                     "
                     autoFocus
                     onKeyDown={(e) => e.key === 'Enter' && handleSave()}
                   />
                   <button
+                    type="button"
                     onClick={handleSave}
                     disabled={!presetName.trim()}
                     className="
                       px-4 py-2.5 bg-[var(--color-success)] hover:opacity-90
                       disabled:opacity-50 disabled:cursor-not-allowed
-                      text-white font-display tracking-widest text-sm rounded-sm
+                      text-white font-semibold text-sm rounded-sm
                       transition-all
                     "
                   >
-                    SAVE
+                    Save
                   </button>
                   <button
+                    type="button"
                     onClick={() => {
                       setShowSaveForm(false);
                       setPresetName('');
                     }}
                     className="
                       px-4 py-2.5 bg-[var(--color-surface-elevated)] border border-[var(--color-border-strong)]
-                      text-[var(--color-text-muted)] font-display tracking-widest text-sm rounded-sm
+                      text-[var(--color-text-muted)] font-semibold text-sm rounded-sm
                       hover:text-[var(--color-text)] transition-colors
                     "
                   >
-                    CANCEL
+                    Cancel
                   </button>
                 </div>
               )}
 
               {/* Current config preview */}
-              <div className="p-3 bg-[var(--color-bg)] rounded-sm border border-[var(--color-border)]">
-                <div className="font-display text-[10px] tracking-widest text-[var(--color-text-muted)] mb-1">CURRENT SETUP</div>
+              <div className="p-3 bg-[var(--color-bg)] rounded-md border border-[var(--color-border)]">
+                <div className="t-caption mb-1">Current setup</div>
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 bg-[var(--color-primary)]/20 text-[var(--color-primary)] font-display text-xs tracking-wider rounded-sm">
+                  <span className="px-2 py-0.5 bg-[var(--color-surface-elevated)] border border-[var(--color-border-strong)] text-[var(--color-text)] text-xs font-semibold rounded-xs">
                     {getModeLabel(config.mode)}
                   </span>
-                  <span className="text-sm text-[var(--color-text)]">
+                  <span className="text-sm text-[var(--color-text)] num">
                     {getPresetDescription({ id: '', name: '', config, createdAt: 0 })}
                   </span>
                 </div>
@@ -182,13 +189,11 @@ export const PresetManager = ({ isOpen, onClose }: PresetManagerProps) => {
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <FolderOpen className="w-4 h-4 text-[var(--color-text-muted)]" />
-              <span className="font-display text-xs tracking-widest text-[var(--color-text-muted)]">SAVED PRESETS ({presets.length})</span>
+              <span className="label-eyebrow">Saved presets <span className="num">({presets.length})</span></span>
             </div>
 
             {presets.length === 0 ? (
-              <div className="p-6 text-center">
-                <p className="font-display text-sm tracking-wider text-[var(--color-text-muted)]">NO PRESETS SAVED</p>
-              </div>
+              <EmptyState icon={Timer} message="No presets yet. Set up a timer, then save it here." />
             ) : (
               <div className="space-y-2">
                 {presets.map((preset) => (
@@ -196,12 +201,13 @@ export const PresetManager = ({ isOpen, onClose }: PresetManagerProps) => {
                     key={preset.id}
                     className="
                       flex items-center gap-3 p-3
-                      bg-[var(--color-bg)] rounded-sm
+                      bg-[var(--color-bg)] rounded-md
                       border border-[var(--color-border)]
                       group
                     "
                   >
                     <button
+                      type="button"
                       onClick={() => handleLoad(preset)}
                       disabled={status !== 'idle'}
                       className="
@@ -210,24 +216,26 @@ export const PresetManager = ({ isOpen, onClose }: PresetManagerProps) => {
                       "
                     >
                       <div className="font-display text-base text-[var(--color-text)]">
-                        {preset.name.toUpperCase()}
+                        {preset.name}
                       </div>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="px-2 py-0.5 bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)] font-display text-[10px] tracking-wider rounded-sm">
+                        <span className="px-2 py-0.5 bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)] text-[11px] font-semibold rounded-xs">
                           {getModeLabel(preset.config.mode)}
                         </span>
-                        <span className="text-xs text-[var(--color-text-muted)]">
+                        <span className="text-xs text-[var(--color-text-muted)] num">
                           {getPresetDescription(preset)}
                         </span>
                       </div>
                     </button>
+                    {/* Always visible (muted) so it works on touch/keyboard */}
                     <button
-                      onClick={() => handleDelete(preset.id)}
+                      type="button"
+                      onClick={() => setPendingDelete(preset)}
+                      aria-label={`Delete preset ${preset.name}`}
                       className="
                         p-2 rounded-sm
-                        text-[var(--color-text-muted)] hover:text-[var(--color-danger)]
-                        hover:bg-red-500/10
-                        opacity-0 group-hover:opacity-100
+                        text-[var(--color-text-muted)] hover:text-[var(--color-danger)] focus-visible:text-[var(--color-danger)]
+                        hover:bg-[var(--color-danger)]/10 focus-visible:bg-[var(--color-danger)]/10
                         transition-all
                       "
                     >
@@ -240,6 +248,20 @@ export const PresetManager = ({ isOpen, onClose }: PresetManagerProps) => {
           </div>
         </div>
       </div>
+
+      {pendingDelete && (
+        // Stop clicks inside the confirm from reaching the outer backdrop handler
+        <div onClick={(e) => e.stopPropagation()}>
+          <ConfirmDialog
+            title="Delete preset?"
+            message={`"${pendingDelete.name}" will be removed.`}
+            confirmLabel="Delete"
+            isDestructive
+            onConfirm={confirmDelete}
+            onCancel={() => setPendingDelete(null)}
+          />
+        </div>
+      )}
     </div>
   );
 };

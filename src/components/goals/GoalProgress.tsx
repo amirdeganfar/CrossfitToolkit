@@ -16,23 +16,23 @@ export const GoalProgress = ({
 
   const heightClass = { sm: 'h-1', md: 'h-1.5', lg: 'h-2' }[size];
 
-  // Always use primary (yellow) — tactical single-color bar
+  // Neutral bar; success green once complete
   const getProgressColor = () => {
     if (roundedProgress >= 100) return 'bg-[var(--color-success)]';
-    return 'bg-[var(--color-primary)]';
+    return 'bg-[var(--color-text)]';
   };
 
   const getLabelColor = () => {
     if (roundedProgress >= 100) return 'text-[var(--color-success)]';
-    return 'text-[var(--color-primary)]';
+    return 'text-[var(--color-text)]';
   };
 
-  const labelSize = { sm: 'text-xs', md: 'text-sm font-display text-base', lg: 'text-lg font-display' }[size];
+  const labelSize = { sm: 'text-xs num', md: 'text-sm font-display text-base', lg: 'text-lg font-display' }[size];
 
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       <div
-        className={`flex-1 bg-[var(--color-surface-elevated)] rounded-none overflow-hidden ${heightClass}`}
+        className={`flex-1 bg-[var(--color-surface-elevated)] rounded-full overflow-hidden ${heightClass}`}
         role="progressbar"
         aria-valuenow={roundedProgress}
         aria-valuemin={0}
@@ -40,7 +40,7 @@ export const GoalProgress = ({
         aria-label={`${roundedProgress}% progress`}
       >
         <div
-          className={`${heightClass} ${getProgressColor()} transition-all duration-500 ease-out rounded-none`}
+          className={`${heightClass} ${getProgressColor()} transition-all duration-500 ease-out rounded-full`}
           style={{ width: `${clampedProgress}%` }}
         />
       </div>

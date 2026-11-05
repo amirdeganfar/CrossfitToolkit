@@ -139,27 +139,30 @@ export type ReasonMetric = 'consecutive' | 'energy' | 'soreness' | 'sleep';
  * Only shown when days >= 2 (contributes points).
  */
 export const getConsecutiveMessage = (days: number): string => {
-  if (days >= 5) return '4+ consecutive training days';
   return `${days} consecutive training days`;
 };
 
 /**
  * Get user-facing message for energy level.
- * Only shown when energy <= 2.
+ * Shown whenever energy adds points (value <= 4).
  */
 export const getEnergyMessage = (value: number): string | null => {
   if (value === 1) return 'Very low energy';
   if (value === 2) return 'Low energy';
+  if (value === 3) return 'Moderate energy';
+  if (value === 4) return 'Energy slightly below peak';
   return null;
 };
 
 /**
  * Get user-facing message for soreness level.
- * Only shown when soreness >= 4.
+ * Shown whenever soreness adds points (value >= 2).
  */
 export const getSorenessMessage = (value: number): string | null => {
   if (value === 5) return 'High soreness';
   if (value === 4) return 'Elevated soreness';
+  if (value === 3) return 'Moderate soreness';
+  if (value === 2) return 'Light soreness';
   return null;
 };
 

@@ -4,6 +4,7 @@ import type { Goal, CreateGoalInput, UpdateGoalInput, GoalStatus } from '../type
 import type { DailyCheckIn } from '../types/training';
 import { getBuiltinCatalog, getBuiltinCatalogItemById } from '../catalog/catalogService';
 import { isLowerBetter as scoreTypeIsLowerBetter, getLogScoreType } from '../config/scoreTypes';
+import { todayLocal } from '../utils/date';
 
 /**
  * CrossfitToolkit IndexedDB Database
@@ -103,11 +104,74 @@ class CrossfitToolkitDB extends Dexie {
       goals: '++id, itemId, status, targetDate',
       dailyCheckIns: 'id, date, type',
     });
+
+    // Version 5: logs & goals store the unit they were entered in. Same schema;
+    // stamp existing rows with the current settings units.
+    this.version(5)
+      .stores({
+        favorites: 'id',
+        customItems: 'id, category, name',
+        prLogs: 'id, catalogItemId, date, variant',
+        settings: 'id',
+        goals: '++id, itemId, status, targetDate',
+        dailyCheckIns: 'id, date, type',
+      })
+      .upgrade(async (tx) => {
+        const stored = (await tx.table('settings').get('default')) as UserSettings | undefined;
+        const units = { ...DEFAULT_SETTINGS, ...stored };
+        const customItems = (await tx.table('customItems').toArray()) as CustomItem[];
+        const customById = new Map(customItems.map((i) => [i.id, i]));
+        await tx.table('prLogs').toCollection().modify((log: PRLog) => {
+          Object.assign(log, stampLogUnits(log, units));
+          // Bare-integer Rounds+Reps results ("18") used to parse as 0+18; they mean 18+0.
+          const item = getBuiltinCatalogItemById(log.catalogItemId) ?? customById.get(log.catalogItemId);
+          if (item && getLogScoreType(log, item) === 'Rounds+Reps' && /^\d+$/.test(log.result)) {
+            log.resultValue = parseInt(log.result, 10) * 100;
+          }
+        });
+        await tx.table('goals').toCollection().modify((goal: Goal) => {
+          Object.assign(goal, stampGoalUnits(goal, units));
+        });
+      });
   }
 }
 
+/** Default user settings (fresh install / after clearAllData). */
+export const DEFAULT_SETTINGS: UserSettings = {
+  weightUnit: 'kg',
+  distanceUnit: 'm',
+  hasSeenOnboarding: false,
+  minSleepHours: 7,
+};
+
+type UnitSettings = Pick<UserSettings, 'weightUnit' | 'distanceUnit'>;
+
+/** Fill in missing unit fields on a log from the given settings. */
+const stampLogUnits = <T extends Pick<PRLog, 'unit' | 'distanceUnit'>>(log: T, units: UnitSettings): T => ({
+  ...log,
+  unit: log.unit ?? units.weightUnit,
+  distanceUnit: log.distanceUnit ?? units.distanceUnit,
+});
+
+/** Fill in missing unit fields on a goal from the given settings. */
+const stampGoalUnits = <T extends Pick<Goal, 'unit' | 'distanceUnit'>>(goal: T, units: UnitSettings): T => ({
+  ...goal,
+  unit: goal.unit ?? units.weightUnit,
+  distanceUnit: goal.distanceUnit ?? units.distanceUnit,
+});
+
 // Database singleton
 export const db = new CrossfitToolkitDB();
+
+/** Every table holding user data (used for import / clear-all transactions). */
+const USER_TABLES = () => [
+  db.favorites,
+  db.customItems,
+  db.prLogs,
+  db.goals,
+  db.dailyCheckIns,
+  db.settings,
+];
 
 /**
  * Initialize database
@@ -119,16 +183,10 @@ export const initializeDatabase = async (): Promise<void> => {
     // `put` (not `add`) keeps this idempotent: React StrictMode double-invokes
     // initialize() in dev, racing two inserts of the same key — `add` would
     // throw a ConstraintError on the second. `put` is a safe no-op overwrite.
-    await db.settings.put({
-      id: 'default',
-      weightUnit: 'kg',
-      distanceUnit: 'm',
-      hasSeenOnboarding: false,
-      minSleepHours: 7,
-    });
+    await db.settings.put({ id: 'default', ...DEFAULT_SETTINGS });
     console.log('[DB] Created default settings');
   }
-  
+
   console.log('[DB] Initialized');
 };
 
@@ -229,12 +287,16 @@ export const searchCatalogItems = async (
  * Toggle favorite status for a catalog item
  */
 export const toggleFavorite = async (id: string): Promise<void> => {
-  const existing = await db.favorites.get(id);
-  if (existing) {
-    await db.favorites.delete(id);
-  } else {
-    await db.favorites.add({ id });
-  }
+  // Read + write in one transaction, and `put` instead of `add`, so rapid
+  // double-taps can't race into a ConstraintError.
+  await db.transaction('rw', db.favorites, async () => {
+    const existing = await db.favorites.get(id);
+    if (existing) {
+      await db.favorites.delete(id);
+    } else {
+      await db.favorites.put({ id });
+    }
+  });
 };
 
 /**
@@ -382,8 +444,10 @@ export const addPRLog = async (
   log: Omit<PRLog, 'id' | 'createdAt'>
 ): Promise<string> => {
   const id = `log-${Date.now()}`;
+  // Stamp the entry unit at save time (callers may pass it explicitly).
+  const settings = await getSettings();
   await db.prLogs.add({
-    ...log,
+    ...stampLogUnits(log, settings),
     id,
     createdAt: Date.now(),
   });
@@ -406,16 +470,24 @@ export const deletePRLog = async (id: string): Promise<void> => {
  */
 export const getSettings = async (): Promise<UserSettings> => {
   const settings = await db.settings.get('default');
-  return settings ?? { weightUnit: 'kg', distanceUnit: 'm', hasSeenOnboarding: false, minSleepHours: 7 };
+  if (!settings) return { ...DEFAULT_SETTINGS };
+  // Strip the internal row id and backfill any fields missing from older rows.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { id: _id, ...rest } = settings;
+  return { ...DEFAULT_SETTINGS, ...rest };
 };
 
 /**
- * Update user settings
+ * Update user settings (upsert: works even if the settings row doesn't exist yet,
+ * e.g. a fresh install opening /onboarding directly).
  */
 export const updateSettings = async (
   updates: Partial<UserSettings>
 ): Promise<void> => {
-  await db.settings.update('default', updates);
+  await db.transaction('rw', db.settings, async () => {
+    const current = await getSettings();
+    await db.settings.put({ id: 'default', ...current, ...updates });
+  });
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -451,184 +523,105 @@ export const exportData = async (): Promise<string> => {
   );
 };
 
-/**
- * Import data from JSON
- */
-export const importData = async (json: string): Promise<void> => {
-  const data = JSON.parse(json);
+interface BackupPayload {
+  favorites: Favorite[];
+  customItems: CustomItem[];
+  prLogs: PRLog[];
+  goals: Goal[];
+  dailyCheckIns: DailyCheckIn[];
+  settings?: Partial<UserSettings>;
+}
 
-  // Handle v1 format (legacy)
-  if (data.version === 1) {
-    await importV1Data(data);
-    return;
-  }
+/** Map a legacy v1 catalog item to the CustomItem shape. */
+const toCustomItem = (item: CatalogItem): CustomItem => ({
+  id: item.id,
+  name: item.name,
+  category: item.category,
+  subCategory: item.subCategory,
+  tags: item.tags,
+  scoreType: item.scoreType,
+  description: item.description,
+  aliases: item.aliases,
+  source: item.source,
+  sourceUrl: item.sourceUrl,
+  createdAt: item.createdAt,
+  metrics: item.metrics,
+});
 
-  // Handle v2 format (no goals)
-  if (data.version === 2) {
-    await importV2Data(data);
-    return;
-  }
-
-  // Handle v3 format (no dailyCheckIns)
-  if (data.version === 3) {
-    await importV3Data(data);
-    return;
-  }
-
-  if (data.version !== 4) {
+/** Normalize any supported backup version (1-4) to the current table set. */
+const parseBackup = (data: Record<string, unknown>): BackupPayload => {
+  const version = data.version;
+  if (version !== 1 && version !== 2 && version !== 3 && version !== 4) {
     throw new Error('Unsupported data format version');
   }
 
-  // Clear existing user data
-  await Promise.all([
-    db.favorites.clear(),
-    db.customItems.clear(),
-    db.prLogs.clear(),
-    db.goals.clear(),
-    db.dailyCheckIns.clear(),
-  ]);
+  const arr = <T>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
+  const settings = (data.settings as Partial<UserSettings> | undefined) ?? undefined;
 
-  // Import new data
-  if (data.favorites?.length > 0) {
-    await db.favorites.bulkAdd(data.favorites);
+  if (version === 1) {
+    const catalogItems = arr<CatalogItem>(data.catalogItems);
+    return {
+      favorites: catalogItems.filter((i) => i.isFavorite).map((i) => ({ id: i.id })),
+      customItems: catalogItems.filter((i) => !i.isBuiltin).map(toCustomItem),
+      prLogs: arr<PRLog>(data.prLogs),
+      goals: [],
+      dailyCheckIns: [],
+      settings,
+    };
   }
-  if (data.customItems?.length > 0) {
-    await db.customItems.bulkAdd(data.customItems);
-  }
-  if (data.prLogs?.length > 0) {
-    await db.prLogs.bulkAdd(data.prLogs);
-  }
-  if (data.goals?.length > 0) {
-    await db.goals.bulkAdd(data.goals);
-  }
-  if (data.dailyCheckIns?.length > 0) {
-    await db.dailyCheckIns.bulkAdd(data.dailyCheckIns);
-  }
-  if (data.settings) {
-    await db.settings.put({ id: 'default', ...data.settings });
-  }
+
+  return {
+    favorites: arr<Favorite>(data.favorites),
+    customItems: arr<CustomItem>(data.customItems),
+    prLogs: arr<PRLog>(data.prLogs),
+    goals: arr<Goal>(data.goals),
+    dailyCheckIns: arr<DailyCheckIn>(data.dailyCheckIns),
+    settings,
+  };
 };
 
 /**
- * Import v3 data format (no dailyCheckIns)
+ * Import data from JSON (backup versions 1-4).
+ *
+ * Replace semantics: every user-data table is cleared and refilled inside ONE
+ * transaction — if anything fails, nothing is changed. Rows without a stored
+ * unit are stamped with the backup's (or current) settings unit.
  */
-const importV3Data = async (data: {
-  favorites?: { id: string }[];
-  customItems?: CustomItem[];
-  prLogs?: PRLog[];
-  goals?: Goal[];
-  settings?: UserSettings;
-}): Promise<void> => {
-  // Clear existing user data
-  await Promise.all([
-    db.favorites.clear(),
-    db.customItems.clear(),
-    db.prLogs.clear(),
-    db.goals.clear(),
-  ]);
+export const importData = async (json: string): Promise<void> => {
+  const payload = parseBackup(JSON.parse(json));
 
-  if (data.favorites?.length) {
-    await db.favorites.bulkAdd(data.favorites);
-  }
-  if (data.customItems?.length) {
-    await db.customItems.bulkAdd(data.customItems);
-  }
-  if (data.prLogs?.length) {
-    await db.prLogs.bulkAdd(data.prLogs);
-  }
-  if (data.goals?.length) {
-    await db.goals.bulkAdd(data.goals);
-  }
-  if (data.settings) {
-    await db.settings.put({ id: 'default', ...data.settings });
-  }
-};
+  await db.transaction('rw', USER_TABLES(), async () => {
+    const current = await getSettings();
+    const settings: UserSettings | undefined = payload.settings
+      ? { ...DEFAULT_SETTINGS, ...payload.settings }
+      : undefined;
+    const units = settings ?? current;
 
-/**
- * Import v2 data format (no goals)
- */
-const importV2Data = async (data: {
-  favorites?: { id: string }[];
-  customItems?: CustomItem[];
-  prLogs?: PRLog[];
-  settings?: UserSettings;
-}): Promise<void> => {
-  // Clear existing user data
-  await Promise.all([
-    db.favorites.clear(),
-    db.customItems.clear(),
-    db.prLogs.clear(),
-  ]);
+    await Promise.all(USER_TABLES().filter((t) => t !== db.settings).map((t) => t.clear()));
 
-  if (data.favorites?.length) {
-    await db.favorites.bulkAdd(data.favorites);
-  }
-  if (data.customItems?.length) {
-    await db.customItems.bulkAdd(data.customItems);
-  }
-  if (data.prLogs?.length) {
-    await db.prLogs.bulkAdd(data.prLogs);
-  }
-  if (data.settings) {
-    await db.settings.put({ id: 'default', ...data.settings });
-  }
-};
-
-/**
- * Import legacy v1 data format
- */
-const importV1Data = async (data: {
-  catalogItems?: CatalogItem[];
-  prLogs?: PRLog[];
-  settings?: UserSettings;
-}): Promise<void> => {
-  // Clear existing user data
-  await Promise.all([
-    db.favorites.clear(),
-    db.customItems.clear(),
-    db.prLogs.clear(),
-  ]);
-
-  if (data.catalogItems?.length) {
-    // Extract favorites
-    const favorites = data.catalogItems
-      .filter((item) => item.isFavorite)
-      .map((item) => ({ id: item.id }));
-    
-    if (favorites.length > 0) {
-      await db.favorites.bulkAdd(favorites);
+    if (payload.favorites.length) await db.favorites.bulkPut(payload.favorites);
+    if (payload.customItems.length) await db.customItems.bulkPut(payload.customItems);
+    if (payload.prLogs.length) {
+      await db.prLogs.bulkPut(payload.prLogs.map((log) => stampLogUnits(log, units)));
     }
-
-    // Extract custom items
-    const customItems = data.catalogItems
-      .filter((item) => !item.isBuiltin)
-      .map((item) => ({
-        id: item.id,
-        name: item.name,
-        category: item.category,
-        subCategory: item.subCategory,
-        tags: item.tags,
-        scoreType: item.scoreType,
-        description: item.description,
-        aliases: item.aliases,
-        source: item.source,
-        sourceUrl: item.sourceUrl,
-        createdAt: item.createdAt,
-        metrics: item.metrics,
-      }));
-    
-    if (customItems.length > 0) {
-      await db.customItems.bulkAdd(customItems);
+    if (payload.goals.length) {
+      await db.goals.bulkPut(payload.goals.map((goal) => stampGoalUnits(goal, units)));
     }
-  }
+    if (payload.dailyCheckIns.length) await db.dailyCheckIns.bulkPut(payload.dailyCheckIns);
+    if (settings) await db.settings.put({ id: 'default', ...settings });
+  });
+};
 
-  if (data.prLogs?.length) {
-    await db.prLogs.bulkAdd(data.prLogs);
-  }
-
-  if (data.settings) {
-    await db.settings.put({ id: 'default', ...data.settings });
-  }
+/**
+ * Delete ALL user data (favorites, custom items, logs, goals, check-ins) and
+ * reset settings to defaults — atomically. Callers should reload their stores
+ * afterwards (catalogStore.refreshData / goalsStore.reload / checkInStore.reload).
+ */
+export const clearAllData = async (): Promise<void> => {
+  await db.transaction('rw', USER_TABLES(), async () => {
+    await Promise.all(USER_TABLES().map((t) => t.clear()));
+    await db.settings.put({ id: 'default', ...DEFAULT_SETTINGS });
+  });
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -670,7 +663,7 @@ export const getActiveGoalForItem = async (
   itemId: string,
   variant?: Goal['variant'],
   reps?: number,
-  pool?: { scoreTypeId?: ScoreType; timeCap?: number; targetReps?: number }
+  pool?: { scoreTypeId?: ScoreType; timeCap?: number; targetReps?: number; distance?: number }
 ): Promise<Goal | undefined> => {
   const activeGoals = await db.goals
     .where('itemId')
@@ -694,7 +687,8 @@ export const getActiveGoalForItem = async (
         (pool.timeCap === undefined || goal.timeCap === pool.timeCap) &&
         (pool.targetReps === undefined || goal.targetReps === pool.targetReps);
     }
-    return variantMatch && repsMatch && poolMatch;
+    const distanceMatch = pool?.distance === undefined || goal.distance === pool.distance;
+    return variantMatch && repsMatch && poolMatch && distanceMatch;
   });
 };
 
@@ -710,8 +704,9 @@ export const getGoalsForItem = async (itemId: string): Promise<Goal[]> => {
  */
 export const addGoal = async (input: CreateGoalInput): Promise<string> => {
   const id = `goal-${Date.now()}`;
-  const now = new Date().toISOString().split('T')[0];
-  
+  const now = todayLocal();
+  const settings = await getSettings();
+
   await db.goals.add({
     id,
     itemId: input.itemId,
@@ -724,6 +719,9 @@ export const addGoal = async (input: CreateGoalInput): Promise<string> => {
     scoreTypeId: input.scoreTypeId,
     timeCap: input.timeCap,
     targetReps: input.targetReps,
+    distance: input.distance,
+    unit: input.unit ?? settings.weightUnit,
+    distanceUnit: input.distanceUnit ?? settings.distanceUnit,
   });
   
   return id;
@@ -736,6 +734,16 @@ export const updateGoal = async (
   id: string,
   updates: UpdateGoalInput
 ): Promise<void> => {
+  // A new targetValue is entered in the current display unit; record that unit
+  // unless the caller specified one.
+  if (updates.targetValue !== undefined && (updates.unit === undefined || updates.distanceUnit === undefined)) {
+    const settings = await getSettings();
+    updates = {
+      ...updates,
+      unit: updates.unit ?? settings.weightUnit,
+      distanceUnit: updates.distanceUnit ?? settings.distanceUnit,
+    };
+  }
   await db.goals.update(id, updates);
 };
 
@@ -743,7 +751,7 @@ export const updateGoal = async (
  * Mark a goal as achieved
  */
 export const achieveGoal = async (id: string): Promise<void> => {
-  const now = new Date().toISOString().split('T')[0];
+  const now = todayLocal();
   await db.goals.update(id, {
     status: 'achieved',
     achievedAt: now,

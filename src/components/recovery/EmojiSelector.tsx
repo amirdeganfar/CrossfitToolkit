@@ -60,12 +60,12 @@ export const EmojiSelector = ({
               disabled={disabled}
               onClick={() => onChange(optionValue)}
               onKeyDown={(e) => handleKeyDown(e, optionValue)}
-              className={`flex-1 flex items-center justify-center rounded-[10px] h-11 text-[13px] font-semibold transition-all duration-150 ease-out ${
+              className={`flex-1 flex items-center justify-center rounded-md h-11 text-[13px] font-semibold num transition-all duration-150 ease-out ${
                 disabled ? 'opacity-40 cursor-not-allowed' : 'active:scale-95'
               } focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-1 focus:ring-offset-[var(--color-bg)]`}
               style={
                 filled
-                  ? { background: tone, color: 'var(--color-bg)', boxShadow: `0 0 10px ${value ? tone : 'transparent'}44` }
+                  ? { background: tone, color: 'var(--color-bg)', boxShadow: `0 0 10px color-mix(in srgb, ${tone} 27%, transparent)` }
                   : { background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text-dim)' }
               }
             >

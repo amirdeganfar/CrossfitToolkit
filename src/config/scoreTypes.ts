@@ -57,7 +57,8 @@ export const parseRoundsReps = (value: string): number => {
     const reps = parseInt(match[2], 10);
     return rounds * 100 + reps; // Normalize for comparison
   }
-  return parseInt(value, 10) || 0;
+  // A bare integer means N full rounds + 0 reps (e.g. "18" → 18+0).
+  return (parseInt(value, 10) || 0) * 100;
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -111,7 +112,8 @@ export interface ScoreTypeDef {
 // REGISTRY
 // ═══════════════════════════════════════════════════════════════════════════
 
-const TIME_RE = /^(\d{1,2}:)?\d{1,2}:\d{2}$/;
+// m:ss or h:mm:ss — seconds (and minutes when hours present) must be 0-59
+const TIME_RE = /^(?:\d{1,2}:[0-5]\d|\d{1,2}):[0-5]\d$/;
 const NUMERIC_RE = /^\d+(\.\d+)?$/;
 const ROUNDS_RE = /^\d+(\+\d+)?$/;
 
@@ -162,7 +164,7 @@ export const SCORE_TYPES: Record<ScoreType, ScoreTypeDef> = {
     resultInput: 'text',
     parse: (r) => parseRoundsReps(r),
     validate: (r) => ROUNDS_RE.test(r),
-    format: (r) => r, // Already formatted as "18+5"
+    format: (r) => (r.includes('+') ? r : `${r}+0`), // "18+5"; bare "18" means 18 rounds
   },
   Distance: {
     id: 'Distance',

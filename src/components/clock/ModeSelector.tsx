@@ -15,9 +15,9 @@ export const ModeSelector = ({ onModeChange }: ModeSelectorProps) => {
   const modes: { id: TimerMode; label: string; description: string }[] = [
     { id: 'amrap',   label: 'AMRAP',    description: 'As Many Rounds As Possible' },
     { id: 'emom',    label: 'EMOM',     description: 'Every Minute On the Minute' },
-    { id: 'forTime', label: 'FOR TIME', description: 'Stopwatch with optional cap' },
-    { id: 'tabata',  label: 'TABATA',   description: '20s work / 10s rest' },
-    { id: 'custom',  label: 'CUSTOM',   description: 'Custom intervals' },
+    { id: 'forTime', label: 'For time', description: 'Stopwatch with optional cap' },
+    { id: 'tabata',  label: 'Tabata',   description: '20s work / 10s rest' },
+    { id: 'custom',  label: 'Custom',   description: 'Custom intervals' },
   ];
 
   const handleModeSelect = (mode: TimerMode) => {
@@ -35,11 +35,11 @@ export const ModeSelector = ({ onModeChange }: ModeSelectorProps) => {
           disabled={status !== 'idle'}
           title={mode.description}
           className={`
-            flex-shrink-0 px-4 py-2 font-display text-xs tracking-widest
+            flex-shrink-0 px-4 py-2.5 text-[14px] font-semibold
             transition-colors duration-150 border-b-2 -mb-px
             ${status !== 'idle' ? 'opacity-40 cursor-not-allowed' : ''}
             ${currentMode === mode.id
-              ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
+              ? 'border-[var(--color-text)] text-[var(--color-text)]'
               : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
             }
           `}

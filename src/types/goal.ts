@@ -26,10 +26,16 @@ export interface Goal {
   scoreTypeId?: ScoreType;     // For multi-mode items: which score pool the goal targets. Backfills to item.scoreType.
   timeCap?: number;            // Constraint pool for RepsInTime goals (seconds)
   targetReps?: number;         // Constraint pool for TimeForReps goals
+  distance?: number;           // Distance pool (meters, same as PRLog.distance) for Time goals on distance items
+  unit?: 'kg' | 'lb';          // Weight unit `targetValue` is stored in (Load goals)
+  distanceUnit?: 'm' | 'ft';   // Distance unit `targetValue` is stored in (Distance goals)
 }
 
 /**
- * Goal with computed progress data
+ * Goal with computed progress data.
+ * `currentValue` is converted to the goal's stored unit (comparable with
+ * `targetValue`); `currentResult`/`targetResult` are formatted in the user's
+ * current display unit (suffix included for Load/Distance).
  */
 export interface GoalWithProgress extends Goal {
   itemName: string;
@@ -54,6 +60,11 @@ export interface CreateGoalInput {
   scoreTypeId?: ScoreType;
   timeCap?: number;
   targetReps?: number;
+  distance?: number;
+  /** Defaults to the current settings unit when omitted. */
+  unit?: 'kg' | 'lb';
+  /** Defaults to the current settings unit when omitted. */
+  distanceUnit?: 'm' | 'ft';
 }
 
 /**
@@ -69,4 +80,7 @@ export interface UpdateGoalInput {
   scoreTypeId?: ScoreType;
   timeCap?: number;
   targetReps?: number;
+  distance?: number;
+  unit?: 'kg' | 'lb';
+  distanceUnit?: 'm' | 'ft';
 }

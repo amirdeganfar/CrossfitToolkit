@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import type { CatalogItem, PRLog, UserSettings } from '../types/catalog';
 import * as db from '../db';
+import { useGoalsStore } from './goalsStore';
+import { useCheckInStore } from './checkInStore';
 
 interface CatalogState {
   // Data
@@ -10,7 +12,10 @@ interface CatalogState {
   settings: UserSettings;
   
   // UI State
+  /** True only during the first initialize() (App shows a full-screen spinner). */
   isLoading: boolean;
+  /** True while refreshData() runs (import, clear-all). Never unmounts the app. */
+  isRefreshing: boolean;
   isInitialized: boolean;
   searchQuery: string;
   selectedCategory: CatalogItem['category'] | 'All';
@@ -25,8 +30,20 @@ interface CatalogState {
   refreshData: () => Promise<void>;
   updateSettings: (updates: Partial<UserSettings>) => Promise<void>;
   exportData: () => Promise<string>;
+  /** Import a backup, then reload catalog, goals and check-in stores. */
   importData: (json: string) => Promise<void>;
+  /** Delete all user data, reset settings to defaults, then reload all stores. */
+  clearAllData: () => Promise<void>;
 }
+
+/** Reload every data store from the DB (after import / clear-all). */
+const reloadAllStores = async (): Promise<void> => {
+  await useCatalogStore.getState().refreshData();
+  await Promise.all([
+    useGoalsStore.getState().reload(useCatalogStore.getState().catalogItems),
+    useCheckInStore.getState().reload(),
+  ]);
+};
 
 export const useCatalogStore = create<CatalogState>((set, get) => ({
   // Initial state
@@ -35,6 +52,7 @@ export const useCatalogStore = create<CatalogState>((set, get) => ({
   recentLogs: [],
   settings: { weightUnit: 'kg', distanceUnit: 'm', hasSeenOnboarding: false, minSleepHours: 7 },
   isLoading: false,
+  isRefreshing: false,
   isInitialized: false,
   searchQuery: '',
   selectedCategory: 'All',
@@ -82,12 +100,16 @@ export const useCatalogStore = create<CatalogState>((set, get) => ({
 
   // Toggle favorite status
   toggleFavorite: async (id: string) => {
-    await db.toggleFavorite(id);
-    
-    const catalogItems = await db.getAllCatalogItems();
-    const favorites = catalogItems.filter((item) => item.isFavorite);
-    
-    set({ catalogItems, favorites });
+    try {
+      await db.toggleFavorite(id);
+
+      const catalogItems = await db.getAllCatalogItems();
+      const favorites = catalogItems.filter((item) => item.isFavorite);
+
+      set({ catalogItems, favorites });
+    } catch (error) {
+      console.error('[Store] Failed to toggle favorite:', error);
+    }
   },
 
   // Add a new PR log
@@ -106,31 +128,44 @@ export const useCatalogStore = create<CatalogState>((set, get) => ({
   },
 
   // Refresh all data from database
+  // Uses isRefreshing (not isLoading) so the app's OnboardingGuard doesn't unmount everything.
   refreshData: async () => {
-    set({ isLoading: true });
-    
-    const [catalogItems, recentLogs, settings] = await Promise.all([
-      db.getAllCatalogItems(),
-      db.getRecentPRLogs(10),
-      db.getSettings(),
-    ]);
+    set({ isRefreshing: true });
 
-    const favorites = catalogItems.filter((item) => item.isFavorite);
+    try {
+      const [catalogItems, recentLogs, settings] = await Promise.all([
+        db.getAllCatalogItems(),
+        db.getRecentPRLogs(10),
+        db.getSettings(),
+      ]);
 
-    set({
-      catalogItems,
-      favorites,
-      recentLogs,
-      settings,
-      isLoading: false,
-    });
+      const favorites = catalogItems.filter((item) => item.isFavorite);
+
+      set({ catalogItems, favorites, recentLogs, settings });
+    } catch (error) {
+      console.error('[Store] Failed to refresh data:', error);
+      throw error;
+    } finally {
+      set({ isRefreshing: false });
+    }
   },
 
   // Update settings
   updateSettings: async (updates: Partial<UserSettings>) => {
+    const previous = get().settings;
     await db.updateSettings(updates);
     const settings = await db.getSettings();
     set({ settings });
+
+    // Goal display strings depend on units; recovery score on min sleep.
+    if (settings.weightUnit !== previous.weightUnit || settings.distanceUnit !== previous.distanceUnit) {
+      if (useGoalsStore.getState().isInitialized) {
+        await useGoalsStore.getState().reload(get().catalogItems);
+      }
+    }
+    if (settings.minSleepHours !== previous.minSleepHours && useCheckInStore.getState().isInitialized) {
+      await useCheckInStore.getState().refresh();
+    }
   },
 
   // Export all data
@@ -141,7 +176,12 @@ export const useCatalogStore = create<CatalogState>((set, get) => ({
   // Import data from JSON
   importData: async (json: string) => {
     await db.importData(json);
-    await get().refreshData();
+    await reloadAllStores();
+  },
+
+  clearAllData: async () => {
+    await db.clearAllData();
+    await reloadAllStores();
   },
 }));
 
