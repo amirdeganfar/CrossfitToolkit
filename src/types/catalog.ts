@@ -92,10 +92,15 @@ export interface PRLog {
   createdAt: number;
 }
 
+/** Appearance: follow the OS, or force a theme. */
+export type ThemePreference = 'system' | 'dark' | 'light';
+
 /**
  * User settings
  */
 export interface UserSettings {
+  /** Color theme. Default: 'system' */
+  theme?: ThemePreference;
   weightUnit: 'kg' | 'lb';
   distanceUnit: 'm' | 'ft';
   hasSeenOnboarding?: boolean;

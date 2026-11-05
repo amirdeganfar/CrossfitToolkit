@@ -68,7 +68,7 @@ export const Onboarding = () => {
       <ol className="space-y-2 text-sm text-[var(--color-text-muted)]">
         <li className="flex items-start gap-2">
           <span className="text-[var(--color-primary-text)] font-bold">1.</span>
-          <span>Tap the <Share className="w-4 h-4 inline text-blue-400" /> Share button in Safari</span>
+          <span>Tap the <Share className="w-4 h-4 inline text-[var(--color-info)]" /> Share button in Safari</span>
         </li>
         <li className="flex items-start gap-2">
           <span className="text-[var(--color-primary-text)] font-bold">2.</span>
@@ -110,13 +110,13 @@ export const Onboarding = () => {
 
   // Desktop notice
   const desktopNotice = (
-    <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
+    <div className="bg-[var(--color-warning)]/10 border border-[var(--color-warning)]/30 rounded-lg p-4">
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-full bg-amber-400/20 flex items-center justify-center flex-shrink-0">
-          <Monitor className="w-5 h-5 text-amber-400" />
+        <div className="w-10 h-10 rounded-full bg-[var(--color-cat-benchmark)]/15 flex items-center justify-center flex-shrink-0">
+          <Monitor className="w-5 h-5 text-[var(--color-cat-benchmark)]" />
         </div>
         <div>
-          <h4 className="font-semibold text-amber-400 mb-1">Desktop Not Recommended</h4>
+          <h4 className="font-semibold text-[var(--color-cat-benchmark)] mb-1">Desktop Not Recommended</h4>
           <p className="text-sm text-[var(--color-text-muted)]">
             This app is designed for <strong className="text-[var(--color-text)]">mobile devices</strong>. For the best experience, please open this page on your phone.
           </p>
@@ -206,20 +206,20 @@ export const Onboarding = () => {
           </p>
           <div className="flex justify-center gap-4 pt-4">
             <div className="flex flex-col items-center gap-2">
-              <div className="w-12 h-12 rounded-full bg-amber-400/20 flex items-center justify-center">
-                <span className="text-amber-400 font-bold">WOD</span>
+              <div className="w-12 h-12 rounded-full bg-[var(--color-cat-benchmark)]/15 flex items-center justify-center">
+                <span className="text-[var(--color-cat-benchmark)] font-bold">WOD</span>
               </div>
               <span className="text-xs text-[var(--color-text-muted)]">Benchmarks</span>
             </div>
             <div className="flex flex-col items-center gap-2">
-              <div className="w-12 h-12 rounded-full bg-blue-400/20 flex items-center justify-center">
-                <span className="text-blue-400 font-bold">PR</span>
+              <div className="w-12 h-12 rounded-full bg-[var(--color-info)]/15 flex items-center justify-center">
+                <span className="text-[var(--color-info)] font-bold">PR</span>
               </div>
               <span className="text-xs text-[var(--color-text-muted)]">Lifts</span>
             </div>
             <div className="flex flex-col items-center gap-2">
-              <div className="w-12 h-12 rounded-full bg-green-400/20 flex items-center justify-center">
-                <span className="text-green-400 font-bold">CAL</span>
+              <div className="w-12 h-12 rounded-full bg-[var(--color-success)]/15 flex items-center justify-center">
+                <span className="text-[var(--color-success)] font-bold">CAL</span>
               </div>
               <span className="text-xs text-[var(--color-text-muted)]">Cardio</span>
             </div>
@@ -241,8 +241,8 @@ export const Onboarding = () => {
         <div className="space-y-4">
           <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-4">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-green-400/20 flex items-center justify-center flex-shrink-0">
-                <Database className="w-5 h-5 text-green-400" />
+              <div className="w-10 h-10 rounded-full bg-[var(--color-success)]/15 flex items-center justify-center flex-shrink-0">
+                <Database className="w-5 h-5 text-[var(--color-success)]" />
               </div>
               <div>
                 <h4 className="font-semibold text-[var(--color-text)] mb-1">100% Private</h4>
@@ -253,13 +253,13 @@ export const Onboarding = () => {
             </div>
           </div>
 
-          <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
+          <div className="bg-[var(--color-warning)]/10 border border-[var(--color-warning)]/30 rounded-lg p-4">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-amber-400/20 flex items-center justify-center flex-shrink-0">
-                <span className="text-amber-400 text-lg">⚠️</span>
+              <div className="w-10 h-10 rounded-full bg-[var(--color-cat-benchmark)]/15 flex items-center justify-center flex-shrink-0">
+                <span className="text-[var(--color-cat-benchmark)] text-lg">⚠️</span>
               </div>
               <div>
-                <h4 className="font-semibold text-amber-400 mb-1">Important</h4>
+                <h4 className="font-semibold text-[var(--color-cat-benchmark)] mb-1">Important</h4>
                 <p className="text-sm text-[var(--color-text-muted)]">
                   If you uninstall the app or clear browser data, <strong className="text-[var(--color-text)]">your data will be lost</strong>. Make sure to export a backup regularly!
                 </p>
@@ -282,8 +282,8 @@ export const Onboarding = () => {
         <div className="space-y-4">
           <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-4">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-400/20 flex items-center justify-center flex-shrink-0">
-                <Download className="w-5 h-5 text-blue-400" />
+              <div className="w-10 h-10 rounded-full bg-[var(--color-info)]/15 flex items-center justify-center flex-shrink-0">
+                <Download className="w-5 h-5 text-[var(--color-info)]" />
               </div>
               <div>
                 <h4 className="font-semibold text-[var(--color-text)] mb-1">Export Data</h4>
@@ -296,8 +296,8 @@ export const Onboarding = () => {
 
           <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-4">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-purple-400/20 flex items-center justify-center flex-shrink-0">
-                <Upload className="w-5 h-5 text-purple-400" />
+              <div className="w-10 h-10 rounded-full bg-[var(--color-cat-skill)]/15 flex items-center justify-center flex-shrink-0">
+                <Upload className="w-5 h-5 text-[var(--color-cat-skill)]" />
               </div>
               <div>
                 <h4 className="font-semibold text-[var(--color-text)] mb-1">Import Data</h4>

@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useRef, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { useModalA11y } from '../hooks/useModalA11y';
@@ -19,7 +20,7 @@ export const BottomSheet = ({ title, onClose, children }: BottomSheetProps) => {
   // Escape, scroll lock, initial focus, focus trap + restore.
   useModalA11y(sheetRef, onClose);
 
-  return (
+  return createPortal(
     <div className="sheet-root">
       {/* Backdrop */}
       <div className="sheet-backdrop" onClick={onClose} aria-hidden="true" />
@@ -51,6 +52,7 @@ export const BottomSheet = ({ title, onClose, children }: BottomSheetProps) => {
         {/* Body */}
         <div className="p-4">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };

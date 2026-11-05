@@ -188,6 +188,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   distanceUnit: 'm',
   hasSeenOnboarding: false,
   minSleepHours: 7,
+  theme: 'system',
 };
 
 type UnitSettings = Pick<UserSettings, 'weightUnit' | 'distanceUnit'>;

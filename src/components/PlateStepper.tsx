@@ -15,14 +15,14 @@ interface PlateStepperProps {
   onChange?: (v: number) => void;
 }
 
-function PlateKey({ color, glow, label, onClick, children }: { color: string; glow: string; label: string; onClick?: () => void; children: ReactNode }) {
+function PlateKey({ color, label, onClick, children }: { color: string; label: string; onClick?: () => void; children: ReactNode }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={label}
       className="flex shrink-0 items-center justify-center transition-transform active:scale-95"
-      style={{ width: 56, height: 56, borderRadius: 9999, background: color, boxShadow: `0 0 16px ${glow}` }}
+      style={{ width: 56, height: 56, borderRadius: 9999, background: color, boxShadow: `0 0 16px color-mix(in srgb, ${color} var(--glow-strength), transparent)` }}
     >
       <span
         className="flex items-center justify-center"
@@ -38,16 +38,16 @@ export function PlateStepper({ value, step = 2.5, unit = 'kg', min = 0, onChange
   const rounded = Math.round(value * 100) / 100;
   return (
     <div className="flex items-center justify-between gap-3">
-      <PlateKey color="var(--plate-blue)" glow="#0A84FF80" label={`Remove ${step} ${unit}`} onClick={() => onChange?.(Math.max(min, rounded - step))}>
+      <PlateKey color="var(--plate-blue)" label={`Remove ${step} ${unit}`} onClick={() => onChange?.(Math.max(min, rounded - step))}>
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M5 12h14" /></svg>
       </PlateKey>
       <div className="text-center">
-        <div className="timer-digits num text-[44px] text-white" style={{ letterSpacing: '-1.5px' }}>{rounded}</div>
+        <div className="timer-digits num text-[44px] text-[var(--color-text)]" style={{ letterSpacing: '-1.5px' }}>{rounded}</div>
         <div className="mt-0.5 text-xs" style={{ color: 'var(--color-text-muted)', letterSpacing: '0.06em' }}>
           {unit} · +{step} step
         </div>
       </div>
-      <PlateKey color="var(--plate-red)" glow="#FF3B3080" label={`Add ${step} ${unit}`} onClick={() => onChange?.(rounded + step)}>
+      <PlateKey color="var(--plate-red)" label={`Add ${step} ${unit}`} onClick={() => onChange?.(rounded + step)}>
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
       </PlateKey>
     </div>

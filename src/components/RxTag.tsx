@@ -16,7 +16,7 @@ export function RxTag({ variant }: RxTagProps) {
     return <span className={base} style={{ color: 'var(--color-bg)', background: 'var(--color-text)' }}>RX+</span>;
   }
   if (variant === 'Scaled') {
-    return <span className={base} style={{ color: 'var(--color-text-muted)', border: '1.5px dashed rgba(255,255,255,0.25)' }}>SCALED</span>;
+    return <span className={base} style={{ color: 'var(--color-text-muted)', border: '1.5px dashed var(--color-hairline)' }}>SCALED</span>;
   }
-  return <span className={base} style={{ color: '#fff', border: '1.5px solid rgba(255,255,255,0.4)' }}>RX</span>;
+  return <span className={base} style={{ color: 'var(--color-text)', border: '1.5px solid var(--color-hairline-strong)' }}>RX</span>;
 }

@@ -16,7 +16,7 @@ import { LoadedBarButton } from '../components/LoadedBarButton';
 import { Barbell } from '../components/Barbell';
 import { RxTag } from '../components/RxTag';
 import { isDualMetricItem, isDistanceOnlyItem } from '../utils/itemMetrics';
-import { categoryColorHex } from '../utils/categoryColors';
+import { categoryColorVar } from '../utils/categoryColors';
 import {
   getScoreModes,
   getLogScoreType,
@@ -648,7 +648,7 @@ export const ItemDetail = () => {
     ? trendPools.find((p) => p.points.some((pt) => pt.id === bestLog.id))?.key
     : undefined;
 
-  const getCategoryColor = (category: CatalogItem['category']) => categoryColorHex(category);
+  const getCategoryColor = (category: CatalogItem['category']) => categoryColorVar(category);
 
   // One goal's progress. Direction comes from the goal's own score type.
   const renderGoal = (goal: GoalWithProgress, label?: string) => (

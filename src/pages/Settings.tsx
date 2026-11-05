@@ -7,6 +7,7 @@ import { useInitialize } from '../hooks/useInitialize';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { Skeleton } from '../components/Skeleton';
 import { todayLocal } from '../utils/date';
+import type { ThemePreference } from '../types/catalog';
 
 // Reusable section header
 const SectionHeader = ({ label }: { label: string }) => (
@@ -221,6 +222,22 @@ export const Settings = () => {
           <p className="text-[13px] font-medium text-[var(--color-danger)]">{settingsError}</p>
         </div>
       )}
+
+      {/* Appearance section */}
+      <section className="space-y-3">
+        <SectionHeader label="Appearance" />
+
+        <div className="py-2 border-b border-[var(--color-border)]">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-[var(--color-text)]">Theme</span>
+          </div>
+          <TabToggle
+            options={[{ value: 'system', label: 'System' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }]}
+            active={settings.theme ?? 'system'}
+            onChange={(v) => saveSettings({ theme: v as ThemePreference })}
+          />
+        </div>
+      </section>
 
       {/* Units section */}
       <section className="space-y-3">

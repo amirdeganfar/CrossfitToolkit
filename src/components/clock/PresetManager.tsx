@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useId, useRef, useState } from 'react';
 import { Save, FolderOpen, Trash2, X, Timer } from 'lucide-react';
 import { EmptyState } from '../EmptyState';
@@ -78,7 +79,7 @@ export const PresetManager = ({ isOpen, onClose }: PresetManagerProps) => {
     }
   };
 
-  return (
+  return createPortal(
     <div className="sheet-root" onClick={onClose}>
       {/* Backdrop */}
       <div className="sheet-backdrop" aria-hidden="true" />
@@ -262,6 +263,7 @@ export const PresetManager = ({ isOpen, onClose }: PresetManagerProps) => {
           />
         </div>
       )}
-    </div>
+    </div>,
+    document.body,
   );
 };

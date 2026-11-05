@@ -5,7 +5,17 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#0f0f0f" />
+    <meta name="theme-color" content="#0A0A0B" />
+    <script>
+      // Pre-paint theme (no flash). `cf-theme` mirrors the Dexie setting; see src/utils/theme.ts.
+      (function () {
+        var pref = 'system';
+        try { pref = localStorage.getItem('cf-theme') || 'system'; } catch (e) {}
+        var dark = pref === 'dark' || (pref !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', dark ? '#0A0A0B' : '#F4F3F0');
+      })();
+    </script>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>CrossfitToolkit — PR Tracker</title>

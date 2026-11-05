@@ -10,6 +10,7 @@ import { Onboarding } from './pages/Onboarding';
 import { useInitialize } from './hooks/useInitialize';
 import { useCatalogStore } from './stores/catalogStore';
 import { Loader2 } from 'lucide-react';
+import { useApplyTheme } from './utils/theme';
 
 /**
  * Wrapper that redirects to onboarding if user hasn't seen it
@@ -34,6 +35,10 @@ const OnboardingGuard = ({ children }: { children: React.ReactNode }) => {
 };
 
 const App = () => {
+  // Undefined until settings load, so the pre-paint choice in index.html stands.
+  const theme = useCatalogStore((state) => (state.isInitialized ? state.settings.theme ?? 'system' : undefined));
+  useApplyTheme(theme);
+
   return (
     <BrowserRouter>
       <Routes>

@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState, useEffect, useId, useRef } from 'react';
 import { X } from 'lucide-react';
 import type { CatalogItem, Variant, ScoreType, PRLog } from '../../types/catalog';
@@ -354,7 +355,7 @@ export const GoalModal = ({
     }
   };
 
-  return (
+  return createPortal(
     <div className="sheet-root">
       {/* Backdrop */}
       <div
@@ -612,6 +613,7 @@ export const GoalModal = ({
           </button>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };

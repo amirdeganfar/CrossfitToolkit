@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { Category } from '../types/catalog';
-import { categoryColorHex } from '../utils/categoryColors';
+import { categoryColorVar } from '../utils/categoryColors';
 
 /**
  * PlateBadge — a competition bumper plate seen head-on.
@@ -22,7 +22,7 @@ interface PlateBadgeProps {
 }
 
 export function PlateBadge({ category, size = 46, favorite = false, onToggleFavorite, children }: PlateBadgeProps) {
-  const color = categoryColorHex(category);
+  const color = categoryColorVar(category);
   const hub = Math.round(size * 0.65);
   const content = (
     <>
@@ -45,7 +45,7 @@ export function PlateBadge({ category, size = 46, favorite = false, onToggleFavo
     </>
   );
 
-  const style = { width: size, height: size, borderRadius: 9999, background: color, boxShadow: `0 0 14px ${color}80` };
+  const style = { width: size, height: size, borderRadius: 9999, background: color, boxShadow: `0 0 14px color-mix(in srgb, ${color} var(--glow-strength), transparent)` };
 
   if (onToggleFavorite) {
     return (

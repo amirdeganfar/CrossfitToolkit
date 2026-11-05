@@ -190,7 +190,7 @@ export const Progress = () => {
       {/* Floating add-goal action — sits above the always-visible bottom nav */}
       <button
         onClick={() => setShowModal(true)}
-        className="fixed bottom-24 right-4 z-40 w-14 h-14 rounded-full bg-[var(--color-primary)] hover:opacity-90 active:scale-90 text-[var(--color-text)] flex items-center justify-center transition-all shadow-[0_0_24px_rgba(232,50,28,0.3)]"
+        className="fixed bottom-24 right-4 z-40 w-14 h-14 rounded-full bg-[var(--color-primary)] hover:opacity-90 active:scale-90 text-white flex items-center justify-center transition-all shadow-[0_0_24px_color-mix(in_srgb,var(--color-primary)_30%,transparent)]"
         aria-label="Add new goal"
       >
         <Plus size={24} />

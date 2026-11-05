@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useId, useRef } from 'react';
 import { useModalA11y } from '../hooks/useModalA11y';
 
@@ -25,7 +26,7 @@ export const ConfirmDialog = ({
   const messageId = useId();
   useModalA11y(dialogRef, onCancel);
 
-  return (
+  return createPortal(
     <div className="sheet-root">
       {/* Backdrop */}
       <div className="sheet-backdrop" onClick={onCancel} aria-hidden="true" />
@@ -63,13 +64,14 @@ export const ConfirmDialog = ({
             className={`flex-1 min-h-[48px] px-4 rounded-md font-semibold text-[15px] hover:opacity-90 ${
               isDestructive
                 ? 'bg-[var(--color-danger-fill)] text-white'
-                : 'bg-[var(--color-primary)] text-[var(--color-text)]'
+                : 'bg-[var(--color-primary)] text-white'
             }`}
           >
             {confirmLabel}
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };

@@ -73,6 +73,23 @@
   --color-phase-done:   #1E7D3A;
   --color-phase-paused: #1C1C1E;
 
+  /* Theme-dependent overlays / chrome (overridden for light below) */
+  --color-backdrop: rgba(0,0,0,0.7);           /* sheet / modal scrim */
+  --color-pr-backdrop: rgba(0,0,0,0.55);
+  --color-sheet-shadow: 0 -12px 40px rgba(0,0,0,0.5);
+  --color-sheet-handle: rgba(255,255,255,0.22);
+  --color-card-shadow: none;                   /* light cards get a soft lift */
+  --color-skeleton-hi: #26262A;                /* shimmer highlight */
+  --color-texture: rgba(255,255,255,0.03);     /* diagonal mat stripe */
+  --color-hairline-strong: rgba(255,255,255,0.4);  /* RX tag outline */
+  --color-hairline: rgba(255,255,255,0.25);        /* Scaled tag / variant outline */
+  --color-iron: #FFFFFF;                       /* Barbell loaded bar */
+  --glow-strength: 50%;                        /* plate glow mix (color-mix %) */
+  --color-pr-card-bg: var(--color-surface-elevated);
+  --color-pr-card-shadow: 0 24px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,0,0,0.4);
+  --color-pr-ring-2: rgba(255,255,255,0.5);
+  --color-pr-spark-light: #FFFFFF;
+
   /* Category / plate accent colors (dark-optimized) */
   --color-cat-benchmark: #FF9F0A;
   --color-cat-lift:       #0A84FF;
@@ -90,6 +107,73 @@
   /* Typography — Apple SF stack (Inter fallback off-platform) */
   --font-display: "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
   --font-text:    "SF Pro Text", system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+
+  color-scheme: dark;
+}
+
+/* ─── Design Tokens — CHALK (light) ──────────────────────────────────────
+   Not an inversion: a chalk-dust warm-grey floor, white cards that sit on it
+   with a hairline + soft shadow, near-black ink, the same CrossFit red.
+   Every text token is >= 4.5:1 on bg, surface and surface-elevated; white
+   on primary / danger-fill / phase tints is >= 4.5:1 (see report). Category
+   / semantic hues are deepened so they still read as text on white.     */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --color-bg: #F4F3F0;
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: #EFEEEA;          /* recessed fill inside white cards, hovers */
+
+  --color-border: rgba(23,23,26,0.08);
+  --color-border-strong: rgba(23,23,26,0.14);
+
+  --color-input: #FFFFFF;
+  --color-input-border: #85847F;              /* 3.38:1 on bg, 3.75 on white */
+  --color-input-border-hover: #5C5B57;
+  --color-focus-ring: rgba(225,49,27,0.28);
+
+  --color-primary: #E1311B;                   /* white text 4.51 */
+  --color-primary-text: #C02A17;              /* 5.28 bg / 5.86 surf / 5.05 elev */
+  --color-primary-dark: #B02414;
+  --color-primary-glow: rgba(225,49,27,0.10);
+
+  --color-text: #17171A;                      /* 16.12 / 17.89 / 15.41 */
+  --color-text-muted: #5C5B57;                /* 6.13 / 6.80 / 5.86 */
+  --color-text-dim: #64635F;                  /* 5.42 / 6.01 / 5.18 */
+
+  --color-success: #1A7034;                   /* 5.55 / 6.16 / 5.30 */
+  --color-warning: #9E5800;                   /* 4.92 / 5.45 / 4.70 */
+  --color-danger: #C42820;                    /* 5.15 / 5.72 / 4.93 */
+  --color-danger-fill: #D2302A;               /* white text 5.00 */
+  --color-info: #0060CC;                      /* 5.34 / 5.92 / 5.10 */
+
+  /* Phase tints unchanged — the active timer keeps its full-bleed look. */
+
+  --color-cat-benchmark: #9E5800;
+  --color-cat-lift:      #0060CC;
+  --color-cat-mono:      #1A7034;
+  --color-cat-cardio:    #1A7034;
+  --color-cat-skill:     #8A35BD;
+  --color-cat-custom:    #C21E48;
+
+  /* Plates stay competition colors; yellow deepened a touch to hold on white. */
+  --plate-yellow: #F2C200;
+
+  --color-backdrop: rgba(30,28,24,0.38);
+  --color-pr-backdrop: rgba(30,28,24,0.32);
+  --color-sheet-shadow: 0 -8px 32px rgba(30,28,24,0.14);
+  --color-sheet-handle: rgba(23,23,26,0.18);
+  --color-card-shadow: 0 1px 2px rgba(30,28,24,0.05), 0 2px 8px rgba(30,28,24,0.04);
+  --color-skeleton-hi: #F8F7F5;
+  --color-texture: rgba(23,23,26,0.022);
+  --color-hairline-strong: rgba(23,23,26,0.45);
+  --color-hairline: rgba(23,23,26,0.25);
+  --color-iron: #3A3A3E;
+  --glow-strength: 24%;
+  --color-pr-card-bg: var(--color-surface);
+  --color-pr-card-shadow: 0 24px 60px rgba(30,28,24,0.22), 0 0 0 1px rgba(30,28,24,0.04);
+  --color-pr-ring-2: rgba(23,23,26,0.25);
+  --color-pr-spark-light: #F2C200;
 }
 
 /* ─── Base ──────────────────────────────────────────────────────────────── */
@@ -208,6 +292,7 @@ a:hover { text-decoration: underline; }
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: var(--space-4);
+  box-shadow: var(--color-card-shadow);
 }
 
 /* Selected chip / segment — neutral inverted, keeps red for CTAs only. */
@@ -222,7 +307,7 @@ a:hover { text-decoration: underline; }
 }
 .sheet-backdrop {
   position: absolute; inset: 0;
-  background: rgba(0,0,0,0.7);
+  background: var(--color-backdrop);
   -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
   animation: backdrop-in 0.24s ease-out both;
@@ -239,7 +324,7 @@ a:hover { text-decoration: underline; }
   border-bottom: 0;
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  box-shadow: 0 -12px 40px rgba(0,0,0,0.5);
+  box-shadow: var(--color-sheet-shadow);
   /* `backwards`, not `both`: no transform is left on the sheet once it lands,
      so it doesn't become the containing block for fixed-position children. */
   animation: slide-up 0.3s cubic-bezier(0.32, 0.72, 0, 1) backwards;
@@ -248,7 +333,7 @@ a:hover { text-decoration: underline; }
 .sheet-sm { max-width: 24rem; }
 .sheet-handle {
   width: 36px; height: 4px; border-radius: 9999px;
-  background: rgba(255,255,255,0.22);
+  background: var(--color-sheet-handle);
   margin: 8px auto 4px;
 }
 @media (min-width: 640px) {
@@ -261,7 +346,7 @@ a:hover { text-decoration: underline; }
 .skeleton {
   display: block;
   border-radius: var(--radius-sm);
-  background: linear-gradient(90deg, var(--color-surface-elevated) 0%, #26262A 50%, var(--color-surface-elevated) 100%);
+  background: linear-gradient(90deg, var(--color-surface-elevated) 0%, var(--color-skeleton-hi) 50%, var(--color-surface-elevated) 100%);
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.4s ease-in-out infinite;
 }
@@ -345,7 +430,7 @@ a:hover { text-decoration: underline; }
   position: fixed; inset: 0; z-index: 70;
   display: flex; align-items: center; justify-content: center;
   padding: var(--space-4) var(--space-4) 18vh;
-  background: rgba(0,0,0,0.55);
+  background: var(--color-pr-backdrop);
   animation: backdrop-in 0.2s ease-out both;
   cursor: pointer;
   transition: opacity 0.18s ease-in;
@@ -359,18 +444,18 @@ a:hover { text-decoration: underline; }
   color: var(--color-text);
   background:
     radial-gradient(120% 70% at 50% 0%, rgba(225,49,27,0.16), transparent 70%),
-    var(--color-surface-elevated);
-  border: 1px solid rgba(235,74,54,0.35);
+    var(--color-pr-card-bg);
+  border: 1px solid color-mix(in srgb, var(--color-primary-text) 35%, transparent);
   border-radius: var(--radius-xl);
-  box-shadow: 0 24px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,0,0,0.4);
+  box-shadow: var(--color-pr-card-shadow);
   overflow: hidden;
   animation: pr-card-in 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 .pr-card-goal {
   background:
     radial-gradient(120% 70% at 50% 0%, rgba(52,199,89,0.14), transparent 70%),
-    var(--color-surface-elevated);
-  border-color: rgba(52,199,89,0.3);
+    var(--color-pr-card-bg);
+  border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
 }
 /* Burst origin sits on the value line. */
 .pr-burst { position: absolute; left: 50%; top: 62%; width: 0; height: 0; pointer-events: none; }
@@ -381,8 +466,8 @@ a:hover { text-decoration: underline; }
   opacity: 0;
   animation: pr-ring 0.9s cubic-bezier(0.2, 0.7, 0.3, 1) 0.1s both;
 }
-.pr-ring-2 { border-color: rgba(255,255,255,0.5); animation-delay: 0.26s; }
-.pr-card-goal .pr-ring { border-color: rgba(255,255,255,0.6); }
+.pr-ring-2 { border-color: var(--color-pr-ring-2); animation-delay: 0.26s; }
+.pr-card-goal .pr-ring { border-color: var(--color-pr-ring-2); }
 .pr-card-goal .pr-ring-2 { border-color: var(--color-success); }
 .pr-spark {
   position: absolute; left: -1.5px; top: -7px; width: 3px; height: 14px;
@@ -392,9 +477,9 @@ a:hover { text-decoration: underline; }
   transform: rotate(var(--a)) translateY(-28px);
   animation: pr-spark 0.7s cubic-bezier(0.15, 0.7, 0.3, 1) 0.12s both;
 }
-.pr-spark-light { background: #FFFFFF; }
+.pr-spark-light { background: var(--color-pr-spark-light); }
 .pr-card-goal .pr-spark { background: var(--color-success); }
-.pr-card-goal .pr-spark-light { background: #FFFFFF; }
+.pr-card-goal .pr-spark-light { background: var(--color-pr-spark-light); }
 .pr-value { display: inline-block; animation: pr-value-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.08s both; }
 .pr-delta { animation: card-enter 0.3s ease-out 0.38s both; }
 .pr-timer {
@@ -416,7 +501,7 @@ a:hover { text-decoration: underline; }
 /* ─── Gym-floor texture (apply to page backgrounds) ─────────────────────── */
 .mat-texture {
   background-image: repeating-linear-gradient(
-    45deg, rgba(255,255,255,0.03) 0 2px, transparent 2px 15px
+    45deg, var(--color-texture) 0 2px, transparent 2px 15px
   );
 }
 

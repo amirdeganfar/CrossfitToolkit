@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useId, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import type { CatalogItem, PRLog, Variant, ScoreType } from '../types/catalog';
@@ -201,7 +202,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
   // Filled field class (visible on near-black — see .field in index.css)
   const inputClass = 'field w-full px-3 py-2.5 text-[15px] num';
 
-  return (
+  return createPortal(
     <div className="sheet-root">
       {/* Backdrop */}
       <div className="sheet-backdrop" onClick={onClose} aria-hidden="true" />
@@ -448,8 +449,8 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
                         active
                           ? { background: 'var(--color-text)', color: 'var(--color-bg)' }
                           : v.value === 'Scaled'
-                            ? { color: 'var(--color-text-muted)', border: '1.5px dashed rgba(255,255,255,0.25)' }
-                            : { color: '#fff', border: '1.5px solid rgba(255,255,255,0.25)' }
+                            ? { color: 'var(--color-text-muted)', border: '1.5px dashed var(--color-hairline)' }
+                            : { color: 'var(--color-text)', border: '1.5px solid var(--color-hairline)' }
                       }
                       aria-pressed={active}
                     >
@@ -500,6 +501,7 @@ export const LogResultModal = ({ item, onClose, onSuccess }: LogResultModalProps
           </LoadedBarButton>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };

@@ -35,7 +35,7 @@ export const TimerDisplay = () => {
       </div>
       <button
         onClick={handleStart}
-        className="tap w-full flex items-center justify-center gap-2 rounded-md py-4 text-[18px] font-bold bg-[var(--color-primary)] text-[var(--color-text)]"
+        className="tap w-full flex items-center justify-center gap-2 rounded-md py-4 text-[18px] font-bold bg-[var(--color-primary)] text-white"
       >
         <Play className="w-5 h-5" fill="currentColor" />
         Start

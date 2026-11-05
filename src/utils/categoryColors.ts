@@ -14,17 +14,5 @@ const CATEGORY_VAR: Record<Category, string> = {
   Custom: 'var(--color-cat-custom)',
 };
 
-/** Resolved hex fallbacks (for canvas/SVG contexts that can't read CSS vars). */
-const CATEGORY_HEX: Record<Category, string> = {
-  Benchmark: '#FF9F0A',
-  Lift: '#0A84FF',
-  Monostructural: '#34C759',
-  Skill: '#BF5AF2',
-  Custom: '#FF375F',
-};
-
 export const categoryColorVar = (category: Category): string =>
   CATEGORY_VAR[category] ?? 'var(--color-text-muted)';
-
-export const categoryColorHex = (category: Category): string =>
-  CATEGORY_HEX[category] ?? '#8E8E93';
